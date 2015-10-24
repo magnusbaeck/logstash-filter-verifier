@@ -10,6 +10,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"sort"
 	"strconv"
 
 	"github.com/magnusbaeck/logstash-filter-verifier/logging"
@@ -31,6 +32,20 @@ type TestCase struct {
 	// Codec names the Logstash codec that should be used when
 	// events are read. This is normally "plain" or "json".
 	Codec string `json:"codec"`
+
+	// IgnoredFields contains a list of fields that will be
+	// deleted from the events that Logstash returns before
+	// they're compared to the events in ExpectedEevents.
+	//
+	// This can be used for skipping fields that Logstash
+	// populates with unpredictable contents (hostnames or
+	// timestamps) that can't be hard-wired into the test case
+	// file.
+	//
+	// It's also useful for the @version field that Logstash
+	// always adds with a constant value so that one doesn't have
+	// to include that field in every event in ExpectedEvents.
+	IgnoredFields []string `json:"ignore"`
 
 	// InputLines contains the lines of input that should be fed
 	// to the Logstash process.
@@ -61,10 +76,14 @@ type MismatchedEvent struct {
 
 var (
 	log = logging.MustGetLogger()
+
+	defaultIgnoredFields = []string{"@version"}
 )
 
 // New reads a test case configuration from a reader and returns a
-// TestCase. Defaults to a "plain" codec.
+// TestCase. Defaults to a "plain" codec and ignoring the @version
+// field. If the configuration being read lists additional fields to
+// ignore those will be ignored in addition to @version.
 func New(reader io.Reader) (*TestCase, error) {
 	tc := TestCase{
 		Codec: "plain",
@@ -76,6 +95,10 @@ func New(reader io.Reader) (*TestCase, error) {
 	if err = json.Unmarshal(buf, &tc); err != nil {
 		return nil, err
 	}
+	for _, f := range defaultIgnoredFields {
+		tc.IgnoredFields = append(tc.IgnoredFields, f)
+	}
+	sort.Strings(tc.IgnoredFields)
 	return &tc, nil
 }
 
@@ -136,6 +159,10 @@ func (tc *TestCase) Compare(events []logstash.Event, quiet bool) error {
 	for i, actualEvent := range events {
 		if !quiet {
 			fmt.Fprintf(os.Stderr, "Comparing message %d of %s...\n", i+1, filepath.Base(tc.File))
+		}
+
+		for _, ignored := range tc.IgnoredFields {
+			delete(actualEvent, ignored)
 		}
 
 		resultDir := filepath.Join(tempdir, filepath.Base(tc.File), strconv.Itoa(i))

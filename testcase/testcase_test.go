@@ -23,16 +23,26 @@ func TestNew(t *testing.T) {
 		{
 			`{"type": "mytype"}`,
 			TestCase{
-				Codec: "plain",
-				Type:  "mytype",
+				Codec:         "plain",
+				IgnoredFields: []string{"@version"},
+				Type:          "mytype",
 			},
 		},
 		// Happy flow with a custom codec.
 		{
 			`{"type": "mytype", "codec": "json"}`,
 			TestCase{
-				Codec: "json",
-				Type:  "mytype",
+				Codec:         "json",
+				IgnoredFields: []string{"@version"},
+				Type:          "mytype",
+			},
+		},
+		// Additional fields to ignore are appended to the default.
+		{
+			`{"ignore": ["foo"]}`,
+			TestCase{
+				Codec:         "plain",
+				IgnoredFields: []string{"@version", "foo"},
 			},
 		},
 	}
@@ -219,6 +229,28 @@ func TestCompare(t *testing.T) {
 					},
 				},
 			},
+		},
+		// Ignored fields are ignored.
+		{
+			&TestCase{
+				File:          "/path/to/filename.json",
+				Type:          "test",
+				Codec:         "plain",
+				IgnoredFields: []string{"ignored"},
+				InputLines:    []string{},
+				ExpectedEvents: []logstash.Event{
+					{
+						"not_ignored": "value",
+					},
+				},
+			},
+			[]logstash.Event{
+				{
+					"ignored":     "ignoreme",
+					"not_ignored": "value",
+				},
+			},
+			nil,
 		},
 	}
 

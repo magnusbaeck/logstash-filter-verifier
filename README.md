@@ -77,7 +77,6 @@ about a handful of supported properties.
   "expected": [
     {
       "@timestamp": "2015-10-06T20:55:29.000Z",
-      "@version": "1",
       "host": "myhost",
       "message": "This is a test message",
       "pid": 31993,
@@ -111,6 +110,12 @@ with a zero exit code and (almost) no output. If the test fails it'll
 run `diff -u` to compare the pretty-printed JSON representation of the
 expected and actual events.
 
+The actual event emitted by Logstash will contain a `@version` field,
+but since that field isn't interesting it's ignored by default when
+reading the actual event. Hence we don't need to include it in the
+expected event either. Additional fields can be ignored with the
+`ignore` array property in the test case file (see details below).
+
 ### JSON messages
 
 I always prefer to configure application to emit JSON objects
@@ -130,16 +135,15 @@ that:
 {
   "type": "app",
   "codec": "json",
+  "ignore": ["host"],
   "input": [
-    "{\"message\": \"This is a test message\", \"client\": \"127.0.0.1\", \"host\": \"myhost\", \"time\": \"2015-10-06T20:55:29Z\"}"
+    "{\"message\": \"This is a test message\", \"client\": \"127.0.0.1\", \"time\": \"2015-10-06T20:55:29Z\"}"
   ],
   "expected": [
     {
       "@timestamp": "2015-10-06T20:55:29.000Z",
-      "@version": "1",
       "client": "localhost",
       "clientip": "127.0.0.1",
-      "host": "myhost",
       "message": "This is a test message",
       "type": "app"
     }
@@ -157,6 +161,10 @@ There are a few points to be made here:
   future problems and flaky tests, pick a hostname or IP address for
   the test case that will always resolve to the same thing. As in this
   example, localhost and 127.0.0.1 should be safe picks.
+* If the input event doesn't contain a `host` field, Logstash will add
+  such a field containing the name of the current host. To avoid test
+  cases that behave differently depending on the host where they're
+  run, we ignore that field with the `ignore` property.
 
 ## Test case file reference
 
@@ -168,6 +176,10 @@ may have the following properties:
 * `expected`: An array of JSON objects with the events to be
   expected. They will be compared to the actual events produced by the
   Logstash process.
+* `ignore`: An array with the names of the fields that should be
+  removed from the events that Logstash emit. This is for example
+  useful for dynamically generated fields whose contents can't be
+  predicted and hardwired into the test case file.
 * `input`: An array with the lines of input (each line being a string)
   that should be fed to the Logstash process.
 * `type`: A string value with the contents of the "type" field of the
@@ -188,10 +200,6 @@ may have the following properties:
 * All Logstash processes are run serially. By running them in parallel
   the execution time can be reduced drastically on multi-core
   machines.
-* Sometimes filters (or Logstash itself) add fields with dynamic
-  values that can't be predicted beforehand and therefore can't be
-  hardwired into the test case file. It should be possible to ignore
-  such fields when comparing the events.
 
 ## License
 
