@@ -13,6 +13,7 @@ import (
 	"github.com/magnusbaeck/logstash-filter-verifier/logging"
 	"github.com/magnusbaeck/logstash-filter-verifier/logstash"
 	"github.com/magnusbaeck/logstash-filter-verifier/testcase"
+	"github.com/mattn/go-shellwords"
 	oplogging "github.com/op/go-logging"
 )
 
@@ -22,6 +23,10 @@ var (
 	loglevels = []string{"CRITICAL", "ERROR", "WARNING", "NOTICE", "INFO", "DEBUG"}
 
 	// Flags
+	diffCommand = kingpin.
+			Flag("diff-command", "The command to run to compare two events. The command will receive the two files to compare as arguments.").
+			Default("diff -u").
+			String()
 	loglevel = kingpin.
 			Flag("loglevel", fmt.Sprintf("Set the desired level of logging (one of: %s).", strings.Join(loglevels, ", "))).
 			Default("WARNING").
@@ -46,7 +51,7 @@ var (
 // slice of test cases and compares the actual events against the
 // expected set. Returns an error if at least one test case fails or
 // if there's a problem running the tests.
-func runTests(logstashPath string, tests []testcase.TestCase, configPaths []string) error {
+func runTests(logstashPath string, tests []testcase.TestCase, configPaths []string, diffCommand []string) error {
 	ok := true
 	for _, t := range tests {
 		p, err := logstash.NewProcess(logstashPath, t.Codec, t.Type, configPaths...)
@@ -67,7 +72,7 @@ func runTests(logstashPath string, tests []testcase.TestCase, configPaths []stri
 		if err != nil {
 			return err
 		}
-		if err = t.Compare(result.Events, false); err != nil {
+		if err = t.Compare(result.Events, false, diffCommand); err != nil {
 			userError("Testcase failed, continuing with the rest: %s", err.Error())
 			ok = false
 		}
@@ -110,12 +115,18 @@ func main() {
 	}
 	logging.SetLevel(level)
 
+	diffCmd, err := shellwords.NewParser().Parse(*diffCommand)
+	if err != nil {
+		userError("Error parsing diff command %q: %s", *diffCommand, err.Error())
+		os.Exit(1)
+	}
+
 	tests, err := testcase.DiscoverTests(*testcasePath)
 	if err != nil {
 		userError(err.Error())
 		os.Exit(1)
 	}
-	if err = runTests(*logstashPath, tests, *configPaths); err != nil {
+	if err = runTests(*logstashPath, tests, *configPaths, diffCmd); err != nil {
 		userError(err.Error())
 		os.Exit(1)
 	}

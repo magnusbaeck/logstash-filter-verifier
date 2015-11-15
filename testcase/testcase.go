@@ -129,7 +129,7 @@ func NewFromFile(path string) (*TestCase, error) {
 // file and the two files are passed to "diff -u". If quiet is true,
 // the progress messages normally written to stderr will be emitted
 // and the output of the diff program will be discarded.
-func (tc *TestCase) Compare(events []logstash.Event, quiet bool) error {
+func (tc *TestCase) Compare(events []logstash.Event, quiet bool, diffCommand []string) error {
 	result := ComparisonError{
 		ActualCount:   len(events),
 		ExpectedCount: len(tc.ExpectedEvents),
@@ -175,7 +175,7 @@ func (tc *TestCase) Compare(events []logstash.Event, quiet bool) error {
 			return err
 		}
 
-		equal, err := runDiffCommand(expectedFilePath, actualFilePath, quiet)
+		equal, err := runDiffCommand(diffCommand, expectedFilePath, actualFilePath, quiet)
 		if err != nil {
 			return err
 		}
@@ -206,14 +206,17 @@ func marshalToFile(event logstash.Event, filename string) error {
 	return nil
 }
 
-// runDiffCommand passes two files to "diff -u" and returns whether
-// the files were equal, i.e. whether the diff command returned a zero
-// exit status. The returned error value will be set if there was a
-// problem running the command. If quiet is true, the output of the
-// diff command will be discarded. Otherwise the child process will
-// inherit stdout and stderr from the parent.
-func runDiffCommand(file1, file2 string, quiet bool) (bool, error) {
-	c := exec.Command("diff", "-u", file1, file2)
+// runDiffCommand passes two files to the supplied command (executable
+// path and optional arguments) and returns whether the files were
+// equal, i.e. whether the diff command returned a zero exit
+// status. The returned error value will be set if there was a problem
+// running the command. If quiet is true, the output of the diff
+// command will be discarded. Otherwise the child process will inherit
+// stdout and stderr from the parent.
+func runDiffCommand(command []string, file1, file2 string, quiet bool) (bool, error) {
+	fullCommand := append(command, file1)
+	fullCommand = append(fullCommand, file2)
+	c := exec.Command(fullCommand[0], fullCommand[1:]...)
 	if !quiet {
 		c.Stdout = os.Stdout
 		c.Stderr = os.Stderr

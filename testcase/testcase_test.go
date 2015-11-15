@@ -91,9 +91,18 @@ func TestNewFromFile(t *testing.T) {
 }
 
 func TestCompare(t *testing.T) {
+	// Create an empty tempdir so that we can construct a path to
+	// a diff binary that's guaranteed to not exist.
+	tempdir, err := ioutil.TempDir("", "")
+	if err != nil {
+		t.Fatalf(err.Error())
+	}
+	defer os.RemoveAll(tempdir)
+
 	cases := []struct {
 		testcase     *TestCase
 		actualEvents []logstash.Event
+		diffCommand  []string
 		result       error
 	}{
 		// Empty test case with no messages is okay.
@@ -106,6 +115,7 @@ func TestCompare(t *testing.T) {
 				ExpectedEvents: []logstash.Event{},
 			},
 			[]logstash.Event{},
+			[]string{"diff"},
 			nil,
 		},
 		// Too few messages received.
@@ -129,6 +139,7 @@ func TestCompare(t *testing.T) {
 					"a": "b",
 				},
 			},
+			[]string{"diff"},
 			ComparisonError{
 				ActualCount:   1,
 				ExpectedCount: 2,
@@ -156,6 +167,7 @@ func TestCompare(t *testing.T) {
 					"c": "d",
 				},
 			},
+			[]string{"diff"},
 			ComparisonError{
 				ActualCount:   2,
 				ExpectedCount: 1,
@@ -180,6 +192,7 @@ func TestCompare(t *testing.T) {
 					"c": "d",
 				},
 			},
+			[]string{"diff"},
 			ComparisonError{
 				ActualCount:   1,
 				ExpectedCount: 1,
@@ -214,6 +227,7 @@ func TestCompare(t *testing.T) {
 					"a": "B",
 				},
 			},
+			[]string{"diff"},
 			ComparisonError{
 				ActualCount:   1,
 				ExpectedCount: 1,
@@ -250,12 +264,34 @@ func TestCompare(t *testing.T) {
 					"not_ignored": "value",
 				},
 			},
+			[]string{"diff"},
 			nil,
+		},
+		// Diff command execution errors are propagated correctly.
+		{
+			&TestCase{
+				File:       "/path/to/filename.json",
+				Type:       "test",
+				Codec:      "plain",
+				InputLines: []string{},
+				ExpectedEvents: []logstash.Event{
+					{
+						"a": "b",
+					},
+				},
+			},
+			[]logstash.Event{
+				{
+					"a": "b",
+				},
+			},
+			[]string{filepath.Join(tempdir, "does-not-exist")},
+			&os.PathError{},
 		},
 	}
 
 	for i, c := range cases {
-		actualResult := c.testcase.Compare(c.actualEvents, true)
+		actualResult := c.testcase.Compare(c.actualEvents, true, c.diffCommand)
 		if actualResult == nil && c.result != nil {
 			t.Errorf("Test %d: Expected failure, got success.", i)
 		} else if actualResult != nil && c.result == nil {
