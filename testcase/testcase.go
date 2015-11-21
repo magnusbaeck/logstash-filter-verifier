@@ -24,11 +24,6 @@ type TestCase struct {
 	// test case was read.
 	File string `json:-`
 
-	// Type contains the contents of the "type" field of the
-	// events that are to be read. This is often important since
-	// filters typically are configured based on the event's type.
-	Type string `json:"type"`
-
 	// Codec names the Logstash codec that should be used when
 	// events are read. This is normally "plain" or "json".
 	Codec string `json:"codec"`
@@ -46,6 +41,13 @@ type TestCase struct {
 	// always adds with a constant value so that one doesn't have
 	// to include that field in every event in ExpectedEvents.
 	IgnoredFields []string `json:"ignore"`
+
+	// InputFields contains a mapping of fields that should be
+	// added to input events, like "type" or "tags". The map
+	// values may be scalar values or arrays of scalar
+	// values. This is often important since filters typically are
+	// configured based on the event's type or its tags.
+	InputFields logstash.FieldSet `json:"fields"`
 
 	// InputLines contains the lines of input that should be fed
 	// to the Logstash process.
@@ -93,6 +95,9 @@ func New(reader io.Reader) (*TestCase, error) {
 		return nil, err
 	}
 	if err = json.Unmarshal(buf, &tc); err != nil {
+		return nil, err
+	}
+	if err = tc.InputFields.IsValid(); err != nil {
 		return nil, err
 	}
 	for _, f := range defaultIgnoredFields {

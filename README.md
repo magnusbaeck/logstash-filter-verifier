@@ -70,7 +70,9 @@ about a handful of supported properties.
 
 ```javascript
 {
-  "type": "syslog",
+  "fields": {
+    "type": "syslog"
+  }
   "input": [
     "Oct  6 20:55:29 myhost myprogram[31993]: This is a test message"
   ],
@@ -133,7 +135,9 @@ that:
 
 ```javascript
 {
-  "type": "app",
+  "fields": {
+    "type": "app"
+  }
   "codec": "json",
   "ignore": ["host"],
   "input": [
@@ -176,15 +180,17 @@ may have the following properties:
 * `expected`: An array of JSON objects with the events to be
   expected. They will be compared to the actual events produced by the
   Logstash process.
+* `fields`: An object containing the fields that all input messages
+  should have. This is vital since filters typically are configured
+  based on the event's type and/or tags. Scalar values (strings,
+  numbers, and booleans) are supported, as are arrays of scalars. It
+  seems Logstash doesn't support nested arrays.
 * `ignore`: An array with the names of the fields that should be
   removed from the events that Logstash emit. This is for example
   useful for dynamically generated fields whose contents can't be
   predicted and hardwired into the test case file.
 * `input`: An array with the lines of input (each line being a string)
   that should be fed to the Logstash process.
-* `type`: A string value with the contents of the "type" field of the
-  events that are to be read. This is often important since filters
-  typically are configured based on the event's type.
 
 ## Known limitations and future work
 
@@ -195,8 +201,6 @@ may have the following properties:
   double quotes, and escaped double quotes everywhere and no native
   support for comments. We should support YAML in addition to JSON to
   make it more pleasant to write test case files.
-* You can't add any field values to the input lines, except the
-  type. We might as well support adding any fields.
 * All Logstash processes are run serially. By running them in parallel
   the execution time can be reduced drastically on multi-core
   machines.

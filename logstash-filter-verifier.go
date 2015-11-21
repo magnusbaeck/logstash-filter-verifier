@@ -54,7 +54,7 @@ var (
 func runTests(logstashPath string, tests []testcase.TestCase, configPaths []string, diffCommand []string) error {
 	ok := true
 	for _, t := range tests {
-		p, err := logstash.NewProcess(logstashPath, t.Codec, t.Type, configPaths...)
+		p, err := logstash.NewProcess(logstashPath, t.Codec, t.InputFields, configPaths...)
 		if err != nil {
 			return err
 		}

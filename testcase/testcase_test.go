@@ -21,20 +21,24 @@ func TestNew(t *testing.T) {
 	}{
 		// Happy flow relying on the default codec.
 		{
-			`{"type": "mytype"}`,
+			`{"fields": {"type": "mytype"}}`,
 			TestCase{
-				Codec:         "plain",
+				Codec: "plain",
+				InputFields: logstash.FieldSet{
+					"type": "mytype",
+				},
 				IgnoredFields: []string{"@version"},
-				Type:          "mytype",
 			},
 		},
 		// Happy flow with a custom codec.
 		{
-			`{"type": "mytype", "codec": "json"}`,
+			`{"fields": {"type": "mytype"}, "codec": "json"}`,
 			TestCase{
-				Codec:         "json",
+				Codec: "json",
+				InputFields: logstash.FieldSet{
+					"type": "mytype",
+				},
 				IgnoredFields: []string{"@version"},
-				Type:          "mytype",
 			},
 		},
 		// Additional fields to ignore are appended to the default.
@@ -108,8 +112,10 @@ func TestCompare(t *testing.T) {
 		// Empty test case with no messages is okay.
 		{
 			&TestCase{
-				File:           "/path/to/filename.json",
-				Type:           "test",
+				File: "/path/to/filename.json",
+				InputFields: logstash.FieldSet{
+					"type": "test",
+				},
 				Codec:          "plain",
 				InputLines:     []string{},
 				ExpectedEvents: []logstash.Event{},
@@ -121,8 +127,10 @@ func TestCompare(t *testing.T) {
 		// Too few messages received.
 		{
 			&TestCase{
-				File:       "/path/to/filename.json",
-				Type:       "test",
+				File: "/path/to/filename.json",
+				InputFields: logstash.FieldSet{
+					"type": "test",
+				},
 				Codec:      "plain",
 				InputLines: []string{},
 				ExpectedEvents: []logstash.Event{
@@ -149,8 +157,10 @@ func TestCompare(t *testing.T) {
 		// Too many messages received.
 		{
 			&TestCase{
-				File:       "/path/to/filename.json",
-				Type:       "test",
+				File: "/path/to/filename.json",
+				InputFields: logstash.FieldSet{
+					"type": "test",
+				},
 				Codec:      "plain",
 				InputLines: []string{},
 				ExpectedEvents: []logstash.Event{
@@ -177,8 +187,10 @@ func TestCompare(t *testing.T) {
 		// Different fields.
 		{
 			&TestCase{
-				File:       "/path/to/filename.json",
-				Type:       "test",
+				File: "/path/to/filename.json",
+				InputFields: logstash.FieldSet{
+					"type": "test",
+				},
 				Codec:      "plain",
 				InputLines: []string{},
 				ExpectedEvents: []logstash.Event{
@@ -212,8 +224,10 @@ func TestCompare(t *testing.T) {
 		// Same field with different values.
 		{
 			&TestCase{
-				File:       "/path/to/filename.json",
-				Type:       "test",
+				File: "/path/to/filename.json",
+				InputFields: logstash.FieldSet{
+					"type": "test",
+				},
 				Codec:      "plain",
 				InputLines: []string{},
 				ExpectedEvents: []logstash.Event{
@@ -247,8 +261,10 @@ func TestCompare(t *testing.T) {
 		// Ignored fields are ignored.
 		{
 			&TestCase{
-				File:          "/path/to/filename.json",
-				Type:          "test",
+				File: "/path/to/filename.json",
+				InputFields: logstash.FieldSet{
+					"type": "test",
+				},
 				Codec:         "plain",
 				IgnoredFields: []string{"ignored"},
 				InputLines:    []string{},
@@ -270,8 +286,10 @@ func TestCompare(t *testing.T) {
 		// Diff command execution errors are propagated correctly.
 		{
 			&TestCase{
-				File:       "/path/to/filename.json",
-				Type:       "test",
+				File: "/path/to/filename.json",
+				InputFields: logstash.FieldSet{
+					"type": "test",
+				},
 				Codec:      "plain",
 				InputLines: []string{},
 				ExpectedEvents: []logstash.Event{
