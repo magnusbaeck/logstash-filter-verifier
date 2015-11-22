@@ -31,7 +31,7 @@ Before you can run Logstash Filter Verifier you need to compile
 it. After covering that, let's start with a simple example and follow
 up with reference documentation.
 
-## Building
+## Building and installing
 
 This program is written in the [Go](https://golang.org/) language and
 needs to be compiled before it can be run. Go compilers are available
@@ -52,7 +52,17 @@ directory name if you like):
     $ go get
     $ go build
 
-If successful you'll find an executable in the current directory.
+If successful you'll find an executable in the current directory. The
+two last commands can be replaced with an invocation of the makefile
+with `make`.
+
+The makefile can also be used to install Logstash Filter Verifier
+centrally, by default in /usr/local/bin but you can change that by
+modifying the PREFIX variable. For example, to install it in $HOME/bin
+(which is probably in your shell's path) you can issue the following
+command:
+
+    $ make install PREFIX=$HOME
 
 ## Examples
 
