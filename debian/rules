@@ -1,0 +1,12 @@
+#!/usr/bin/make -f
+
+%:
+	dh $@
+
+# Override PREFIX so that we don't install files under /usr/local.
+override_dh_auto_install:
+	$(MAKE) \
+	        DESTDIR=$$(pwd)/debian/logstash-filter-verifier \
+	        AM_UPDATE_INFO_DIR=no \
+	        PREFIX=/usr \
+	        install

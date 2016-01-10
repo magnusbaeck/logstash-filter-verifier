@@ -217,6 +217,6 @@ may have the following properties:
 
 ## License
 
-This software is copyright 2015 by Magnus Bäck <<magnus@noun.se>>
+This software is copyright 2015-2016 by Magnus Bäck <<magnus@noun.se>>
 and licensed under the Apache 2.0 license. See the LICENSE file for the full
 license text.

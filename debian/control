@@ -1,0 +1,16 @@
+Source: logstash-filter-verifier
+Maintainer: Magnus Bäck <magnus@noun.se>
+Section: devel
+Priority: optional
+Standards-Version: 3.9.6
+Build-Depends: debhelper (>= 9), devscripts, git, golang-go | go-compiler
+
+Package: logstash-filter-verifier
+Architecture: any
+Description: Test framework for Logstash filter configuration files
+ Lets you verify the correctness of your Logstash filters by running
+ Logstash and feeding it log data defined in test case files that also
+ contain the corresponding output events that you expect. If Logstash
+ doesn't produce the expected events the test fails and the diff between
+ the expected and actual events is shown.
+Depends: ${shlibs:Depends}, ${misc:Depends}

@@ -1,0 +1,5 @@
+logstash-filter-verifier (1.0.0) RELEASED; urgency=medium
+
+  * Initial release.
+
+ -- Magnus Bäck <magnus@noun.se>  Sun, 10 Jan 2016 21:07:19 +0100
