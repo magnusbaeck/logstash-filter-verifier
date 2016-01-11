@@ -1,4 +1,4 @@
-// Copyright (c) 2015 Magnus Bäck <magnus@noun.se>
+// Copyright (c) 2015-2016 Magnus Bäck <magnus@noun.se>
 
 package logstash
 
@@ -63,7 +63,7 @@ func NewProcess(logstashPath, inputCodec string, fields FieldSet, configs ...str
 		"-e",
 		fmt.Sprintf(
 			"input { stdin { codec => %q add_field => %s } } "+
-				"output { file { path => %q codec => \"json\" } }",
+				"output { file { path => %q codec => \"json_lines\" } }",
 			inputCodec, fieldHash, outputFile.Name()),
 		"--log",
 		logFile.Name(),
