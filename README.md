@@ -40,6 +40,7 @@ Linux distributions make some version of the Go compiler easily
 installable, but otherwise you can [download and install the latest
 version](https://golang.org/dl/). You should be able to compile the
 source code with any reasonable up to date version of the Go compiler.
+The build process also requires GNU make.
 
 To download and compile the source, run these commands (pick another
 directory name if you like):
@@ -49,8 +50,7 @@ directory name if you like):
     $ export GOPATH=$(pwd)
     $ go get github.com/magnusbaeck/logstash-filter-verifier
     $ cd src/github.com/magnusbaeck/logstash-filter-verifier
-    $ go get
-    $ go build
+    $ make
 
 If successful you'll find an executable in the current directory. The
 two last commands can be replaced with an invocation of the makefile

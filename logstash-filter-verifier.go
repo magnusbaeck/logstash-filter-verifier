@@ -1,4 +1,4 @@
-// Copyright (c) 2015 Magnus Bäck <magnus@noun.se>
+// Copyright (c) 2015-2016 Magnus Bäck <magnus@noun.se>
 
 package main
 
@@ -106,6 +106,7 @@ func userError(format string, a ...interface{}) {
 }
 
 func main() {
+	kingpin.Version(fmt.Sprintf("%s %s", kingpin.CommandLine.Name, VERSION))
 	kingpin.Parse()
 
 	level, err := oplogging.LogLevel(*loglevel)

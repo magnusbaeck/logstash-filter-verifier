@@ -15,9 +15,25 @@ all: logstash-filter-verifier
 # Depend on this target to force a rebuild every time.
 .FORCE:
 
+# Generate version.go based on the "git describe" output so that
+# the reported version number is always descriptive and useful.
+# This rule must always run but the target file is only updated if
+# there's an actual change in the version number.
+.PRECIOUS: version.go
+version.go: .FORCE
+	TMPFILE=$$(mktemp $@.XXXX) && \
+	    echo "package main" >> $$TMPFILE && \
+	    echo "const VERSION = \"$$(git describe --tags --always)\"" \
+	            >> $$TMPFILE && \
+	    gofmt -w $$TMPFILE && \
+	    if ! cmp --quiet $$TMPFILE $@ ; then \
+	        mv $$TMPFILE $@ ; \
+	    fi && \
+	    rm -f $$TMPFILE
+
 # The Go compiler is fast and pretty good about figuring out what to
 # build so we don't try to to outsmart it.
-logstash-filter-verifier: .FORCE
+logstash-filter-verifier: .FORCE version.go
 	go get
 	go build
 
