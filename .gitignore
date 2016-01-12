@@ -1,2 +1,4 @@
+/coverage.html
 /logstash-filter-verifier
 /version.go
+*.coverprofile

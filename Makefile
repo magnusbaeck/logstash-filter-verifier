@@ -9,6 +9,10 @@ DEST_DIR :=
 # /opt/logstash-filter-verifier.
 PREFIX := /usr/local
 
+GOCOV      := $(GOPATH)/bin/gocov
+GOCOV_HTML := $(GOPATH)/bin/gocov-html
+OVERALLS   := $(GOPATH)/bin/overalls
+
 .PHONY: all
 all: logstash-filter-verifier
 
@@ -30,6 +34,15 @@ version.go: .FORCE
 	        mv $$TMPFILE $@ ; \
 	    fi && \
 	    rm -f $$TMPFILE
+
+$(GOCOV):
+	go get github.com/axw/gocov/gocov
+
+$(GOCOV_HTML):
+	go get gopkg.in/matm/v1/gocov-html
+
+$(OVERALLS):
+	go get github.com/go-playground/overalls
 
 # The Go compiler is fast and pretty good about figuring out what to
 # build so we don't try to to outsmart it.
@@ -67,3 +80,8 @@ deb:
 install: logstash-filter-verifier
 	mkdir -p $(DESTDIR)$(PREFIX)/bin
 	install -m 0755 --strip logstash-filter-verifier $(DESTDIR)$(PREFIX)/bin
+
+.PHONY: test
+test: $(GOCOV) $(GOCOV_HTML) $(OVERALLS) logstash-filter-verifier
+	$(OVERALLS) -project=$$(go list .) -covermode=count -debug
+	$(GOCOV) convert overalls.coverprofile | $(GOCOV_HTML) > coverage.html
