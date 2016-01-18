@@ -59,6 +59,8 @@ func NewProcess(logstashPath, inputCodec string, fields FieldSet, configs ...str
 		return nil, err
 	}
 	args := []string{
+		"--filterworkers", // Make messages arrive in order.
+		"1",
 		"--debug",
 		"-e",
 		fmt.Sprintf(
