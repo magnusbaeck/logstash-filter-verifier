@@ -48,7 +48,7 @@ directory name if you like):
     $ mkdir ~/go
     $ cd ~/go
     $ export GOPATH=$(pwd)
-    $ go get github.com/magnusbaeck/logstash-filter-verifier
+    $ go get -d github.com/magnusbaeck/logstash-filter-verifier
     $ cd src/github.com/magnusbaeck/logstash-filter-verifier
     $ make
 
