@@ -82,7 +82,7 @@ about a handful of supported properties.
 {
   "fields": {
     "type": "syslog"
-  }
+  },
   "input": [
     "Oct  6 20:55:29 myhost myprogram[31993]: This is a test message"
   ],
