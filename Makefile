@@ -5,16 +5,25 @@
 # directory for normal use you should modify PREFIX instead.
 DEST_DIR :=
 
+ifeq ($(OS),Windows_NT)
+EXEC_SUFFIX := .exe
+else
+EXEC_SUFFIX :=
+endif
+
 # Installation prefix directory. Could be changed to e.g. /usr or
 # /opt/logstash-filter-verifier.
 PREFIX := /usr/local
 
-GOCOV      := $(GOPATH)/bin/gocov
-GOCOV_HTML := $(GOPATH)/bin/gocov-html
-OVERALLS   := $(GOPATH)/bin/overalls
+# The name of the executable produced by this makefile.
+PROGRAM := logstash-filter-verifier
+
+GOCOV      := $(GOPATH)/bin/gocov$(EXEC_SUFFIX)
+GOCOV_HTML := $(GOPATH)/bin/gocov-html$(EXEC_SUFFIX)
+OVERALLS   := $(GOPATH)/bin/overalls$(EXEC_SUFFIX)
 
 .PHONY: all
-all: logstash-filter-verifier
+all: $(PROGRAM)$(EXEC_SUFFIX)
 
 # Depend on this target to force a rebuild every time.
 .FORCE:
@@ -46,13 +55,13 @@ $(OVERALLS):
 
 # The Go compiler is fast and pretty good about figuring out what to
 # build so we don't try to to outsmart it.
-logstash-filter-verifier: .FORCE version.go
+$(PROGRAM)$(EXEC_SUFFIX): .FORCE version.go
 	go get
-	go build
+	go build -o $@
 
 .PHONY: clean
 clean:
-	rm -f logstash-filter-verifier
+	rm -f $(PROGRAM)$(EXEC_SUFFIX)
 
 # To be able to build a Debian package from any commit and get a
 # meaningful result, use "git describe" to find the current version
@@ -77,11 +86,11 @@ deb:
 	debuild --preserve-envvar GOPATH -uc -us
 
 .PHONY: install
-install: logstash-filter-verifier
+install: $(PROGRAM)$(EXEC_SUFFIX)
 	mkdir -p $(DESTDIR)$(PREFIX)/bin
-	install -m 0755 --strip logstash-filter-verifier $(DESTDIR)$(PREFIX)/bin
+	install -m 0755 --strip $(PROGRAM)$(EXEC_SUFFIX) $(DESTDIR)$(PREFIX)/bin
 
 .PHONY: test
-test: $(GOCOV) $(GOCOV_HTML) $(OVERALLS) logstash-filter-verifier
+test: $(GOCOV) $(GOCOV_HTML) $(OVERALLS) $(PROGRAM)$(EXEC_SUFFIX)
 	$(OVERALLS) -project=$$(go list .) -covermode=count -debug
 	$(GOCOV) convert overalls.coverprofile | $(GOCOV_HTML) > coverage.html
