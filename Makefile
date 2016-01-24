@@ -18,6 +18,13 @@ PREFIX := /usr/local
 # The name of the executable produced by this makefile.
 PROGRAM := logstash-filter-verifier
 
+# List of all GOOS_GOARCH combinations that we should build release
+# binaries for. See https://golang.org/doc/install/source#environment
+# for all available combinations.
+TARGETS := darwin_amd64 linux_386 linux_amd64 windows_386 windows_amd64
+
+VERSION := $(shell git describe --tags --always)
+
 GOCOV      := $(GOPATH)/bin/gocov$(EXEC_SUFFIX)
 GOCOV_HTML := $(GOPATH)/bin/gocov-html$(EXEC_SUFFIX)
 OVERALLS   := $(GOPATH)/bin/overalls$(EXEC_SUFFIX)
@@ -36,8 +43,7 @@ all: $(PROGRAM)$(EXEC_SUFFIX)
 version.go: .FORCE
 	TMPFILE=$$(mktemp $@.XXXX) && \
 	    echo "package main" >> $$TMPFILE && \
-	    echo "const VERSION = \"$$(git describe --tags --always)\"" \
-	            >> $$TMPFILE && \
+	    echo "const VERSION = \"$(VERSION)\"" >> $$TMPFILE && \
 	    gofmt -w $$TMPFILE && \
 	    if ! cmp --quiet $$TMPFILE $@ ; then \
 	        mv $$TMPFILE $@ ; \
@@ -56,12 +62,13 @@ $(OVERALLS):
 # The Go compiler is fast and pretty good about figuring out what to
 # build so we don't try to to outsmart it.
 $(PROGRAM)$(EXEC_SUFFIX): .FORCE version.go
-	go get
+	go get -d
 	go build -o $@
 
 .PHONY: clean
 clean:
 	rm -f $(PROGRAM)$(EXEC_SUFFIX)
+	rm -rf dist
 
 # To be able to build a Debian package from any commit and get a
 # meaningful result, use "git describe" to find the current version
@@ -77,7 +84,7 @@ clean:
 deb:
 	CURRENT_VERSION=$$(sed -n '1s/^[^ ]* (\([^)]*\)).*/\1/p' \
 	        < debian/changelog) && \
-	    ACTUAL_VERSION=$$(git describe --tags --always | \
+	    ACTUAL_VERSION=$$(echo "$(VERSION)" | \
 	            sed 's/-rc/~rc/; s/-/+/g') && \
 	    if [ "$$CURRENT_VERSION" != "$$ACTUAL_VERSION" ] ; then \
 	        dch --force-bad-version --newversion $$ACTUAL_VERSION \
@@ -89,6 +96,26 @@ deb:
 install: $(PROGRAM)$(EXEC_SUFFIX)
 	mkdir -p $(DESTDIR)$(PREFIX)/bin
 	install -m 0755 --strip $(PROGRAM)$(EXEC_SUFFIX) $(DESTDIR)$(PREFIX)/bin
+
+.PHONY: release-tarballs
+release-tarballs: dist/$(PROGRAM)_$(VERSION).tar.gz \
+    $(addsuffix .tar.gz,$(addprefix dist/$(PROGRAM)_$(VERSION)_,$(TARGETS)))
+
+dist/$(PROGRAM)_$(VERSION).tar.gz:
+	mkdir -p $(dir $@)
+	git archive --output=$@ HEAD
+
+dist/$(PROGRAM)_$(VERSION)_%.tar.gz: version.go
+	mkdir -p $(dir $@)
+	export GOOS="$$(basename $@ .tar.gz | awk -F_ '{print $$3}')" && \
+	    export GOARCH="$$(basename $@ .tar.gz | awk -F_ '{print $$4}')" && \
+	    export DISTDIR=dist/$${GOOS}_$${GOARCH} && \
+	    if [ $$GOOS = "windows" ] ; then export EXEC_SUFFIX=".exe" ; fi && \
+	    mkdir -p $$DISTDIR && \
+	    cp README.md LICENSE $$DISTDIR && \
+	    go build -o $$DISTDIR/$(PROGRAM)$$EXEC_SUFFIX && \
+	    tar -C $$DISTDIR -zcpf $@ . && \
+	    rm -rf $$DISTDIR
 
 .PHONY: test
 test: $(GOCOV) $(GOCOV_HTML) $(OVERALLS) $(PROGRAM)$(EXEC_SUFFIX)
