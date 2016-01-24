@@ -3,7 +3,7 @@
 # Installation root directory. Should be left alone except for
 # e.g. package installations. If you want to control the installation
 # directory for normal use you should modify PREFIX instead.
-DEST_DIR :=
+DESTDIR :=
 
 ifeq ($(OS),Windows_NT)
 EXEC_SUFFIX := .exe
