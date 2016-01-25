@@ -1,5 +1,10 @@
 # Copyright (c) 2015-2016 Magnus Bäck <magnus@noun.se>
 
+# An empty GOPATH can result in slightly confusing error messages.
+ifeq ($(GOPATH),)
+$(error The GOPATH environment variable needs to be set)
+endif
+
 # Installation root directory. Should be left alone except for
 # e.g. package installations. If you want to control the installation
 # directory for normal use you should modify PREFIX instead.
