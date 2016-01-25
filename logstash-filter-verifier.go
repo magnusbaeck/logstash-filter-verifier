@@ -34,7 +34,7 @@ var (
 	logstashPath = kingpin.
 			Flag("logstash-path", "Set the path to the Logstash executable.").
 			Default("/opt/logstash/bin/logstash").
-			ExistingFile()
+			String()
 
 	// Arguments
 	testcasePath = kingpin.
