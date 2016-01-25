@@ -24,7 +24,7 @@ var (
 
 	// Flags
 	diffCommand = kingpin.
-			Flag("diff-command", "The command to run to compare two events. The command will receive the two files to compare as arguments.").
+			Flag("diff-command", "Set the command to run to compare two events. The command will receive the two files to compare as arguments.").
 			Default("diff -u").
 			String()
 	loglevel = kingpin.
