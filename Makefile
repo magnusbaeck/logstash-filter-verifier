@@ -35,6 +35,7 @@ VERSION := $(shell git describe --tags --always)
 
 GOCOV      := $(GOPATH)/bin/gocov$(EXEC_SUFFIX)
 GOCOV_HTML := $(GOPATH)/bin/gocov-html$(EXEC_SUFFIX)
+GPM        := $(GOPATH)/bin/gpm
 OVERALLS   := $(GOPATH)/bin/overalls$(EXEC_SUFFIX)
 
 .PHONY: all
@@ -58,25 +59,33 @@ version.go: .FORCE
 	    fi && \
 	    rm -f $$TMPFILE
 
-$(GOCOV):
-	go get github.com/axw/gocov/gocov
+$(GOCOV): deps
+	go install github.com/axw/gocov/gocov
 
-$(GOCOV_HTML):
-	go get gopkg.in/matm/v1/gocov-html
+$(GOCOV_HTML): deps
+	go install gopkg.in/matm/v1/gocov-html
 
-$(OVERALLS):
-	go get github.com/go-playground/overalls
+$(GPM):
+	curl --silent --show-error \
+	    https://raw.githubusercontent.com/pote/gpm/v1.4.0/bin/gpm > $@
+	chmod +x $@
+
+$(OVERALLS): deps
+	go install github.com/go-playground/overalls
 
 # The Go compiler is fast and pretty good about figuring out what to
 # build so we don't try to to outsmart it.
-$(PROGRAM)$(EXEC_SUFFIX): .FORCE version.go
-	go get -d
+$(PROGRAM)$(EXEC_SUFFIX): .FORCE version.go deps
 	go build -o $@
 
 .PHONY: clean
 clean:
-	rm -f $(PROGRAM)$(EXEC_SUFFIX)
+	rm -f $(PROGRAM)$(EXEC_SUFFIX) $(GOCOV) $(GOCOV_HTML) $(GPM) $(OVERALLS)
 	rm -rf dist
+
+.PHONY: deps
+deps: $(GPM) Godeps
+	$(GPM) get
 
 # To be able to build a Debian package from any commit and get a
 # meaningful result, use "git describe" to find the current version
