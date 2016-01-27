@@ -2,3 +2,4 @@
 /*.debhelper.log
 /*.substvars
 /files
+/logstash-filter-verifier/
