@@ -16,6 +16,9 @@ else
 EXEC_SUFFIX :=
 endif
 
+# The Docker image to use when building release images.
+GOLANG_DOCKER_IMAGE := golang:1.5.3
+
 # Installation prefix directory. Could be changed to e.g. /usr or
 # /opt/logstash-filter-verifier.
 PREFIX := /usr/local
@@ -112,13 +115,16 @@ dist/$(PROGRAM)_$(VERSION).tar.gz:
 
 dist/$(PROGRAM)_$(VERSION)_%.tar.gz: version.go
 	mkdir -p $(dir $@)
-	export GOOS="$$(basename $@ .tar.gz | awk -F_ '{print $$3}')" && \
-	    export GOARCH="$$(basename $@ .tar.gz | awk -F_ '{print $$4}')" && \
-	    export DISTDIR=dist/$${GOOS}_$${GOARCH} && \
-	    if [ $$GOOS = "windows" ] ; then export EXEC_SUFFIX=".exe" ; fi && \
+	GOOS="$$(basename $@ .tar.gz | awk -F_ '{print $$3}')" && \
+	    GOARCH="$$(basename $@ .tar.gz | awk -F_ '{print $$4}')" && \
+	    DISTDIR=dist/$${GOOS}_$${GOARCH} && \
+	    if [ $$GOOS = "windows" ] ; then EXEC_SUFFIX=".exe" ; fi && \
 	    mkdir -p $$DISTDIR && \
 	    cp README.md LICENSE $$DISTDIR && \
-	    go build -o $$DISTDIR/$(PROGRAM)$$EXEC_SUFFIX && \
+	    docker run -it --rm -v $$GOPATH:$$GOPATH -w $$(pwd) \
+	        -e GOPATH=$$GOPATH -e GOOS=$$GOOS -e GOARCH=$$GOARCH \
+	        $(GOLANG_DOCKER_IMAGE) \
+	        go build -o $$DISTDIR/$(PROGRAM)$$EXEC_SUFFIX && \
 	    tar -C $$DISTDIR -zcpf $@ . && \
 	    rm -rf $$DISTDIR
 
