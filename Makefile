@@ -19,6 +19,8 @@ endif
 # The Docker image to use when building release images.
 GOLANG_DOCKER_IMAGE := golang:1.5.3
 
+INSTALL := install
+
 # Installation prefix directory. Could be changed to e.g. /usr or
 # /opt/logstash-filter-verifier.
 PREFIX := /usr/local
@@ -110,9 +112,11 @@ deb:
 	debuild --preserve-envvar GOPATH -uc -us
 
 .PHONY: install
-install: $(PROGRAM)$(EXEC_SUFFIX)
-	mkdir -p $(DESTDIR)$(PREFIX)/bin
-	install -m 0755 --strip $(PROGRAM)$(EXEC_SUFFIX) $(DESTDIR)$(PREFIX)/bin
+install: $(DESTDIR)$(PREFIX)/bin/$(PROGRAM)$(EXEC_SUFFIX)
+
+$(DESTDIR)$(PREFIX)/bin/%: %
+	mkdir -p $(dir $@)
+	$(INSTALL) -m 0755 --strip $< $@
 
 .PHONY: release-tarballs
 release-tarballs: dist/$(PROGRAM)_$(VERSION).tar.gz \
