@@ -35,10 +35,11 @@ TARGETS := darwin_amd64 linux_386 linux_amd64 windows_386 windows_amd64
 
 VERSION := $(shell git describe --tags --always)
 
-GOCOV      := $(GOPATH)/bin/gocov$(EXEC_SUFFIX)
-GOCOV_HTML := $(GOPATH)/bin/gocov-html$(EXEC_SUFFIX)
-GPM        := $(GOPATH)/bin/gpm
-OVERALLS   := $(GOPATH)/bin/overalls$(EXEC_SUFFIX)
+GOCOV        := $(GOPATH)/bin/gocov$(EXEC_SUFFIX)
+GOCOV_HTML   := $(GOPATH)/bin/gocov-html$(EXEC_SUFFIX)
+GOMETALINTER := $(GOPATH)/bin/gometalinter
+GPM          := $(GOPATH)/bin/gpm
+OVERALLS     := $(GOPATH)/bin/overalls$(EXEC_SUFFIX)
 
 .PHONY: all
 all: $(PROGRAM)$(EXEC_SUFFIX)
@@ -67,6 +68,12 @@ $(GOCOV): deps
 $(GOCOV_HTML): deps
 	go install gopkg.in/matm/v1/gocov-html
 
+# Should ideally list all its dependencies in the Godeps file
+# and not use gometalinter for the installation.
+$(GOMETALINTER): deps
+	go install github.com/alecthomas/gometalinter
+	$@ --install --update
+
 $(GPM):
 	curl --silent --show-error \
 	    https://raw.githubusercontent.com/pote/gpm/v1.4.0/bin/gpm > $@
@@ -79,6 +86,10 @@ $(OVERALLS): deps
 # build so we don't try to to outsmart it.
 $(PROGRAM)$(EXEC_SUFFIX): .FORCE version.go deps
 	go build -o $@
+
+.PHONY: check
+check: $(GOMETALINTER)
+	PATH=$$PATH:$(GOPATH)/bin gometalinter --deadline 15s --enable=gofmt ./...
 
 .PHONY: clean
 clean:
