@@ -94,7 +94,7 @@ func TestDiscoverTests_Directory(t *testing.T) {
 			t.Errorf("Test %d:\nExpected:\n%v\nGot:\n%v", cnum, sexpected, filenames)
 			break
 		}
-		for i, _ := range sexpected {
+		for i := range sexpected {
 			if sexpected[i] != filenames[i] {
 				t.Errorf("Test %d: Expected item %d to be %q, got %q instead.", cnum, i, sexpected[i], filenames[i])
 			}
