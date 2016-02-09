@@ -77,7 +77,9 @@ func TestNewFromFile(t *testing.T) {
 	}
 	defer os.RemoveAll(tempdir)
 	defer os.Chdir(olddir)
-	os.Chdir(tempdir)
+	if err = os.Chdir(tempdir); err != nil {
+		t.Fatalf(err.Error())
+	}
 
 	fullTestCasePath := filepath.Join(tempdir, "test.json")
 	if err = ioutil.WriteFile(fullTestCasePath, []byte(`{"type": "test"}`), 0644); err != nil {

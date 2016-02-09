@@ -64,9 +64,14 @@ func runTests(logstashPath string, tests []testcase.TestCase, configPaths []stri
 		}
 
 		for _, line := range t.InputLines {
-			p.Input.Write([]byte(line + "\n"))
+			_, err = p.Input.Write([]byte(line + "\n"))
+			if err != nil {
+				return err
+			}
 		}
-		p.Input.Close()
+		if err = p.Input.Close(); err != nil {
+			return err
+		}
 
 		result, err := p.Wait()
 		if err != nil {

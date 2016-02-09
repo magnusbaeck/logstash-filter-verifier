@@ -50,7 +50,7 @@ func NewProcess(logstashPath, inputCodec string, fields FieldSet, configs ...str
 	}
 	logFile, err := NewDeletedTempFile("", "")
 	if err != nil {
-		outputFile.Close()
+		_ = outputFile.Close()
 		return nil, err
 	}
 
@@ -85,8 +85,8 @@ func NewProcess(logstashPath, inputCodec string, fields FieldSet, configs ...str
 
 	inputPipe, err := c.StdinPipe()
 	if err != nil {
-		outputFile.Close()
-		logFile.Close()
+		_ = outputFile.Close()
+		_ = logFile.Close()
 		return nil, err
 	}
 
@@ -144,6 +144,6 @@ func (p *Process) Wait() (*Result, error) {
 
 // Release frees all allocated resources connected to this process.
 func (p *Process) Release() {
-	p.output.Close()
-	p.log.Close()
+	_ = p.output.Close()
+	_ = p.log.Close()
 }
