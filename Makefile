@@ -55,7 +55,7 @@ all: $(PROGRAM)$(EXEC_SUFFIX)
 version.go: .FORCE
 	TMPFILE=$$(mktemp $@.XXXX) && \
 	    echo "package main" >> $$TMPFILE && \
-	    echo "const VERSION = \"$(VERSION)\"" >> $$TMPFILE && \
+	    echo "const version = \"$(VERSION)\"" >> $$TMPFILE && \
 	    gofmt -w $$TMPFILE && \
 	    if ! cmp --quiet $$TMPFILE $@ ; then \
 	        mv $$TMPFILE $@ ; \

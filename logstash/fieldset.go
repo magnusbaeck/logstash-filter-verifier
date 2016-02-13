@@ -1,4 +1,4 @@
-// Copyright (c) 2015 Magnus Bäck <magnus@noun.se>
+// Copyright (c) 2015-2016 Magnus Bäck <magnus@noun.se>
 
 package logstash
 
@@ -8,6 +8,9 @@ import (
 	"strings"
 )
 
+// FieldSet contains a set of fields for a Logstash event and can be
+// marshalled as a Logstash-compatible string that's acceptable to an
+// add_field option for an input or filter.
 type FieldSet map[string]interface{}
 
 // IsValid inspects the field set and returns an error if there are

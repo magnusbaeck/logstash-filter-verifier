@@ -1,4 +1,4 @@
-// Copyright (c) 2015 Magnus Bäck <magnus@noun.se>
+// Copyright (c) 2015-2016 Magnus Bäck <magnus@noun.se>
 
 package testcase
 
@@ -22,7 +22,7 @@ import (
 type TestCase struct {
 	// File is the absolute path to the file from which this
 	// test case was read.
-	File string `json:-`
+	File string `json:"-"`
 
 	// Codec names the Logstash codec that should be used when
 	// events are read. This is normally "plain" or "json".
@@ -119,7 +119,9 @@ func NewFromFile(path string) (*TestCase, error) {
 	if err != nil {
 		return nil, err
 	}
-	defer f.Close()
+	defer func() {
+		_ = f.Close()
+	}()
 
 	tc, err := New(f)
 	if err != nil {
@@ -190,9 +192,8 @@ func (tc *TestCase) Compare(events []logstash.Event, quiet bool, diffCommand []s
 	}
 	if len(result.Mismatches) == 0 {
 		return nil
-	} else {
-		return result
 	}
+	return result
 }
 
 // marshalToFile pretty-prints a logstash.Event and writes it to a

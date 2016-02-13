@@ -1,4 +1,4 @@
-// Copyright (c) 2015 Magnus Bäck <magnus@noun.se>
+// Copyright (c) 2015-2016 Magnus Bäck <magnus@noun.se>
 
 package testcase
 
@@ -56,10 +56,10 @@ func TestNew(t *testing.T) {
 			t.Errorf("Test %d: %q input: %s", i, c.input, err)
 			break
 		}
-		resultJson := marshalTestCase(t, tc)
-		expectedJson := marshalTestCase(t, &c.expected)
-		if expectedJson != resultJson {
-			t.Errorf("Test %d:\nExpected:\n%s\nGot:\n%s", i, expectedJson, resultJson)
+		resultJSON := marshalTestCase(t, tc)
+		expectedJSON := marshalTestCase(t, &c.expected)
+		if expectedJSON != resultJSON {
+			t.Errorf("Test %d:\nExpected:\n%s\nGot:\n%s", i, expectedJSON, resultJSON)
 		}
 	}
 }

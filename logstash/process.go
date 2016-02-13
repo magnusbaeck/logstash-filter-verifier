@@ -44,11 +44,11 @@ func NewProcess(logstashPath, inputCodec string, fields FieldSet, configs ...str
 	// messages could very well be sent there too. Mitigate by
 	// having Logstash write output logs to a temporary file and
 	// its own logs to a different temporary file.
-	outputFile, err := NewDeletedTempFile("", "")
+	outputFile, err := newDeletedTempFile("", "")
 	if err != nil {
 		return nil, err
 	}
-	logFile, err := NewDeletedTempFile("", "")
+	logFile, err := newDeletedTempFile("", "")
 	if err != nil {
 		_ = outputFile.Close()
 		return nil, err

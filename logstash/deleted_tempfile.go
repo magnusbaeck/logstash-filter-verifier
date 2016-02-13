@@ -1,4 +1,4 @@
-// Copyright (c) 2015 Magnus Bäck <magnus@noun.se>
+// Copyright (c) 2015-2016 Magnus Bäck <magnus@noun.se>
 
 package logstash
 
@@ -17,7 +17,7 @@ type deletedTempFile struct {
 // deleted upon closing. It uses the TempFile function from io/ioutil
 // for the creation of the file and the dir and prefix parameters are
 // passed straight through.
-func NewDeletedTempFile(dir, prefix string) (*deletedTempFile, error) {
+func newDeletedTempFile(dir, prefix string) (*deletedTempFile, error) {
 	f, err := ioutil.TempFile(dir, prefix)
 	if err != nil {
 		return nil, err

@@ -18,8 +18,6 @@ import (
 )
 
 var (
-	log = logging.MustGetLogger()
-
 	loglevels = []string{"CRITICAL", "ERROR", "WARNING", "NOTICE", "INFO", "DEBUG"}
 
 	// Flags
@@ -77,9 +75,8 @@ func runTests(logstashPath string, tests []testcase.TestCase, configPaths []stri
 		if err != nil {
 			if result.Log != "" {
 				return fmt.Errorf("Error running Logstash: %s. Process output:\n%s", err, result.Log)
-			} else {
-				return fmt.Errorf("Error running Logstash: %s. The process gave no output.", err)
 			}
+			return fmt.Errorf("Error running Logstash: %s. The process gave no output.", err)
 		}
 		if err = t.Compare(result.Events, false, diffCommand); err != nil {
 			userError("Testcase failed, continuing with the rest: %s", err.Error())
@@ -115,7 +112,7 @@ func userError(format string, a ...interface{}) {
 }
 
 func main() {
-	kingpin.Version(fmt.Sprintf("%s %s", kingpin.CommandLine.Name, VERSION))
+	kingpin.Version(fmt.Sprintf("%s %s", kingpin.CommandLine.Name, version))
 	kingpin.Parse()
 
 	level, err := oplogging.LogLevel(*loglevel)
