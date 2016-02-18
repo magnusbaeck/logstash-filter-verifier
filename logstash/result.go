@@ -1,4 +1,4 @@
-// Copyright (c) 2015 Magnus Bäck <magnus@noun.se>
+// Copyright (c) 2015-2016 Magnus Bäck <magnus@noun.se>
 
 package logstash
 
@@ -15,6 +15,11 @@ type Result struct {
 
 	// Log contains the contents of the Logstash log file.
 	Log string
+
+	// Output contains stdout and stderr output (if any) of
+	// the Logstash process. If the process fails during
+	// initialization clues can probably be found here.
+	Output string
 }
 
 // Event represents a Logstash event, i.e. basically a JSON document.

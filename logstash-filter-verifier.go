@@ -73,10 +73,18 @@ func runTests(logstashPath string, tests []testcase.TestCase, configPaths []stri
 
 		result, err := p.Wait()
 		if err != nil {
-			if result.Log != "" {
-				return fmt.Errorf("Error running Logstash: %s. Process output:\n%s", err, result.Log)
+			message := fmt.Sprintf("Error running Logstash: %s.", err)
+			if result.Output != "" {
+				message += fmt.Sprintf("\nProcess output:\n%s", result.Output)
+			} else {
+				message += "\nThe process wrote nothing to stdout or stderr."
 			}
-			return fmt.Errorf("Error running Logstash: %s. The process gave no output.", err)
+			if result.Log != "" {
+				message += fmt.Sprintf("\nLog:\n%s", result.Log)
+			} else {
+				message += "\nThe process wrote nothing to its logfile."
+			}
+			return errors.New(message)
 		}
 		if err = t.Compare(result.Events, false, diffCommand); err != nil {
 			userError("Testcase failed, continuing with the rest: %s", err.Error())

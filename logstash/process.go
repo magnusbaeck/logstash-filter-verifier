@@ -4,6 +4,7 @@ package logstash
 
 import (
 	"bufio"
+	"bytes"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -24,6 +25,7 @@ type Process struct {
 	child  *exec.Cmd
 	log    io.ReadCloser
 	output io.ReadCloser
+	stdio  io.Reader
 }
 
 // NewProcess prepares for the execution of a new Logstash process but
@@ -76,6 +78,13 @@ func NewProcess(logstashPath, inputCodec string, fields FieldSet, configs ...str
 	}
 	c := exec.Command(logstashPath, args...)
 
+	// Save the process's stdout and stderr since an early startup
+	// failure (e.g. JVM issues) will get dumped there and not in
+	// the log file.
+	var b bytes.Buffer
+	c.Stdout = &b
+	c.Stderr = &b
+
 	// The test cases must be written to be stable and independent
 	// of the current timezone to there's no risk of a @timestamp
 	// mismatch just because we've gone into daylight savings time.
@@ -95,6 +104,7 @@ func NewProcess(logstashPath, inputCodec string, fields FieldSet, configs ...str
 		child:  c,
 		output: outputFile,
 		log:    logFile,
+		stdio:  &b,
 	}, nil
 }
 
@@ -122,8 +132,11 @@ func (p *Process) Wait() (*Result, error) {
 		// report that problem anyway.
 		log.Error("Error reading the Logstash logfile: %s", logerr.Error())
 	}
+	outbuf, _ := ioutil.ReadAll(p.stdio)
+
 	result := Result{
 		Log:     string(logbuf),
+		Output:  string(outbuf),
 		Success: waiterr == nil,
 	}
 	if waiterr != nil {
