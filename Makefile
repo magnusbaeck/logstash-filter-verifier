@@ -89,7 +89,8 @@ $(PROGRAM)$(EXEC_SUFFIX): .FORCE version.go deps
 
 .PHONY: check
 check: $(GOMETALINTER)
-	PATH=$$PATH:$(GOPATH)/bin gometalinter --deadline 15s --enable=gofmt \
+	PATH=$$PATH:$(GOPATH)/bin gometalinter --deadline 15s \
+	    --disable=gotype --enable=gofmt \
 	    '--linter=errcheck:errcheck -ignoretests -abspath .:^(?P<path>[^:]+):(?P<line>\d+):(?P<col>\d+)\t(?P<message>.*)$$' \
 	    ./...
 
