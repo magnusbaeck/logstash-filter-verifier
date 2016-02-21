@@ -111,7 +111,7 @@ func NewProcess(logstashPath, inputCodec string, fields FieldSet, configs ...str
 // Start starts a Logstash child process with the previously supplied
 // configuration.
 func (p *Process) Start() error {
-	log.Info("Starting %q with args %q.", p.child.Path, p.child.Args)
+	log.Info("Starting %q with args %q.", p.child.Path, p.child.Args[1:])
 	return p.child.Start()
 }
 
