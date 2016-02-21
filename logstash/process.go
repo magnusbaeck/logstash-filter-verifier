@@ -3,9 +3,7 @@
 package logstash
 
 import (
-	"bufio"
 	"bytes"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -146,16 +144,10 @@ func (p *Process) Wait() (*Result, error) {
 		return &result, waiterr
 	}
 
-	scanner := bufio.NewScanner(p.output)
-	for scanner.Scan() {
-		var event Event
-		err := json.Unmarshal([]byte(scanner.Text()), &event)
-		if err != nil {
-			return &result, fmt.Errorf("Logstash succeeded, but this output line couldn't be parsed as JSON: %s", scanner.Text())
-		}
-		result.Events = append(result.Events, event)
-	}
-	return &result, scanner.Err()
+	var err error
+	result.Events, err = readEvents(p.output)
+	result.Success = err == nil
+	return &result, err
 }
 
 // Release frees all allocated resources connected to this process.
