@@ -118,6 +118,9 @@ func (p *Process) Start() error {
 // Wait blocks until the started Logstash process terminates and
 // returns the result of the execution.
 func (p *Process) Wait() (*Result, error) {
+	if p.child.Process == nil {
+		return nil, errors.New("Can't wait on an unborn process.")
+	}
 	log.Debug("Waiting for child with pid %d to terminate.", p.child.Process.Pid)
 
 	waiterr := p.child.Wait()
