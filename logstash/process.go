@@ -74,7 +74,22 @@ func NewProcess(logstashPath, inputCodec string, fields FieldSet, configs ...str
 		args = append(args, "--config")
 		args = append(args, c)
 	}
-	c := exec.Command(logstashPath, args...)
+
+	p, err := newProcessWithArgs(logstashPath, args)
+	if err != nil {
+		_ = outputFile.Close()
+		_ = logFile.Close()
+	}
+	p.output = outputFile
+	p.log = logFile
+	return p, nil
+}
+
+// newProcessWithArgs performs the non-Logstash specific low-level
+// actions of preparing to spawn a child process, making it easier to
+// test the code in this package.
+func newProcessWithArgs(command string, args []string) (*Process, error) {
+	c := exec.Command(command, args...)
 
 	// Save the process's stdout and stderr since an early startup
 	// failure (e.g. JVM issues) will get dumped there and not in
@@ -92,17 +107,13 @@ func NewProcess(logstashPath, inputCodec string, fields FieldSet, configs ...str
 
 	inputPipe, err := c.StdinPipe()
 	if err != nil {
-		_ = outputFile.Close()
-		_ = logFile.Close()
 		return nil, err
 	}
 
 	return &Process{
-		Input:  inputPipe,
-		child:  c,
-		output: outputFile,
-		log:    logFile,
-		stdio:  &b,
+		Input: inputPipe,
+		child: c,
+		stdio: &b,
 	}, nil
 }
 
@@ -136,6 +147,7 @@ func (p *Process) Wait() (*Result, error) {
 	outbuf, _ := ioutil.ReadAll(p.stdio)
 
 	result := Result{
+		Events:  []Event{},
 		Log:     string(logbuf),
 		Output:  string(outbuf),
 		Success: waiterr == nil,
