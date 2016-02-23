@@ -25,6 +25,10 @@ var (
 			Flag("diff-command", "Set the command to run to compare two events. The command will receive the two files to compare as arguments.").
 			Default("diff -u").
 			String()
+	keptEnvVars = kingpin.
+			Flag("keep-env", "Add this environment variable to the list of variables that will be preserved from the calling process's environment. Defaults to an empty list, except TZ which will be set to \"UTC\".").
+			PlaceHolder("VARNAME").
+			Strings()
 	loglevel = kingpin.
 			Flag("loglevel", fmt.Sprintf("Set the desired level of logging (one of: %s).", strings.Join(loglevels, ", "))).
 			Default("WARNING").
@@ -49,10 +53,10 @@ var (
 // slice of test cases and compares the actual events against the
 // expected set. Returns an error if at least one test case fails or
 // if there's a problem running the tests.
-func runTests(logstashPath string, tests []testcase.TestCase, configPaths []string, diffCommand []string) error {
+func runTests(logstashPath string, tests []testcase.TestCase, configPaths []string, diffCommand []string, keptEnvVars []string) error {
 	ok := true
 	for _, t := range tests {
-		p, err := logstash.NewProcess(logstashPath, t.Codec, t.InputFields, configPaths...)
+		p, err := logstash.NewProcess(logstashPath, t.Codec, t.InputFields, keptEnvVars, configPaths...)
 		if err != nil {
 			return err
 		}
@@ -141,7 +145,7 @@ func main() {
 		userError(err.Error())
 		os.Exit(1)
 	}
-	if err = runTests(*logstashPath, tests, *configPaths, diffCmd); err != nil {
+	if err = runTests(*logstashPath, tests, *configPaths, diffCmd, *keptEnvVars); err != nil {
 		userError(err.Error())
 		os.Exit(1)
 	}

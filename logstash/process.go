@@ -8,7 +8,9 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
+	"os"
 	"os/exec"
+	"strings"
 )
 
 // Process represents the invocation and execution of a Logstash child
@@ -32,7 +34,7 @@ type Process struct {
 // the desired codec for the stdin input and inputType the value of
 // the "type" field for ingested events. The configs parameter is
 // one or more configuration files containing Logstash filters.
-func NewProcess(logstashPath, inputCodec string, fields FieldSet, configs ...string) (*Process, error) {
+func NewProcess(logstashPath, inputCodec string, fields FieldSet, keptEnvVars []string, configs ...string) (*Process, error) {
 	if len(configs) == 0 {
 		return nil, errors.New("Must provide non-empty list of configuration file or directory names.")
 	}
@@ -75,7 +77,7 @@ func NewProcess(logstashPath, inputCodec string, fields FieldSet, configs ...str
 		args = append(args, c)
 	}
 
-	p, err := newProcessWithArgs(logstashPath, args)
+	p, err := newProcessWithArgs(logstashPath, args, getLimitedEnvironment(os.Environ(), keptEnvVars))
 	if err != nil {
 		_ = outputFile.Close()
 		_ = logFile.Close()
@@ -88,8 +90,9 @@ func NewProcess(logstashPath, inputCodec string, fields FieldSet, configs ...str
 // newProcessWithArgs performs the non-Logstash specific low-level
 // actions of preparing to spawn a child process, making it easier to
 // test the code in this package.
-func newProcessWithArgs(command string, args []string) (*Process, error) {
+func newProcessWithArgs(command string, args []string, env []string) (*Process, error) {
 	c := exec.Command(command, args...)
+	c.Env = env
 
 	// Save the process's stdout and stderr since an early startup
 	// failure (e.g. JVM issues) will get dumped there and not in
@@ -97,13 +100,6 @@ func newProcessWithArgs(command string, args []string) (*Process, error) {
 	var b bytes.Buffer
 	c.Stdout = &b
 	c.Stderr = &b
-
-	// The test cases must be written to be stable and independent
-	// of the current timezone to there's no risk of a @timestamp
-	// mismatch just because we've gone into daylight savings time.
-	c.Env = []string{
-		"TZ=UTC",
-	}
 
 	inputPipe, err := c.StdinPipe()
 	if err != nil {
@@ -115,6 +111,45 @@ func newProcessWithArgs(command string, args []string) (*Process, error) {
 		child: c,
 		stdio: &b,
 	}, nil
+}
+
+// getLimitedEnvironment returns a list of "key=value" strings
+// representing a process's enviroment based on an original set of
+// variables (e.g. returned by os.Environ()) that's intersected with a
+// list of the names of variables that should be kept.
+//
+// Additionally, the TZ variable is set to "UTC" unless TZ is one of
+// the variables to keep. The point of this is to make the tests more
+// stable and independent of the current timezone so there's no risk
+// of a @timestamp mismatch just because we've gone into daylight
+// savings time.
+func getLimitedEnvironment(originalVars, keptVars []string) []string {
+	keepVar := func(varname string) bool {
+		for _, s := range keptVars {
+			if varname == s {
+				return true
+			}
+		}
+		return false
+	}
+
+	// It would've been easier to just check with os.Getenv()
+	// whether a particular variable is set rather than iterating
+	// over the whole environment list that we're given, but
+	// os.Getenv() doesn't distinguish between unset variables and
+	// variables set to an empty string.
+	result := []string{}
+	for _, keyval := range originalVars {
+		tokens := strings.SplitN(keyval, "=", 2)
+		if keepVar(tokens[0]) {
+			result = append(result, keyval)
+			break
+		}
+	}
+	if !keepVar("TZ") {
+		result = append(result, "TZ=UTC")
+	}
+	return result
 }
 
 // Start starts a Logstash child process with the previously supplied

@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"reflect"
 	"testing"
 )
 
@@ -24,12 +25,77 @@ func (cb *closeableBuffer) Close() error {
 	return nil
 }
 
+func TestGetLimitedEnvironment(t *testing.T) {
+	cases := []struct {
+		original []string
+		kept     []string
+		expected []string
+	}{
+		// Only TZ=UTC set if there are no keepers.
+		{
+			[]string{
+				"A=B",
+				"C=D",
+			},
+			[]string{},
+			[]string{
+				"TZ=UTC",
+			},
+		},
+		// Original variables can be kept.
+		{
+			[]string{
+				"A=B",
+				"C=D",
+			},
+			[]string{
+				"A",
+			},
+			[]string{
+				"A=B",
+				"TZ=UTC",
+			},
+		},
+		// TZ can be overridden.
+		{
+			[]string{
+				"TZ=Europe/Stockholm",
+			},
+			[]string{
+				"TZ",
+			},
+			[]string{
+				"TZ=Europe/Stockholm",
+			},
+		},
+		// Listing a keeper that isn't set is okay.
+		{
+			[]string{
+				"A=B",
+			},
+			[]string{
+				"UNDEFINED_KEEPER",
+			},
+			[]string{
+				"TZ=UTC",
+			},
+		},
+	}
+	for i, c := range cases {
+		actual := getLimitedEnvironment(c.original, c.kept)
+		if !reflect.DeepEqual(c.expected, actual) {
+			t.Errorf("Test %d:\nExpected:\n%#v\nGot:\n%#v", i, c.expected, actual)
+		}
+	}
+}
+
 func TestProcess(t *testing.T) {
 	cases := []struct {
 		// Input
 		command string
 		args    []string
 		input   string
+		env     []string
 
 		// Command behavior
 		output string
@@ -45,6 +111,7 @@ func TestProcess(t *testing.T) {
 			command: "true",
 			args:    []string{},
 			input:   "",
+			env:     []string{},
 			output:  "",
 			log:     "",
 			result: Result{
@@ -61,6 +128,7 @@ func TestProcess(t *testing.T) {
 			command: "false",
 			args:    []string{},
 			input:   "",
+			env:     []string{},
 			output:  "",
 			log:     "",
 			result: Result{
@@ -72,7 +140,7 @@ func TestProcess(t *testing.T) {
 			starterr: nil,
 			waiterr:  &exec.ExitError{},
 		},
-		// The TZ variable is correctly set.
+		// Environment variables are correctly set.
 		{
 			command: "sh",
 			args: []string{
@@ -80,6 +148,7 @@ func TestProcess(t *testing.T) {
 				`test "$TZ" = "UTC"`,
 			},
 			input:  "",
+			env:    []string{"TZ=UTC"},
 			output: "",
 			log:    "",
 			result: Result{
@@ -134,6 +203,7 @@ func TestProcess(t *testing.T) {
 			command: "true",
 			args:    []string{},
 			input:   "",
+			env:     []string{},
 			output:  "",
 			log:     "log output",
 			result: Result{
@@ -150,6 +220,7 @@ func TestProcess(t *testing.T) {
 			command: "false",
 			args:    []string{},
 			input:   "",
+			env:     []string{},
 			output:  "",
 			log:     "log output",
 			result: Result{
@@ -166,6 +237,7 @@ func TestProcess(t *testing.T) {
 			command: "cat",
 			args:    []string{},
 			input:   "",
+			env:     []string{},
 			output:  `{"a": "b"}`,
 			log:     "",
 			result: Result{
@@ -186,6 +258,7 @@ func TestProcess(t *testing.T) {
 			command: "grep",
 			args:    []string{"string to search for"},
 			input:   "this string doesn't contain what we look for",
+			env:     []string{},
 			output:  "",
 			log:     "",
 			result: Result{
@@ -202,6 +275,7 @@ func TestProcess(t *testing.T) {
 			command: "true",
 			args:    []string{},
 			input:   "",
+			env:     []string{},
 			output:  "this is not JSON",
 			log:     "",
 			result: Result{
@@ -218,6 +292,7 @@ func TestProcess(t *testing.T) {
 			command: "/file/does/not/exist",
 			args:    []string{},
 			input:   "",
+			env:     []string{},
 			output:  "",
 			log:     "",
 			result: Result{
@@ -231,7 +306,7 @@ func TestProcess(t *testing.T) {
 		},
 	}
 	for i, c := range cases {
-		p, err := newProcessWithArgs(c.command, c.args)
+		p, err := newProcessWithArgs(c.command, c.args, c.env)
 		if err != nil {
 			t.Fatalf("Test %d: Unexpected error when creating process struct: %s", i, err)
 		}
