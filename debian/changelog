@@ -1,3 +1,15 @@
+logstash-filter-verifier (1.1.0) RELEASED; urgency=medium
+
+  * Adds the --keep-env option to keep select environment variables
+    when invoking Logstash. Useful to propagate JAVA_HOME and any
+    other variables needed by Logstash.
+  * If the Logstash child process terminates with a non-zero exit code,
+    show the stdout/stderr output from the command rather than solely
+    relying on the log output. If Logstash fails very early, e.g. before
+    the JVM starts up, there won't be a logfile.
+
+ -- Magnus Bäck <magnus@noun.se>  Thu, 25 Feb 2016 21:48:28 +0100
+
 logstash-filter-verifier (1.0.1) RELEASED; urgency=medium
 
   * Fixes Logstash 2.2.0 incompatibility problem.
