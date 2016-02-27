@@ -31,16 +31,25 @@ Before you can run Logstash Filter Verifier you need to compile
 it. After covering that, let's start with a simple example and follow
 up with reference documentation.
 
-## Building and installing
+## Installing
 
-This program is written in the [Go](https://golang.org/) language and
-needs to be compiled before it can be run. Go compilers are available
-for most platforms that Logstash runs on, including Windows. Many
-Linux distributions make some version of the Go compiler easily
+All releases of Logstash Filter Verifier are published in binary form
+for the most common platforms at
+[github.com/magnusbaeck/logstash-filter-verifier/releases](https://github.com/magnusbaeck/logstash-filter-verifier/releases).
+
+If you need to run the program on other platforms or if you want to
+modify the program yourself you can build and use it on any platform
+for which a [Go](https://golang.org/) compiler is available. Pretty
+much any platform where Logstash runs should be fine, including
+Windows.
+
+Many Linux distributions make some version of the Go compiler easily
 installable, but otherwise you can [download and install the latest
 version](https://golang.org/dl/). You should be able to compile the
 source code with any reasonable up to date version of the Go compiler.
-The build process also requires GNU make.
+The build process also requires GNU make and other GNU tools. When
+building on a Windows system you need a basic [cygwin](http://cygwin.com/)
+installation.
 
 To download and compile the source, run these commands (pick another
 directory name if you like):
