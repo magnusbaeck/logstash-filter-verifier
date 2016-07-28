@@ -17,7 +17,7 @@ EXEC_SUFFIX :=
 endif
 
 # The Docker image to use when building release images.
-GOLANG_DOCKER_IMAGE := golang:1.5.3
+GOLANG_DOCKER_IMAGE := golang:1.6.3
 
 INSTALL := install
 
