@@ -68,6 +68,7 @@ func TestNew(t *testing.T) {
 // an absolute path even if a relative path was given as input.
 func TestNewFromFile(t *testing.T) {
 	tempdir, err := ioutil.TempDir("", "")
+	defer os.RemoveAll(tempdir)
 	if err != nil {
 		t.Fatalf(err.Error())
 	}
@@ -75,7 +76,6 @@ func TestNewFromFile(t *testing.T) {
 	if err != nil {
 		t.Fatalf(err.Error())
 	}
-	defer os.RemoveAll(tempdir)
 	defer os.Chdir(olddir)
 	if err = os.Chdir(tempdir); err != nil {
 		t.Fatalf(err.Error())
