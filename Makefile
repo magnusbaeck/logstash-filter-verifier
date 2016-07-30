@@ -63,15 +63,15 @@ version.go: .FORCE
 	    rm -f $$TMPFILE
 
 $(GOCOV): deps
-	go install github.com/axw/gocov/gocov
+	go get github.com/axw/gocov/gocov
 
 $(GOCOV_HTML): deps
-	go install gopkg.in/matm/v1/gocov-html
+	go get gopkg.in/matm/v1/gocov-html
 
 # Should ideally list all its dependencies in the Godeps file
 # and not use gometalinter for the installation.
 $(GOMETALINTER): deps
-	go install github.com/alecthomas/gometalinter
+	go get github.com/alecthomas/gometalinter
 	$@ --install --update
 
 $(GPM):
@@ -80,7 +80,7 @@ $(GPM):
 	chmod +x $@
 
 $(OVERALLS): deps
-	go install github.com/go-playground/overalls
+	go get github.com/go-playground/overalls
 
 # The Go compiler is fast and pretty good about figuring out what to
 # build so we don't try to to outsmart it.
