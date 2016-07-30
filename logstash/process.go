@@ -58,6 +58,8 @@ func NewProcess(logstashPath, inputCodec string, fields FieldSet, keptEnvVars []
 
 	fieldHash, err := fields.LogstashHash()
 	if err != nil {
+		_ = logFile.Close()
+		_ = outputFile.Close()
 		return nil, err
 	}
 	args := []string{
