@@ -1,3 +1,13 @@
+logstash-filter-verifier (1.1.1) RELEASED; urgency=medium
+
+  * Multiple filter configuration files now work. Previously only one
+    of the files would be picked up by Logstash, possibly resulting in
+    incorrect test results.
+  * When invoking with --help to get command-line help, the exit code
+    is now zero.
+
+ -- Magnus Bäck <magnus@noun.se>  Sun, 31 Jul 2016 17:59:04 +0200
+
 logstash-filter-verifier (1.1.0) RELEASED; urgency=medium
 
   * Adds the --keep-env option to keep select environment variables
