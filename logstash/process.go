@@ -22,10 +22,11 @@ type Process struct {
 	// been written so that the process will terminate.
 	Input io.WriteCloser
 
-	child  *exec.Cmd
-	log    io.ReadCloser
-	output io.ReadCloser
-	stdio  io.Reader
+	child     *exec.Cmd
+	configDir *string
+	log       io.ReadCloser
+	output    io.ReadCloser
+	stdio     io.Reader
 }
 
 // NewProcess prepares for the execution of a new Logstash process but
@@ -56,6 +57,13 @@ func NewProcess(logstashPath, inputCodec string, fields FieldSet, keptEnvVars []
 		return nil, err
 	}
 
+	configDir, err := getConfigFileDir(configs)
+	if err != nil {
+		_ = logFile.Close()
+		_ = outputFile.Close()
+		return nil, err
+	}
+
 	fieldHash, err := fields.LogstashHash()
 	if err != nil {
 		_ = logFile.Close()
@@ -71,12 +79,10 @@ func NewProcess(logstashPath, inputCodec string, fields FieldSet, keptEnvVars []
 			"input { stdin { codec => %q add_field => %s } } "+
 				"output { file { path => %q codec => \"json_lines\" } }",
 			inputCodec, fieldHash, outputFile.Name()),
+		"--config",
+		configDir,
 		"--log",
 		logFile.Name(),
-	}
-	for _, c := range configs {
-		args = append(args, "--config")
-		args = append(args, c)
 	}
 
 	p, err := newProcessWithArgs(logstashPath, args, getLimitedEnvironment(os.Environ(), keptEnvVars))
@@ -84,6 +90,7 @@ func NewProcess(logstashPath, inputCodec string, fields FieldSet, keptEnvVars []
 		_ = outputFile.Close()
 		_ = logFile.Close()
 	}
+	p.configDir = &configDir
 	p.output = outputFile
 	p.log = logFile
 	return p, nil
@@ -203,4 +210,7 @@ func (p *Process) Wait() (*Result, error) {
 func (p *Process) Release() {
 	_ = p.output.Close()
 	_ = p.log.Close()
+	if p.configDir != nil {
+		_ = os.RemoveAll(*p.configDir)
+	}
 }
