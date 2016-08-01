@@ -149,10 +149,6 @@ func (tc *TestCase) Compare(events []logstash.Event, quiet bool, diffCommand []s
 		return result
 	}
 
-	// Create a directory structure for the JSON file being
-	// compared that makes it easy for the user to identify
-	// the failing test case in the diff output:
-	// $TMP/<random>/<test case file>/<event number>/<actual|expected>
 	tempdir, err := ioutil.TempDir("", "")
 	if err != nil {
 		return nil
@@ -172,7 +168,11 @@ func (tc *TestCase) Compare(events []logstash.Event, quiet bool, diffCommand []s
 			delete(actualEvent, ignored)
 		}
 
-		resultDir := filepath.Join(tempdir, filepath.Base(tc.File), strconv.Itoa(i))
+		// Create a directory structure for the JSON file being
+		// compared that makes it easy for the user to identify
+		// the failing test case in the diff output:
+		// $TMP/<random>/<test case file>/<event #>/<actual|expected>
+		resultDir := filepath.Join(tempdir, filepath.Base(tc.File), strconv.Itoa(i+1))
 		actualFilePath := filepath.Join(resultDir, "actual")
 		if err = marshalToFile(actualEvent, actualFilePath); err != nil {
 			return err
