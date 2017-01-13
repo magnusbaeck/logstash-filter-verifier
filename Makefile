@@ -4,6 +4,7 @@
 ifeq ($(GOPATH),)
 $(error The GOPATH environment variable needs to be set)
 endif
+GOPATH_PRIMARY := $(firstword $(subst :, ,${GOPATH}))
 
 # Installation root directory. Should be left alone except for
 # e.g. package installations. If you want to control the installation
@@ -35,11 +36,11 @@ TARGETS := darwin_amd64 linux_386 linux_amd64 windows_386 windows_amd64
 
 VERSION := $(shell git describe --tags --always)
 
-GOCOV        := $(GOPATH)/bin/gocov$(EXEC_SUFFIX)
-GOCOV_HTML   := $(GOPATH)/bin/gocov-html$(EXEC_SUFFIX)
-GOMETALINTER := $(GOPATH)/bin/gometalinter
-GPM          := $(GOPATH)/bin/gpm
-OVERALLS     := $(GOPATH)/bin/overalls$(EXEC_SUFFIX)
+GOCOV        := $(GOPATH_PRIMARY)/bin/gocov$(EXEC_SUFFIX)
+GOCOV_HTML   := $(GOPATH_PRIMARY)/bin/gocov-html$(EXEC_SUFFIX)
+GOMETALINTER := $(GOPATH_PRIMARY)/bin/gometalinter
+GPM          := $(GOPATH_PRIMARY)/bin/gpm
+OVERALLS     := $(GOPATH_PRIMARY)/bin/overalls$(EXEC_SUFFIX)
 
 .PHONY: all
 all: $(PROGRAM)$(EXEC_SUFFIX)
@@ -89,7 +90,7 @@ $(PROGRAM)$(EXEC_SUFFIX): .FORCE version.go deps
 
 .PHONY: check
 check: $(GOMETALINTER)
-	PATH=$$PATH:$(GOPATH)/bin gometalinter --deadline 15s \
+	PATH=$$PATH:$(GOPATH_PRIMARY)/bin gometalinter --deadline 15s \
 	    --disable=gotype --enable=gofmt \
 	    '--linter=errcheck:errcheck -ignoretests -abspath .:^(?P<path>[^:]+):(?P<line>\d+):(?P<col>\d+)\t(?P<message>.*)$$' \
 	    ./...
