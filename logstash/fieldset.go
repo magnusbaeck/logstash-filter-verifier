@@ -15,7 +15,7 @@ type FieldSet map[string]interface{}
 
 // IsValid inspects the field set and returns an error if there are
 // any values that Logstash obviously would disapprove of (like
-// objects since only scalar values and arrays are supported).
+// objects in arrays).
 func (fs FieldSet) IsValid() error {
 	_, err := fs.LogstashHash()
 	return err
@@ -27,11 +27,16 @@ func (fs FieldSet) IsValid() error {
 func (fs FieldSet) LogstashHash() (string, error) {
 	result := make([]string, 0, len(fs))
 	for k, v := range fs {
-		s, err := serializeAsLogstashLiteral(v)
-		if err != nil {
+		ks, s, err := serializeAsLogstashLiteral(k, v)
+		if err != nil || len(ks) != len(s) {
 			return "", fmt.Errorf("Problem converting field %q to Logstash format: %s", k, err)
 		}
-		result = append(result, fmt.Sprintf("%q => %s", k, s))
+		for i, k := range ks {
+			if strings.LastIndex(k, "[") == 0 {
+				k = strings.Trim(k, "[]")
+			}
+			result = append(result, fmt.Sprintf("%q => %s", k, s[i]))
+		}
 	}
 	// Sort the strings to make writing tests easier when there's
 	// more than one field in the map.
@@ -41,27 +46,48 @@ func (fs FieldSet) LogstashHash() (string, error) {
 
 // serializeAsLogstashLiteral serializes a single entity into a
 // Logstash value literal.
-func serializeAsLogstashLiteral(v interface{}) (string, error) {
+func serializeAsLogstashLiteral(k string, v interface{}) ([]string, []string, error) {
+	k = fmt.Sprintf("[%s]", k)
 	switch v := v.(type) {
 	case bool:
-		return fmt.Sprintf("%v", v), nil
+		return []string{k}, []string{fmt.Sprintf("%v", v)}, nil
 	case int:
-		return fmt.Sprintf("%v", v), nil
+		return []string{k}, []string{fmt.Sprintf("%v", v)}, nil
 	case float64:
-		return fmt.Sprintf("%v", v), nil
+		return []string{k}, []string{fmt.Sprintf("%v", v)}, nil
 	case string:
-		return fmt.Sprintf("%q", v), nil
+		return []string{k}, []string{fmt.Sprintf("%q", v)}, nil
 	case []interface{}:
 		result := make([]string, len(v))
 		for i, element := range v {
-			s, err := serializeAsLogstashLiteral(element)
-			if err != nil {
-				return "", err
+			if v, ok := element.(map[string]interface{}); ok {
+				return []string{k}, []string{}, fmt.Errorf("Unsupported type %T in %T: %#v", v, []interface{}{}, v)
 			}
-			result[i] = s
+			ks, s, err := serializeAsLogstashLiteral(k, element)
+			if err != nil {
+				return ks, []string{}, err
+			}
+			result[i] = s[0]
 		}
-		return "[" + strings.Join(result, ", ") + "]", nil
+		return []string{k}, []string{"[" + strings.Join(result, ", ") + "]"}, nil
+	case map[string]interface{}:
+		result := make([]string, 0, len(v))
+		keys := make([]string, 0, len(v))
+		i := 0
+		for ik, iv := range v {
+			ks, s, err := serializeAsLogstashLiteral(ik, iv)
+			if err != nil {
+				return nil, nil, err
+			}
+			for i := range ks {
+				ks[i] = fmt.Sprintf("%s%s", k, ks[i])
+			}
+			result = append(result, s...)
+			keys = append(keys, ks...)
+			i++
+		}
+		return keys, result, nil
 	default:
-		return "", fmt.Errorf("Unsupported type %T: %#v", v, v)
+		return []string{k}, []string{}, fmt.Errorf("Unsupported type %T: %#v", v, v)
 	}
 }
