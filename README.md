@@ -202,8 +202,9 @@ may have the following properties:
 * `fields`: An object containing the fields that all input messages
   should have. This is vital since filters typically are configured
   based on the event's type and/or tags. Scalar values (strings,
-  numbers, and booleans) are supported, as are arrays of scalars. It
-  seems Logstash doesn't support nested arrays.
+  numbers, and booleans) are supported, as are objects (containing
+  scalars, arrays and nested objects), arrays of scalars and nested arrays.
+  The only combination which is not allowed are objects within arrays.
 * `ignore`: An array with the names of the fields that should be
   removed from the events that Logstash emit. This is for example
   useful for dynamically generated fields whose contents can't be

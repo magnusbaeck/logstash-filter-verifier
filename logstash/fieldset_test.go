@@ -20,10 +20,12 @@ func TestIsValid(t *testing.T) {
 		// Value of object type is rejected
 		{
 			FieldSet{
-				"a": map[string]interface{}{},
+				"a": []interface{}{
+					map[string]interface{}{},
+				},
 			},
-			fmt.Errorf("Problem converting field \"a\" to Logstash format: Unsupported type %T: %#v",
-				map[string]interface{}{}, map[string]interface{}{}),
+			fmt.Errorf("Problem converting field \"a\" to Logstash format: Unsupported type %T in %T: %#v",
+				map[string]interface{}{}, []interface{}{}, map[string]interface{}{}),
 		},
 	}
 	for i, c := range cases {
@@ -110,14 +112,35 @@ func TestLogstashHash(t *testing.T) {
 			`{ "a" => "b" "c" => 123 "d" => true "e" => ["f", 123, true] }`,
 			nil,
 		},
-		// Value of object type is rejected
+		// Value of object with multiple values including nested object
 		{
 			FieldSet{
-				"a": map[string]interface{}{},
+				"z": map[string]interface{}{
+					"a": "b",
+					"c": 123,
+					"d": true,
+					"e": []interface{}{"f", 123, true},
+					"g": map[string]interface{}{
+						"a": "b",
+						"c": 123,
+						"d": true,
+						"e": []interface{}{"f", 123, true},
+					},
+				},
+			},
+			`{ "[z][a]" => "b" "[z][c]" => 123 "[z][d]" => true "[z][e]" => ["f", 123, true] "[z][g][a]" => "b" "[z][g][c]" => 123 "[z][g][d]" => true "[z][g][e]" => ["f", 123, true] }`,
+			nil,
+		},
+		// Value of object type in array is rejected
+		{
+			FieldSet{
+				"a": []interface{}{
+					map[string]interface{}{},
+				},
 			},
 			``,
-			fmt.Errorf("Problem converting field \"a\" to Logstash format: Unsupported type %T: %#v",
-				map[string]interface{}{}, map[string]interface{}{}),
+			fmt.Errorf("Problem converting field \"a\" to Logstash format: Unsupported type %T in %T: %#v",
+				map[string]interface{}{}, []interface{}{}, map[string]interface{}{}),
 		},
 	}
 	for i, c := range cases {
