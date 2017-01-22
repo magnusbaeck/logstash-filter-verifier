@@ -1,6 +1,6 @@
 ---
 language: go
 go:
-  - go1.8
+  - 1.8
 script:
   - make test
