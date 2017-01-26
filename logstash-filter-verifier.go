@@ -53,7 +53,7 @@ var (
 // slice of test cases and compares the actual events against the
 // expected set. Returns an error if at least one test case fails or
 // if there's a problem running the tests.
-func runTests(logstashPath string, tests []testcase.TestCase, configPaths []string, diffCommand []string, keptEnvVars []string) error {
+func runTests(logstashPath string, tests []testcase.TestCaseSet, configPaths []string, diffCommand []string, keptEnvVars []string) error {
 	ok := true
 	for _, t := range tests {
 		fmt.Fprintf(os.Stderr, "Running tests in %s...\n", filepath.Base(t.File))
