@@ -37,6 +37,10 @@ var (
 			Flag("logstash-path", "Set the path to the Logstash executable.").
 			Default("/opt/logstash/bin/logstash").
 			String()
+	logstashOutput = kingpin.
+			Flag("logstash-output", "Print the debug output of logstash.").
+			Default("false").
+			Bool()
 
 	// Arguments
 	testcasePath = kingpin.
@@ -77,8 +81,11 @@ func runTests(logstashPath string, tests []testcase.TestCase, configPaths []stri
 		}
 
 		result, err := p.Wait()
-		if err != nil {
-			message := fmt.Sprintf("Error running Logstash: %s.", err)
+		if err != nil || *logstashOutput {
+			var message string
+			if err != nil {
+				message += fmt.Sprintf("Error running Logstash: %s.", err)
+			}
 			if result.Output != "" {
 				message += fmt.Sprintf("\nProcess output:\n%s", result.Output)
 			} else {
@@ -89,7 +96,10 @@ func runTests(logstashPath string, tests []testcase.TestCase, configPaths []stri
 			} else {
 				message += "\nThe process wrote nothing to its logfile."
 			}
-			return errors.New(message)
+			if err != nil {
+				return errors.New(message)
+			}
+			userError("%s", message)
 		}
 		if err = t.Compare(result.Events, false, diffCommand); err != nil {
 			userError("Testcase failed, continuing with the rest: %s", err.Error())
