@@ -44,6 +44,10 @@ var (
 			Flag("sockets", "Use Unix domain sockets for the communication with Logstash.").
 			Default("false").
 			Bool()
+	logstashOutput = kingpin.
+			Flag("logstash-output", "Print the debug output of logstash.").
+			Default("false").
+			Bool()
 
 	// Arguments
 	testcasePath = kingpin.
@@ -150,8 +154,11 @@ func runParallelTests(logstashPath string, tests []testcase.TestCase, configPath
 	}
 
 	result, err := p.Wait()
-	if err != nil {
-		message := fmt.Sprintf("Error running Logstash: %s.", err)
+	if err != nil || *logstashOutput {
+		var message string
+		if err != nil {
+			message += fmt.Sprintf("Error running Logstash: %s.", err)
+		}
 		if result.Output != "" {
 			message += fmt.Sprintf("\nProcess output:\n%s", result.Output)
 		} else {
@@ -162,7 +169,10 @@ func runParallelTests(logstashPath string, tests []testcase.TestCase, configPath
 		} else {
 			message += "\nThe process wrote nothing to its logfile."
 		}
-		return errors.New(message)
+		if err != nil {
+			return errors.New(message)
+		}
+		userError("%s", message)
 	}
 	ok := true
 	for i, t := range tests {

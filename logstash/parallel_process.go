@@ -11,6 +11,7 @@ import (
 	"net"
 	"os"
 	"os/exec"
+	"regexp"
 	"strconv"
 	"strings"
 	"time"
@@ -151,14 +152,14 @@ func NewParallelProcess(logstashPath string, testStream []*TestStream, keptEnvVa
 	logstashOutput := make([]string, len(testStream))
 
 	for i, sp := range testStream {
-		sp.fields["@metadata"] = map[string]interface{}{"testcase": strconv.Itoa(i)}
+		sp.fields["@metadata"] = map[string]interface{}{"__lfv_testcase": strconv.Itoa(i)}
 		fieldHash, err := sp.fields.LogstashHash()
 		if err != nil {
 			CleanupTestStreams(testStream)
 			return nil, err
 		}
 		logstashInput[i] = fmt.Sprintf("unix { mode => \"client\" path => %q codec => %q add_field => %s }", sp.senderPath+"/socket", sp.inputCodec, fieldHash)
-		logstashOutput[i] = fmt.Sprintf("if [@metadata][testcase] == \"%s\" { file { path => %q codec => \"json_lines\" } }", strconv.Itoa(i), sp.receiver.Name())
+		logstashOutput[i] = fmt.Sprintf("if [@metadata][__lfv_testcase] == \"%s\" { file { path => %q codec => \"json_lines\" } }", strconv.Itoa(i), sp.receiver.Name())
 	}
 
 	logFile, err := newDeletedTempFile("", "")
@@ -256,7 +257,8 @@ func (p *ParallelProcess) Wait() (*ParallelResult, error) {
 		Success: waiterr == nil,
 	}
 	if waiterr != nil {
-		if strings.Contains(result.Log, `:message=>"An unexpected error occurred!", :error=>"closed stream", :class=>"IOError"`) {
+		re := regexp.MustCompile("An unexpected error occurred.*closed stream.*IOError")
+		if re.MatchString(result.Log) {
 			log.Warning("Workaround for IOError in unix.rb on stop, process result anyway. (see https://github.com/logstash-plugins/logstash-input-unix/pull/18)")
 			result.Success = true
 		} else {
