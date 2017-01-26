@@ -77,6 +77,15 @@ func TestLogstashHash(t *testing.T) {
 			`{ "a" => 123 }`,
 			nil,
 		},
+		// Large floats must not be converted to exponential notation, because this is not valid for Logstash
+		// https://github.com/elastic/logstash/blob/master/logstash-core/lib/logstash/config/grammar.treetop#L92
+		{
+			FieldSet{
+				"a": 1234567890.123,
+			},
+			`{ "a" => 1234567890.123000 }`,
+			nil,
+		},
 		// Single string value is okay
 		{
 			FieldSet{
