@@ -17,12 +17,12 @@ import (
 func TestNew(t *testing.T) {
 	cases := []struct {
 		input    string
-		expected TestCase
+		expected TestCaseSet
 	}{
 		// Happy flow relying on the default codec.
 		{
 			`{"fields": {"type": "mytype"}}`,
-			TestCase{
+			TestCaseSet{
 				Codec: "plain",
 				InputFields: logstash.FieldSet{
 					"type": "mytype",
@@ -33,7 +33,7 @@ func TestNew(t *testing.T) {
 		// Happy flow with a custom codec.
 		{
 			`{"fields": {"type": "mytype"}, "codec": "json"}`,
-			TestCase{
+			TestCaseSet{
 				Codec: "json",
 				InputFields: logstash.FieldSet{
 					"type": "mytype",
@@ -44,19 +44,19 @@ func TestNew(t *testing.T) {
 		// Additional fields to ignore are appended to the default.
 		{
 			`{"ignore": ["foo"]}`,
-			TestCase{
+			TestCaseSet{
 				Codec:         "plain",
 				IgnoredFields: []string{"@version", "foo"},
 			},
 		},
 	}
 	for i, c := range cases {
-		tc, err := New(bytes.NewReader([]byte(c.input)))
+		tcs, err := New(bytes.NewReader([]byte(c.input)))
 		if err != nil {
 			t.Errorf("Test %d: %q input: %s", i, c.input, err)
 			break
 		}
-		resultJSON := marshalTestCase(t, tc)
+		resultJSON := marshalTestCase(t, tcs)
 		expectedJSON := marshalTestCase(t, &c.expected)
 		if expectedJSON != resultJSON {
 			t.Errorf("Test %d:\nExpected:\n%s\nGot:\n%s", i, expectedJSON, resultJSON)
@@ -86,13 +86,13 @@ func TestNewFromFile(t *testing.T) {
 		t.Fatalf(err.Error())
 	}
 
-	tc, err := NewFromFile("test.json")
+	tcs, err := NewFromFile("test.json")
 	if err != nil {
 		t.Fatalf("NewFromFile() unexpectedly returned an error: %s", err)
 	}
 
-	if tc.File != fullTestCasePath {
-		t.Fatalf("Expected test case path to be %q, got %q instead.", fullTestCasePath, tc.File)
+	if tcs.File != fullTestCasePath {
+		t.Fatalf("Expected test case path to be %q, got %q instead.", fullTestCasePath, tcs.File)
 	}
 }
 
@@ -106,14 +106,14 @@ func TestCompare(t *testing.T) {
 	defer os.RemoveAll(tempdir)
 
 	cases := []struct {
-		testcase     *TestCase
+		testcase     *TestCaseSet
 		actualEvents []logstash.Event
 		diffCommand  []string
 		result       error
 	}{
 		// Empty test case with no messages is okay.
 		{
-			&TestCase{
+			&TestCaseSet{
 				File: "/path/to/filename.json",
 				InputFields: logstash.FieldSet{
 					"type": "test",
@@ -128,7 +128,7 @@ func TestCompare(t *testing.T) {
 		},
 		// Too few messages received.
 		{
-			&TestCase{
+			&TestCaseSet{
 				File: "/path/to/filename.json",
 				InputFields: logstash.FieldSet{
 					"type": "test",
@@ -158,7 +158,7 @@ func TestCompare(t *testing.T) {
 		},
 		// Too many messages received.
 		{
-			&TestCase{
+			&TestCaseSet{
 				File: "/path/to/filename.json",
 				InputFields: logstash.FieldSet{
 					"type": "test",
@@ -188,7 +188,7 @@ func TestCompare(t *testing.T) {
 		},
 		// Different fields.
 		{
-			&TestCase{
+			&TestCaseSet{
 				File: "/path/to/filename.json",
 				InputFields: logstash.FieldSet{
 					"type": "test",
@@ -225,7 +225,7 @@ func TestCompare(t *testing.T) {
 		},
 		// Same field with different values.
 		{
-			&TestCase{
+			&TestCaseSet{
 				File: "/path/to/filename.json",
 				InputFields: logstash.FieldSet{
 					"type": "test",
@@ -262,7 +262,7 @@ func TestCompare(t *testing.T) {
 		},
 		// Ignored fields are ignored.
 		{
-			&TestCase{
+			&TestCaseSet{
 				File: "/path/to/filename.json",
 				InputFields: logstash.FieldSet{
 					"type": "test",
@@ -287,7 +287,7 @@ func TestCompare(t *testing.T) {
 		},
 		// Diff command execution errors are propagated correctly.
 		{
-			&TestCase{
+			&TestCaseSet{
 				File: "/path/to/filename.json",
 				InputFields: logstash.FieldSet{
 					"type": "test",
@@ -368,10 +368,10 @@ func TestMarshalToFile(t *testing.T) {
 	}
 }
 
-func marshalTestCase(t *testing.T, tc *TestCase) string {
-	resultBuf, err := json.MarshalIndent(tc, "", "  ")
+func marshalTestCase(t *testing.T, tcs *TestCaseSet) string {
+	resultBuf, err := json.MarshalIndent(tcs, "", "  ")
 	if err != nil {
-		t.Errorf("Failed to marshal %+v as JSON: %s", tc, err)
+		t.Errorf("Failed to marshal %+v as JSON: %s", tcs, err)
 		return ""
 	}
 	return string(resultBuf)

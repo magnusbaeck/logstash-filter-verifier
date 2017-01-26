@@ -81,8 +81,8 @@ func TestDiscoverTests_Directory(t *testing.T) {
 		}
 
 		filenames := make([]string, len(testcases))
-		for i, tc := range testcases {
-			filenames[i] = filepath.Base(tc.File)
+		for i, tcs := range testcases {
+			filenames[i] = filepath.Base(tcs.File)
 		}
 		sort.Strings(filenames)
 

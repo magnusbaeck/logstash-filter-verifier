@@ -18,9 +18,9 @@ import (
 	unjson "github.com/mitchellh/packer/common/json"
 )
 
-// TestCase contains the configuration of a Logstash filter test case.
+// TestCaseSet contains the configuration of a Logstash filter test case.
 // Most of the fields are supplied by the user via a JSON file.
-type TestCase struct {
+type TestCaseSet struct {
 	// File is the absolute path to the file from which this
 	// test case was read.
 	File string `json:"-"`
@@ -87,29 +87,29 @@ var (
 // TestCase. Defaults to a "plain" codec and ignoring the @version
 // field. If the configuration being read lists additional fields to
 // ignore those will be ignored in addition to @version.
-func New(reader io.Reader) (*TestCase, error) {
-	tc := TestCase{
+func New(reader io.Reader) (*TestCaseSet, error) {
+	tcs := TestCaseSet{
 		Codec: "plain",
 	}
 	buf, err := ioutil.ReadAll(reader)
 	if err != nil {
 		return nil, err
 	}
-	if err = unjson.Unmarshal(buf, &tc); err != nil {
+	if err = unjson.Unmarshal(buf, &tcs); err != nil {
 		return nil, err
 	}
-	if err = tc.InputFields.IsValid(); err != nil {
+	if err = tcs.InputFields.IsValid(); err != nil {
 		return nil, err
 	}
 	for _, f := range defaultIgnoredFields {
-		tc.IgnoredFields = append(tc.IgnoredFields, f)
+		tcs.IgnoredFields = append(tcs.IgnoredFields, f)
 	}
-	sort.Strings(tc.IgnoredFields)
-	return &tc, nil
+	sort.Strings(tcs.IgnoredFields)
+	return &tcs, nil
 }
 
 // NewFromFile reads a test case configuration from an on-disk file.
-func NewFromFile(path string) (*TestCase, error) {
+func NewFromFile(path string) (*TestCaseSet, error) {
 	abspath, err := filepath.Abs(path)
 	if err != nil {
 		return nil, err
@@ -124,12 +124,12 @@ func NewFromFile(path string) (*TestCase, error) {
 		_ = f.Close()
 	}()
 
-	tc, err := New(f)
+	tcs, err := New(f)
 	if err != nil {
 		return nil, fmt.Errorf("Error reading/unmarshalling %s: %s", path, err)
 	}
-	tc.File = abspath
-	return tc, nil
+	tcs.File = abspath
+	return tcs, nil
 }
 
 // Compare compares a slice of events against the expected events of
@@ -137,10 +137,10 @@ func NewFromFile(path string) (*TestCase, error) {
 // file and the two files are passed to "diff -u". If quiet is true,
 // the progress messages normally written to stderr will be emitted
 // and the output of the diff program will be discarded.
-func (tc *TestCase) Compare(events []logstash.Event, quiet bool, diffCommand []string) error {
+func (tcs *TestCaseSet) Compare(events []logstash.Event, quiet bool, diffCommand []string) error {
 	result := ComparisonError{
 		ActualCount:   len(events),
-		ExpectedCount: len(tc.ExpectedEvents),
+		ExpectedCount: len(tcs.ExpectedEvents),
 		Mismatches:    []MismatchedEvent{},
 	}
 
@@ -162,10 +162,10 @@ func (tc *TestCase) Compare(events []logstash.Event, quiet bool, diffCommand []s
 
 	for i, actualEvent := range events {
 		if !quiet {
-			fmt.Fprintf(os.Stderr, "Comparing message %d of %s...\n", i+1, filepath.Base(tc.File))
+			fmt.Fprintf(os.Stderr, "Comparing message %d of %s...\n", i+1, filepath.Base(tcs.File))
 		}
 
-		for _, ignored := range tc.IgnoredFields {
+		for _, ignored := range tcs.IgnoredFields {
 			delete(actualEvent, ignored)
 		}
 
@@ -173,13 +173,13 @@ func (tc *TestCase) Compare(events []logstash.Event, quiet bool, diffCommand []s
 		// compared that makes it easy for the user to identify
 		// the failing test case in the diff output:
 		// $TMP/<random>/<test case file>/<event #>/<actual|expected>
-		resultDir := filepath.Join(tempdir, filepath.Base(tc.File), strconv.Itoa(i+1))
+		resultDir := filepath.Join(tempdir, filepath.Base(tcs.File), strconv.Itoa(i+1))
 		actualFilePath := filepath.Join(resultDir, "actual")
 		if err = marshalToFile(actualEvent, actualFilePath); err != nil {
 			return err
 		}
 		expectedFilePath := filepath.Join(resultDir, "expected")
-		if err = marshalToFile(tc.ExpectedEvents[i], expectedFilePath); err != nil {
+		if err = marshalToFile(tcs.ExpectedEvents[i], expectedFilePath); err != nil {
 			return err
 		}
 
@@ -188,7 +188,7 @@ func (tc *TestCase) Compare(events []logstash.Event, quiet bool, diffCommand []s
 			return err
 		}
 		if !equal {
-			result.Mismatches = append(result.Mismatches, MismatchedEvent{actualEvent, tc.ExpectedEvents[i], i})
+			result.Mismatches = append(result.Mismatches, MismatchedEvent{actualEvent, tcs.ExpectedEvents[i], i})
 		}
 	}
 	if len(result.Mismatches) == 0 {
