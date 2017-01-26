@@ -15,6 +15,7 @@ import (
 
 	"github.com/magnusbaeck/logstash-filter-verifier/logging"
 	"github.com/magnusbaeck/logstash-filter-verifier/logstash"
+	unjson "github.com/mitchellh/packer/common/json"
 )
 
 // TestCase contains the configuration of a Logstash filter test case.
@@ -94,7 +95,7 @@ func New(reader io.Reader) (*TestCase, error) {
 	if err != nil {
 		return nil, err
 	}
-	if err = json.Unmarshal(buf, &tc); err != nil {
+	if err = unjson.Unmarshal(buf, &tc); err != nil {
 		return nil, err
 	}
 	if err = tc.InputFields.IsValid(); err != nil {

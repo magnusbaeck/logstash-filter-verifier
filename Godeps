@@ -5,3 +5,4 @@ github.com/go-playground/overalls                     845469c90499
 github.com/mattn/go-shellwords                        f4e566c536cf
 github.com/op/go-logging                              dfaf3dff9b63
 gopkg.in/matm/v1/gocov-html                           v1.0
+github.com/mitchellh/packer                           v0.9.0
