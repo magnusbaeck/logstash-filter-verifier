@@ -56,8 +56,8 @@ func TestNew(t *testing.T) {
 			t.Errorf("Test %d: %q input: %s", i, c.input, err)
 			break
 		}
-		resultJSON := marshalTestCase(t, tcs)
-		expectedJSON := marshalTestCase(t, &c.expected)
+		resultJSON := marshalTestCaseSet(t, tcs)
+		expectedJSON := marshalTestCaseSet(t, &c.expected)
 		if expectedJSON != resultJSON {
 			t.Errorf("Test %d:\nExpected:\n%s\nGot:\n%s", i, expectedJSON, resultJSON)
 		}
@@ -368,7 +368,7 @@ func TestMarshalToFile(t *testing.T) {
 	}
 }
 
-func marshalTestCase(t *testing.T, tcs *TestCaseSet) string {
+func marshalTestCaseSet(t *testing.T, tcs *TestCaseSet) string {
 	resultBuf, err := json.MarshalIndent(tcs, "", "  ")
 	if err != nil {
 		t.Errorf("Failed to marshal %+v as JSON: %s", tcs, err)
