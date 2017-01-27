@@ -58,6 +58,26 @@ type TestCaseSet struct {
 	// compared to the actual events produced by the Logstash
 	// process.
 	ExpectedEvents []logstash.Event `json:"expected"`
+
+	// TestCases is a slice of test cases, which include at minimum
+	// a pair of an input and an expected event
+	// Optionally other information regarding the test case
+	// may be supplied.
+	TestCases []TestCase `json:"testcases"`
+}
+
+// TestCase is a pair of an input line that should be fed
+// into the Logstash process and an expected event which is compared
+// to the actual event produced by the Logstash process.
+type TestCase struct {
+	// InputLine contains the line of input that should be fed
+	// to the Logstash process.
+	InputLine string `json:"input"`
+
+	// ExpectedEvent contains an expected event to be
+	// compared to the actual event produced by the Logstash
+	// process.
+	ExpectedEvent logstash.Event `json:"expected"`
 }
 
 // ComparisonError indicates that there was a mismatch when the
@@ -105,6 +125,10 @@ func New(reader io.Reader) (*TestCaseSet, error) {
 		tcs.IgnoredFields = append(tcs.IgnoredFields, f)
 	}
 	sort.Strings(tcs.IgnoredFields)
+	for _, tc := range tcs.TestCases {
+		tcs.InputLines = append(tcs.InputLines, tc.InputLine)
+		tcs.ExpectedEvents = append(tcs.ExpectedEvents, tc.ExpectedEvent)
+	}
 	return &tcs, nil
 }
 
