@@ -217,6 +217,21 @@ may have the following properties:
   event close together in the test case file, which offers a better
   overview.
 
+## Migrate to testcases
+
+To migrate test case files from the old to the new config format, which uses
+the `testcases` array to keep the fields `input` and `expected` next
+to each other, the following command using [jq](https://stedolan.github.io/jq/)
+could be used (run this command in the directory containing the test case
+files):
+
+```
+for f in `ls -1 *.json`; do jq '{ codec, fields, ignore, testcases:[[.input[]], [.expected[]]] | transpose | map({input: [.[0]], expected: [.[1]]})}' $f > $f.migrated && mv $f.migrated $f; done
+```
+
+This command only works for test case files, where for every line in
+`input` an element in `expected` exists.
+
 ## Known limitations and future work
 
 * Some log formats don't include all timestamp components. For
