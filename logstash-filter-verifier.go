@@ -64,7 +64,7 @@ var (
 // slice of test cases and compares the actual events against the
 // expected set. Returns an error if at least one test case fails or
 // if there's a problem running the tests.
-func runTests(logstashPath string, tests []testcase.TestCase, configPaths []string, diffCommand []string, keptEnvVars []string) error {
+func runTests(logstashPath string, tests []testcase.TestCaseSet, configPaths []string, diffCommand []string, keptEnvVars []string) error {
 	ok := true
 	for _, t := range tests {
 		fmt.Fprintf(os.Stderr, "Running tests in %s...\n", filepath.Base(t.File))
@@ -88,8 +88,11 @@ func runTests(logstashPath string, tests []testcase.TestCase, configPaths []stri
 		}
 
 		result, err := p.Wait()
-		if err != nil {
-			message := fmt.Sprintf("Error running Logstash: %s.", err)
+		if err != nil || *logstashOutput {
+			var message string
+			if err != nil {
+				message += fmt.Sprintf("Error running Logstash: %s.", err)
+			}
 			if result.Output != "" {
 				message += fmt.Sprintf("\nProcess output:\n%s", result.Output)
 			} else {
@@ -100,7 +103,10 @@ func runTests(logstashPath string, tests []testcase.TestCase, configPaths []stri
 			} else {
 				message += "\nThe process wrote nothing to its logfile."
 			}
-			return errors.New(message)
+			if err != nil {
+				return errors.New(message)
+			}
+			userError("%s", message)
 		}
 		if err = t.Compare(result.Events, false, diffCommand); err != nil {
 			userError("Testcase failed, continuing with the rest: %s", err.Error())
@@ -119,7 +125,7 @@ const unixSocketCommTimeout = 60 * time.Second
 // instance of Logstash against a slice of test cases and compares
 // the actual events against the expected set. Returns an error if
 // at least one test case fails or if there's a problem running the tests.
-func runParallelTests(logstashPath string, tests []testcase.TestCase, configPaths []string, diffCommand []string, keptEnvVars []string) error {
+func runParallelTests(logstashPath string, tests []testcase.TestCaseSet, configPaths []string, diffCommand []string, keptEnvVars []string) error {
 	var testStreams []*logstash.TestStream
 
 	for _, t := range tests {

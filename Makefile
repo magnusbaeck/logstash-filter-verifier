@@ -149,7 +149,9 @@ dist/$(PROGRAM)_$(VERSION)_%.tar.gz: version.go
 	    if [ $$GOOS = "windows" ] ; then EXEC_SUFFIX=".exe" ; fi && \
 	    mkdir -p $$DISTDIR && \
 	    cp README.md LICENSE $$DISTDIR && \
-	    docker run -it --rm -v $$GOPATH:$$GOPATH -w $$(pwd) \
+	    BINDMOUNTS=$$(echo $$GOPATH | \
+	        awk -F: '{ for (i = 1; i<= NF; i++) { printf " -v %s:%s\n", $$i, $$i } }') && \
+	    docker run -it --rm $$BINDMOUNTS -w $$(pwd) \
 	        -e GOPATH=$$GOPATH -e GOOS=$$GOOS -e GOARCH=$$GOARCH \
 	        $(GOLANG_DOCKER_IMAGE) \
 	        go build -o $$DISTDIR/$(PROGRAM)$$EXEC_SUFFIX && \

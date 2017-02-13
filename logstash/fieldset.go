@@ -54,7 +54,12 @@ func serializeAsLogstashLiteral(k string, v interface{}) ([]string, []string, er
 	case int:
 		return []string{k}, []string{fmt.Sprintf("%v", v)}, nil
 	case float64:
-		return []string{k}, []string{fmt.Sprintf("%v", v)}, nil
+		// large floats must not be converted to exponential notation, because this is not valid for Logstash
+		// https://github.com/elastic/logstash/blob/master/logstash-core/lib/logstash/config/grammar.treetop#L92
+		if !strings.Contains(fmt.Sprintf("%v", v), "e") {
+			return []string{k}, []string{fmt.Sprintf("%v", v)}, nil
+		}
+		return []string{k}, []string{fmt.Sprintf("%f", v)}, nil
 	case string:
 		return []string{k}, []string{fmt.Sprintf("%q", v)}, nil
 	case []interface{}:

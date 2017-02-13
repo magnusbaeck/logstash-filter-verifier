@@ -55,7 +55,7 @@ func getConfigFileDir(configs []string) (string, error) {
 		err = copyFile(f, dest)
 		if err != nil {
 			_ = os.RemoveAll(dir)
-			return "", err
+			return "", fmt.Errorf("Config file copy failed: %s", err)
 		}
 	}
 	fileList, err := getFilesInDir(dir)
