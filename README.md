@@ -211,7 +211,7 @@ may have the following properties:
   predicted and hardwired into the test case file.
 * `input`: An array with the lines of input (each line being a string)
   that should be fed to the Logstash process.
-* `testcases`: An array of test case hashes, consisting of a field `input`
+* `testcaseset`: An array of test case hashes, consisting of a field `input`
   and a field `expected`, which work the same as the above mentioned
   `input` and `expected`, but allow to have the input and the expected
   event close together in the test case file, which offers a better
