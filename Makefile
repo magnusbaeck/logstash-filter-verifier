@@ -76,6 +76,7 @@ $(GOMETALINTER): deps
 	$@ --install --update
 
 $(GPM):
+	mkdir -p $(dir $@)
 	curl --silent --show-error \
 	    https://raw.githubusercontent.com/pote/gpm/v1.4.0/bin/gpm > $@
 	chmod +x $@
