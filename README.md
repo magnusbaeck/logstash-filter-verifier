@@ -1,5 +1,9 @@
 # Logstash Filter Verifier
 
+[![Travis](https://travis-ci.org/magnusbaeck/logstash-filter-verifier.svg?branch=master)](https://travis-ci.org/magnusbaeck/logstash-filter-verifier)
+[![GoReportCard](http://goreportcard.com/badge/magnusbaeck/logstash-filter-verifier)](http://goreportcard.com/report/magnusbaeck/logstash-filter-verifier)
+[![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](https://raw.githubusercontent.com/magnusbaeck/logstash-filter-verifier/master/LICENSE)
+
 The [Logstash](https://www.elastic.co/products/logstash) program for
 collecting and processing logs from is popular and commonly used to
 process e.g. syslog messages and HTTP logs.
