@@ -232,6 +232,19 @@ for f in `ls -1 *.json`; do jq '{ codec, fields, ignore, testcases:[[.input[]], 
 This command only works for test case files, where for every line in
 `input` an element in `expected` exists.
 
+## Notes about the flag --sockets
+
+The command line flag `--sockets` allows to use unix domain sockets instead of
+stdin to send the input to Logstash. The advantage of this approach is, that
+it allows to process test case files in parallel to Logstash, instead of
+starting a new Logstash instance for every test case file. Because Logstash
+is known to start slowly, this increases the time needed significantly,
+especially if there are lots of different test case files.
+
+For the test cases to work properly together with the unix domain socket input,
+the test case files need to include the property `codec` set to the value `lines`
+(or `json_lines`, if json formatted input should be processed).
+
 ## Known limitations and future work
 
 * Some log formats don't include all timestamp components. For
