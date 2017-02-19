@@ -11,6 +11,7 @@ import (
 	"net"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"regexp"
 	"strconv"
 	"strings"
@@ -43,13 +44,13 @@ func NewTestStream(inputCodec string, fields FieldSet, timeout time.Duration) (*
 
 	ts := &TestStream{
 		senderReady: make(chan struct{}),
-		senderPath:  dir,
+		senderPath:  filepath.Join(dir, "socket"),
 		inputCodec:  inputCodec,
 		fields:      fields,
 		timeout:     timeout,
 	}
 
-	ts.senderListener, err = net.ListenUnix("unix", &net.UnixAddr{Name: ts.senderPath + "/socket", Net: "unix"})
+	ts.senderListener, err = net.ListenUnix("unix", &net.UnixAddr{Name: ts.senderPath, Net: "unix"})
 	if err != nil {
 		log.Fatalf("Unable to create unix socket for listening: %s", err)
 	}
@@ -111,7 +112,7 @@ func (ts *TestStream) Cleanup() {
 	if ts.sender != nil {
 		ts.Close()
 	}
-	os.RemoveAll(ts.senderPath)
+	os.RemoveAll(filepath.Dir(ts.senderPath))
 	if ts.receiver != nil {
 		ts.receiver.Close()
 	}
@@ -158,7 +159,7 @@ func NewParallelProcess(logstashPath string, testStream []*TestStream, keptEnvVa
 			CleanupTestStreams(testStream)
 			return nil, err
 		}
-		logstashInput[i] = fmt.Sprintf("unix { mode => \"client\" path => %q codec => %q add_field => %s }", sp.senderPath+"/socket", sp.inputCodec, fieldHash)
+		logstashInput[i] = fmt.Sprintf("unix { mode => \"client\" path => %q codec => %q add_field => %s }", sp.senderPath, sp.inputCodec, fieldHash)
 		logstashOutput[i] = fmt.Sprintf("if [@metadata][__lfv_testcase] == \"%s\" { file { path => %q codec => \"json_lines\" } }", strconv.Itoa(i), sp.receiver.Name())
 	}
 

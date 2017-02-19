@@ -31,7 +31,7 @@ func TestParallelProcess(t *testing.T) {
 	}
 	defer p.Release()
 
-	p.child.Env = append(os.Environ(), "TEST_MAIN=logstash-mock", "TEST_SOCKET="+ts.senderPath+"/socket")
+	p.child.Env = append(os.Environ(), "TEST_MAIN=logstash-mock", "TEST_SOCKET="+ts.senderPath)
 
 	if err = p.Start(); err != nil {
 		t.Fatalf("Unable to start ParallelProcess: %s", err)
