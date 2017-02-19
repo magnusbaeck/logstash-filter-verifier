@@ -273,6 +273,19 @@ func (p *ParallelProcess) Wait() (*ParallelResult, error) {
 		result.Events[i], err = readEvents(tc.receiver)
 		tc.receiver.Close()
 		result.Success = err == nil
+
+		// Logstash's unix input adds a "path" field
+		// containing the socket path, which screws up the
+		// test results. We can't unconditionally delete that
+		// field because the input JSON payload could contain
+		// a "path" field that we can't touch, but we can
+		// safely delete the field if its contents if equal to
+		// the socket path.
+		for j := range result.Events[i] {
+			if path, exists := result.Events[i][j]["path"]; exists && path == p.streams[i].senderPath {
+				delete(result.Events[i][j], "path")
+			}
+		}
 	}
 	return &result, err
 }
