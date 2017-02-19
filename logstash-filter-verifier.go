@@ -7,7 +7,10 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strings"
+
+	"time"
 
 	"github.com/alecthomas/kingpin"
 	"github.com/magnusbaeck/logstash-filter-verifier/logging"
@@ -37,6 +40,10 @@ var (
 			Flag("logstash-path", "Set the path to the Logstash executable.").
 			Default("/opt/logstash/bin/logstash").
 			String()
+	unixSockets = kingpin.
+			Flag("sockets", "Use Unix domain sockets for the communication with Logstash.").
+			Default("false").
+			Bool()
 	logstashOutput = kingpin.
 			Flag("logstash-output", "Print the debug output of logstash.").
 			Default("false").
@@ -112,6 +119,81 @@ func runTests(logstashPath string, tests []testcase.TestCaseSet, configPaths []s
 	return nil
 }
 
+const unixSocketCommTimeout = 60 * time.Second
+
+// runParallelTests runs multiple set of configuration in a single
+// instance of Logstash against a slice of test cases and compares
+// the actual events against the expected set. Returns an error if
+// at least one test case fails or if there's a problem running the tests.
+func runParallelTests(logstashPath string, tests []testcase.TestCaseSet, configPaths []string, diffCommand []string, keptEnvVars []string) error {
+	var testStreams []*logstash.TestStream
+
+	for _, t := range tests {
+		ts, err := logstash.NewTestStream(t.Codec, t.InputFields, unixSocketCommTimeout)
+		if err != nil {
+			logstash.CleanupTestStreams(testStreams)
+			return err
+		}
+		testStreams = append(testStreams, ts)
+	}
+
+	p, err := logstash.NewParallelProcess(logstashPath, testStreams, keptEnvVars, configPaths...)
+	if err != nil {
+		return err
+	}
+	defer p.Release()
+	if err = p.Start(); err != nil {
+		return err
+	}
+
+	for i, t := range tests {
+		for _, line := range t.InputLines {
+			_, err = testStreams[i].Write([]byte(line + "\n"))
+			if err != nil {
+				return err
+			}
+		}
+
+		if err = testStreams[i].Close(); err != nil {
+			return err
+		}
+	}
+
+	result, err := p.Wait()
+	if err != nil || *logstashOutput {
+		var message string
+		if err != nil {
+			message += fmt.Sprintf("Error running Logstash: %s.", err)
+		}
+		if result.Output != "" {
+			message += fmt.Sprintf("\nProcess output:\n%s", result.Output)
+		} else {
+			message += "\nThe process wrote nothing to stdout or stderr."
+		}
+		if result.Log != "" {
+			message += fmt.Sprintf("\nLog:\n%s", result.Log)
+		} else {
+			message += "\nThe process wrote nothing to its logfile."
+		}
+		if err != nil {
+			return errors.New(message)
+		}
+		userError("%s", message)
+	}
+	ok := true
+	for i, t := range tests {
+		if err = t.Compare(result.Events[i], false, diffCommand); err != nil {
+			userError("Testcase failed, continuing with the rest: %s", err.Error())
+			ok = false
+		}
+	}
+
+	if !ok {
+		return errors.New("One or more testcases failed.")
+	}
+	return nil
+}
+
 // prefixedUserError prints an error message to stderr and prefixes it
 // with the name of the program file (e.g. "logstash-filter-verifier:
 // something bad happened.").
@@ -156,9 +238,21 @@ func main() {
 		userError(err.Error())
 		os.Exit(1)
 	}
-	if err = runTests(*logstashPath, tests, *configPaths, diffCmd, *keptEnvVars); err != nil {
-		userError(err.Error())
-		os.Exit(1)
+	if *unixSockets {
+		if runtime.GOOS == "windows" {
+			userError("Use of Unix domain sockets for communication with Logstash is not supported on Windows.")
+			os.Exit(1)
+		}
+		fmt.Println("Use Unix domain sockets.")
+		if err = runParallelTests(*logstashPath, tests, *configPaths, diffCmd, *keptEnvVars); err != nil {
+			userError(err.Error())
+			os.Exit(1)
+		}
+	} else {
+		if err = runTests(*logstashPath, tests, *configPaths, diffCmd, *keptEnvVars); err != nil {
+			userError(err.Error())
+			os.Exit(1)
+		}
 	}
 	os.Exit(0)
 }
