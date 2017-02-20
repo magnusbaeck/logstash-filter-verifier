@@ -246,7 +246,7 @@ is known to start slowly, this increases the time needed significantly,
 especially if there are lots of different test case files.
 
 For the test cases to work properly together with the unix domain socket input,
-the test case files need to include the property `codec` set to the value `lines`
+the test case files need to include the property `codec` set to the value `line`
 (or `json_lines`, if json formatted input should be processed).
 
 ## Known limitations and future work
