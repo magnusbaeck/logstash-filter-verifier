@@ -185,9 +185,9 @@ func NewParallelProcess(logstashPath string, testStream []*TestStream, keptEnvVa
 			"input { %s } "+
 				"output { %s }",
 			strings.Join(logstashInput, " "), strings.Join(logstashOutput, " ")),
-		"--config",
+		"-f",
 		configDir,
-		"--log",
+		"-l",
 		logFile.Name(),
 	}
 

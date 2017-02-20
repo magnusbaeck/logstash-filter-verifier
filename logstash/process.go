@@ -79,9 +79,9 @@ func NewProcess(logstashPath, inputCodec string, fields FieldSet, keptEnvVars []
 			"input { stdin { codec => %q add_field => %s } } "+
 				"output { file { path => %q codec => \"json_lines\" } }",
 			inputCodec, fieldHash, outputFile.Name()),
-		"--config",
+		"-f",
 		configDir,
-		"--log",
+		"-l",
 		logFile.Name(),
 	}
 
