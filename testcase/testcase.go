@@ -26,7 +26,7 @@ type TestCaseSet struct {
 	File string `json:"-"`
 
 	// Codec names the Logstash codec that should be used when
-	// events are read. This is normally "plain" or "json".
+	// events are read. This is normally "line" or "json_lines".
 	Codec string `json:"codec"`
 
 	// IgnoredFields contains a list of fields that will be
@@ -104,12 +104,12 @@ var (
 )
 
 // New reads a test case configuration from a reader and returns a
-// TestCase. Defaults to a "plain" codec and ignoring the @version
+// TestCase. Defaults to a "line" codec and ignoring the @version
 // field. If the configuration being read lists additional fields to
 // ignore those will be ignored in addition to @version.
 func New(reader io.Reader) (*TestCaseSet, error) {
 	tcs := TestCaseSet{
-		Codec: "plain",
+		Codec: "line",
 	}
 	buf, err := ioutil.ReadAll(reader)
 	if err != nil {

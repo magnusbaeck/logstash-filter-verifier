@@ -152,7 +152,7 @@ ambiguous grok expressions. Here's an example:
 ```
 
 When you feed events like this to Logstash it's likely that the
-input used will have its codec set to "json". This is something we
+input used will have its codec set to "json_lines". This is something we
 should mimic on the Logstash Filter Verifier side too. Use `codec` for
 that:
 
@@ -161,7 +161,7 @@ that:
   "fields": {
     "type": "app"
   }
-  "codec": "json",
+  "codec": "json_lines",
   "ignore": ["host"],
   "input": [
     "{\"message\": \"This is a test message\", \"client\": \"127.0.0.1\", \"time\": \"2015-10-06T20:55:29Z\"}"
@@ -199,7 +199,7 @@ Test case files are JSON files containing a single object. That object
 may have the following properties:
 
 * `codec`: A string value naming the Logstash codec that should be
-  used when events are read. This is normally "plain" or "json".
+  used when events are read. This is normally "line" or "json_lines".
 * `expected`: An array of JSON objects with the events to be
   expected. They will be compared to the actual events produced by the
   Logstash process.
