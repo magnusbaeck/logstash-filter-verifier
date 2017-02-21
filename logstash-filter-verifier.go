@@ -66,6 +66,10 @@ var (
 // if there's a problem running the tests.
 func runTests(logstashPath string, tests []testcase.TestCaseSet, configPaths []string, diffCommand []string, keptEnvVars []string) error {
 	ok := true
+	total := 0
+	successful := 0
+	failed := 0
+	missing := 0
 	for _, t := range tests {
 		fmt.Fprintf(os.Stderr, "Running tests in %s...\n", filepath.Base(t.File))
 		p, err := logstash.NewProcess(logstashPath, t.Codec, t.InputFields, keptEnvVars, configPaths...)
@@ -108,14 +112,29 @@ func runTests(logstashPath string, tests []testcase.TestCaseSet, configPaths []s
 			}
 			userError("%s", message)
 		}
+
+		total += len(result.Events)
 		if err = t.Compare(result.Events, false, diffCommand); err != nil {
-			userError("Testcase failed, continuing with the rest: %s", err.Error())
-			ok = false
+			if ce, ok := err.(testcase.ComparisonError); ok {
+				userError("Testcase failed, continuing with the rest: %s", ce.Error())
+				ok = false
+				if ce.ActualCount == ce.ExpectedCount {
+					successful += ce.ExpectedCount - len(ce.Mismatches)
+					failed += len(ce.Mismatches)
+				} else {
+					successful += ce.ActualCount - len(ce.Mismatches)
+					failed += len(ce.Mismatches)
+					missing += ce.ExpectedCount - ce.ActualCount
+				}
+			}
+		} else {
+			successful += len(result.Events)
 		}
 	}
 	if !ok {
 		return errors.New("One or more testcases failed.")
 	}
+	fmt.Printf("Total messages: %d, match successful: %d, match failed: %d, message missing: %d\n", total, successful, failed, missing)
 	return nil
 }
 
@@ -180,17 +199,36 @@ func runParallelTests(logstashPath string, tests []testcase.TestCaseSet, configP
 		}
 		userError("%s", message)
 	}
+
 	ok := true
+	total := 0
+	successful := 0
+	failed := 0
+	missing := 0
 	for i, t := range tests {
+		total += len(result.Events[i])
 		if err = t.Compare(result.Events[i], false, diffCommand); err != nil {
-			userError("Testcase failed, continuing with the rest: %s", err.Error())
-			ok = false
+			if ce, ok := err.(testcase.ComparisonError); ok {
+				userError("Testcase failed, continuing with the rest: %s", ce.Error())
+				ok = false
+				if ce.ActualCount == ce.ExpectedCount {
+					successful += ce.ExpectedCount - len(ce.Mismatches)
+					failed += len(ce.Mismatches)
+				} else {
+					successful += ce.ActualCount - len(ce.Mismatches)
+					failed += len(ce.Mismatches)
+					missing += ce.ExpectedCount - ce.ActualCount
+				}
+			}
+		} else {
+			successful += len(result.Events[i])
 		}
 	}
 
 	if !ok {
 		return errors.New("One or more testcases failed.")
 	}
+	fmt.Printf("Total messages: %d, match successful: %d, match failed: %d, message missing: %d\n", total, successful, failed, missing)
 	return nil
 }
 
