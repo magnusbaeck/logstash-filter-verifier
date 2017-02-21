@@ -1,3 +1,28 @@
+logstash-filter-verifier (1.2.0) RELEASED; urgency=medium
+
+  * Logstash 5.2 compatibility. Issues still exist with Logstash 5.0
+    and possibly 5.1.
+  * Addition of --sockets option that causes the program to use Unix
+    domain sockets to pass inputs to Logstash, enabling a single
+    Logstash process to be used for multiple test case files which
+    has the potential to dramatically shorten the execution time.
+  * Go 1.8 is now required for compiling.
+  * Support for a new test case file format where pairs of input and
+    expected output lines are store together. For now both formats
+    work.
+  * Addition of --logstash-output option that causes the Logstash
+    output to be emitted.
+  * JSON parse errors for test case files are reported with line and
+    column details to make it easier to find the problem.
+  * The makefile now supports a GOPATH variable with multiple paths.
+  * When adding fields to input events with the `fields` option, nested
+    fields may now be objects.
+  * Large floating point numbers are now formatted in a way that's
+    acceptable to Logstash.
+  * Minor improvements in the messages given when running the program.
+
+ -- Magnus Bäck <magnus@noun.se>  Tue, 21 Feb 2017 21:49:23 +0100
+
 logstash-filter-verifier (1.1.1) RELEASED; urgency=medium
 
   * Multiple filter configuration files now work. Previously only one
