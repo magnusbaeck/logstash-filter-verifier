@@ -3,7 +3,7 @@ Maintainer: Magnus Bäck <magnus@noun.se>
 Section: devel
 Priority: optional
 Standards-Version: 3.9.6
-Build-Depends: debhelper (>= 9), devscripts, git, golang-go | go-compiler
+Build-Depends: debhelper (>= 9), devscripts, git, golang-1.8-go | golang-go (>= 1.8)
 
 Package: logstash-filter-verifier
 Architecture: any
