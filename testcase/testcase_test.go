@@ -23,7 +23,7 @@ func TestNew(t *testing.T) {
 		{
 			`{"fields": {"type": "mytype"}}`,
 			TestCaseSet{
-				Codec: "plain",
+				Codec: "line",
 				InputFields: logstash.FieldSet{
 					"type": "mytype",
 				},
@@ -32,9 +32,9 @@ func TestNew(t *testing.T) {
 		},
 		// Happy flow with a custom codec.
 		{
-			`{"fields": {"type": "mytype"}, "codec": "json"}`,
+			`{"fields": {"type": "mytype"}, "codec": "json_lines"}`,
 			TestCaseSet{
-				Codec: "json",
+				Codec: "json_lines",
 				InputFields: logstash.FieldSet{
 					"type": "mytype",
 				},
@@ -45,7 +45,7 @@ func TestNew(t *testing.T) {
 		{
 			`{"ignore": ["foo"]}`,
 			TestCaseSet{
-				Codec:         "plain",
+				Codec:         "line",
 				IgnoredFields: []string{"@version", "foo"},
 			},
 		},
@@ -118,7 +118,7 @@ func TestCompare(t *testing.T) {
 				InputFields: logstash.FieldSet{
 					"type": "test",
 				},
-				Codec:          "plain",
+				Codec:          "line",
 				InputLines:     []string{},
 				ExpectedEvents: []logstash.Event{},
 			},
@@ -133,7 +133,7 @@ func TestCompare(t *testing.T) {
 				InputFields: logstash.FieldSet{
 					"type": "test",
 				},
-				Codec:      "plain",
+				Codec:      "line",
 				InputLines: []string{},
 				ExpectedEvents: []logstash.Event{
 					{
@@ -163,7 +163,7 @@ func TestCompare(t *testing.T) {
 				InputFields: logstash.FieldSet{
 					"type": "test",
 				},
-				Codec:      "plain",
+				Codec:      "line",
 				InputLines: []string{},
 				ExpectedEvents: []logstash.Event{
 					{
@@ -193,7 +193,7 @@ func TestCompare(t *testing.T) {
 				InputFields: logstash.FieldSet{
 					"type": "test",
 				},
-				Codec:      "plain",
+				Codec:      "line",
 				InputLines: []string{},
 				ExpectedEvents: []logstash.Event{
 					{
@@ -230,7 +230,7 @@ func TestCompare(t *testing.T) {
 				InputFields: logstash.FieldSet{
 					"type": "test",
 				},
-				Codec:      "plain",
+				Codec:      "line",
 				InputLines: []string{},
 				ExpectedEvents: []logstash.Event{
 					{
@@ -267,7 +267,7 @@ func TestCompare(t *testing.T) {
 				InputFields: logstash.FieldSet{
 					"type": "test",
 				},
-				Codec:         "plain",
+				Codec:         "line",
 				IgnoredFields: []string{"ignored"},
 				InputLines:    []string{},
 				ExpectedEvents: []logstash.Event{
@@ -292,7 +292,7 @@ func TestCompare(t *testing.T) {
 				InputFields: logstash.FieldSet{
 					"type": "test",
 				},
-				Codec:      "plain",
+				Codec:      "line",
 				InputLines: []string{},
 				ExpectedEvents: []logstash.Event{
 					{
