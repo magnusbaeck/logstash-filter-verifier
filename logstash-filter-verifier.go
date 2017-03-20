@@ -69,7 +69,7 @@ var (
 func runTests(logstashPath string, tests []testcase.TestCaseSet, configPaths []string, diffCommand []string, keptEnvVars []string) error {
 	ok := true
 	for _, t := range tests {
-		fmt.Fprintf(os.Stderr, "Running tests in %s...\n", filepath.Base(t.File))
+		fmt.Printf("Running tests in %s...\n", filepath.Base(t.File))
 		p, err := logstash.NewProcess(logstashPath, t.Codec, t.InputFields, keptEnvVars, configPaths...)
 		if err != nil {
 			return err
