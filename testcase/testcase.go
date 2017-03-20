@@ -186,7 +186,7 @@ func (tcs *TestCaseSet) Compare(events []logstash.Event, quiet bool, diffCommand
 
 	for i, actualEvent := range events {
 		if !quiet {
-			fmt.Fprintf(os.Stderr, "Comparing message %d of %s...\n", i+1, filepath.Base(tcs.File))
+			fmt.Printf("Comparing message %d of %s...\n", i+1, filepath.Base(tcs.File))
 		}
 
 		for _, ignored := range tcs.IgnoredFields {
