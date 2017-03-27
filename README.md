@@ -261,6 +261,10 @@ the test case files need to include the property `codec` set to the value `line`
 * All Logstash processes are run serially. By running them in parallel
   the execution time can be reduced drastically on multi-core
   machines.
+* There have been reports regarding problems in combination with X-Pack plugins
+  for Logstash ([Issue #31](https://github.com/magnusbaeck/logstash-filter-verifier/issues/31)).
+  One possibility to resolve this problem is to disable the monitoring
+  with the following configuration option in `logstash.yml`: `xpack.monitoring.enabled: false`.
 
 ## License
 
