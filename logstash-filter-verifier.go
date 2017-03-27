@@ -114,7 +114,7 @@ func runTests(logstashPath string, tests []testcase.TestCaseSet, configPaths []s
 		}
 	}
 	if !ok {
-		return errors.New("One or more testcases failed.")
+		return errors.New("one or more testcases failed")
 	}
 	return nil
 }
@@ -189,7 +189,7 @@ func runParallelTests(logstashPath string, tests []testcase.TestCaseSet, configP
 	}
 
 	if !ok {
-		return errors.New("One or more testcases failed.")
+		return errors.New("one or more testcases failed")
 	}
 	return nil
 }
