@@ -10,8 +10,6 @@ import (
 	"runtime"
 	"strings"
 
-	"time"
-
 	"github.com/alecthomas/kingpin"
 	"github.com/magnusbaeck/logstash-filter-verifier/logging"
 	"github.com/magnusbaeck/logstash-filter-verifier/logstash"
@@ -44,6 +42,10 @@ var (
 			Flag("sockets", "Use Unix domain sockets for the communication with Logstash.").
 			Default("false").
 			Bool()
+	unixSocketCommTimeout = kingpin.
+				Flag("sockets-timeout", "Timeout (duration) for the communication wit Logstash via Unix domain sockets.").
+				Default("60s").
+				Duration()
 	logstashOutput = kingpin.
 			Flag("logstash-output", "Print the debug output of logstash.").
 			Default("false").
@@ -119,8 +121,6 @@ func runTests(logstashPath string, tests []testcase.TestCaseSet, configPaths []s
 	return nil
 }
 
-const unixSocketCommTimeout = 60 * time.Second
-
 // runParallelTests runs multiple set of configuration in a single
 // instance of Logstash against a slice of test cases and compares
 // the actual events against the expected set. Returns an error if
@@ -129,7 +129,7 @@ func runParallelTests(logstashPath string, tests []testcase.TestCaseSet, configP
 	var testStreams []*logstash.TestStream
 
 	for _, t := range tests {
-		ts, err := logstash.NewTestStream(t.Codec, t.InputFields, unixSocketCommTimeout)
+		ts, err := logstash.NewTestStream(t.Codec, t.InputFields, *unixSocketCommTimeout)
 		if err != nil {
 			logstash.CleanupTestStreams(testStreams)
 			return err
