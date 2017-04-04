@@ -64,6 +64,8 @@ type TestCaseSet struct {
 	// Optionally other information regarding the test case
 	// may be supplied.
 	TestCases []TestCase `json:"testcases"`
+
+	descriptions []string
 }
 
 // TestCase is a pair of an input line that should be fed
@@ -78,6 +80,10 @@ type TestCase struct {
 	// compared to the actual events produced by the Logstash
 	// process.
 	ExpectedEvents []logstash.Event `json:"expected"`
+
+	// Description contains an optional description of the test case
+	// which will be printed while the tests are executed.
+	Description string `json:"description"`
 }
 
 // ComparisonError indicates that there was a mismatch when the
@@ -125,9 +131,13 @@ func New(reader io.Reader) (*TestCaseSet, error) {
 		tcs.IgnoredFields = append(tcs.IgnoredFields, f)
 	}
 	sort.Strings(tcs.IgnoredFields)
+	tcs.descriptions = make([]string, len(tcs.ExpectedEvents))
 	for _, tc := range tcs.TestCases {
 		tcs.InputLines = append(tcs.InputLines, tc.InputLines...)
 		tcs.ExpectedEvents = append(tcs.ExpectedEvents, tc.ExpectedEvents...)
+		for range tc.ExpectedEvents {
+			tcs.descriptions = append(tcs.descriptions, tc.Description)
+		}
 	}
 	return &tcs, nil
 }
@@ -186,7 +196,11 @@ func (tcs *TestCaseSet) Compare(events []logstash.Event, quiet bool, diffCommand
 
 	for i, actualEvent := range events {
 		if !quiet {
-			fmt.Printf("Comparing message %d of %s...\n", i+1, filepath.Base(tcs.File))
+			var description string
+			if len(tcs.descriptions[i]) > 0 {
+				description = fmt.Sprintf(" (%s)", tcs.descriptions[i])
+			}
+			fmt.Printf("Comparing message %d of %d from %s%s...\n", i+1, len(events), filepath.Base(tcs.File), description)
 		}
 
 		for _, ignored := range tcs.IgnoredFields {
