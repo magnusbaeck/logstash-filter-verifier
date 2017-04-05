@@ -219,7 +219,9 @@ may have the following properties:
   and a field `expected`, which work the same as the above mentioned
   `input` and `expected`, but allow to have the input and the expected
   event close together in the test case file, which offers a better
-  overview.
+  overview. An optional `description` field can be used to describe the
+  test case, e.g. as documentation. The description will be included in
+  the program's progress messages.
 
 ## Migrate to testcases
 
