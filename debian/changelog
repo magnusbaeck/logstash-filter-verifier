@@ -1,3 +1,15 @@
+logstash-filter-verifier (1.2.1) RELEASED; urgency=medium
+
+  * Addition of --sockets-timeout option to control how long to
+    wait for Logstash to start up and become ready to process
+    events when using the --sockets option.
+  * Status and progress messages are now written to stdout instead
+    of stderr.
+  * Addition of a "description" field for test cases that e.g. can be
+    used as a short piece of documentation.
+
+ -- Magnus Bäck <magnus@noun.se>  Wed, 5 Apr 2017 22:07:33 +0200
+
 logstash-filter-verifier (1.2.0) RELEASED; urgency=medium
 
   * Logstash 5.2 compatibility. Issues still exist with Logstash 5.0
