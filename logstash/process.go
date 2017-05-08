@@ -35,7 +35,7 @@ type Process struct {
 // the desired codec for the stdin input and inputType the value of
 // the "type" field for ingested events. The configs parameter is
 // one or more configuration files containing Logstash filters.
-func NewProcess(logstashPath, inputCodec string, fields FieldSet, keptEnvVars []string, configs ...string) (*Process, error) {
+func NewProcess(logstashPath string, logstashArgs []string, inputCodec string, fields FieldSet, keptEnvVars []string, configs ...string) (*Process, error) {
 	if len(configs) == 0 {
 		return nil, errors.New("Must provide non-empty list of configuration file or directory names.")
 	}
@@ -84,6 +84,7 @@ func NewProcess(logstashPath, inputCodec string, fields FieldSet, keptEnvVars []
 		"-l",
 		logFile.Name(),
 	}
+	args = append(args, logstashArgs...)
 
 	p, err := newProcessWithArgs(logstashPath, args, getLimitedEnvironment(os.Environ(), keptEnvVars))
 	if err != nil {

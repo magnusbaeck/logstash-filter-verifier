@@ -50,6 +50,9 @@ var (
 			Flag("logstash-output", "Print the debug output of logstash.").
 			Default("false").
 			Bool()
+	logstashArgs = kingpin.
+			Flag("logstash-arg", "Command line arguments, which are passed to Logstash. Flag and value have to be provided as a flag each, e.g.: --logstash-arg=-n --logstash-arg=InstanceName").
+			Strings()
 
 	// Arguments
 	testcasePath = kingpin.
@@ -66,11 +69,11 @@ var (
 // slice of test cases and compares the actual events against the
 // expected set. Returns an error if at least one test case fails or
 // if there's a problem running the tests.
-func runTests(logstashPath string, tests []testcase.TestCaseSet, configPaths []string, diffCommand []string, keptEnvVars []string) error {
+func runTests(logstashPath string, logstashArgs []string, tests []testcase.TestCaseSet, configPaths []string, diffCommand []string, keptEnvVars []string) error {
 	ok := true
 	for _, t := range tests {
 		fmt.Printf("Running tests in %s...\n", filepath.Base(t.File))
-		p, err := logstash.NewProcess(logstashPath, t.Codec, t.InputFields, keptEnvVars, configPaths...)
+		p, err := logstash.NewProcess(logstashPath, logstashArgs, t.Codec, t.InputFields, keptEnvVars, configPaths...)
 		if err != nil {
 			return err
 		}
@@ -125,7 +128,7 @@ func runTests(logstashPath string, tests []testcase.TestCaseSet, configPaths []s
 // instance of Logstash against a slice of test cases and compares
 // the actual events against the expected set. Returns an error if
 // at least one test case fails or if there's a problem running the tests.
-func runParallelTests(logstashPath string, tests []testcase.TestCaseSet, configPaths []string, diffCommand []string, keptEnvVars []string) error {
+func runParallelTests(logstashPath string, logstashArgs []string, tests []testcase.TestCaseSet, configPaths []string, diffCommand []string, keptEnvVars []string) error {
 	var testStreams []*logstash.TestStream
 
 	for _, t := range tests {
@@ -137,7 +140,7 @@ func runParallelTests(logstashPath string, tests []testcase.TestCaseSet, configP
 		testStreams = append(testStreams, ts)
 	}
 
-	p, err := logstash.NewParallelProcess(logstashPath, testStreams, keptEnvVars, configPaths...)
+	p, err := logstash.NewParallelProcess(logstashPath, logstashArgs, testStreams, keptEnvVars, configPaths...)
 	if err != nil {
 		return err
 	}
@@ -244,12 +247,12 @@ func main() {
 			os.Exit(1)
 		}
 		fmt.Println("Use Unix domain sockets.")
-		if err = runParallelTests(*logstashPath, tests, *configPaths, diffCmd, *keptEnvVars); err != nil {
+		if err = runParallelTests(*logstashPath, *logstashArgs, tests, *configPaths, diffCmd, *keptEnvVars); err != nil {
 			userError(err.Error())
 			os.Exit(1)
 		}
 	} else {
-		if err = runTests(*logstashPath, tests, *configPaths, diffCmd, *keptEnvVars); err != nil {
+		if err = runTests(*logstashPath, *logstashArgs, tests, *configPaths, diffCmd, *keptEnvVars); err != nil {
 			userError(err.Error())
 			os.Exit(1)
 		}

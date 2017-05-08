@@ -144,7 +144,7 @@ type ParallelProcess struct {
 // doesn't actually start it. logstashPath is the path to the Logstash
 // executable (typically /opt/logstash/bin/logstash). The configs parameter is
 // one or more configuration files containing Logstash filters.
-func NewParallelProcess(logstashPath string, testStream []*TestStream, keptEnvVars []string, configs ...string) (*ParallelProcess, error) {
+func NewParallelProcess(logstashPath string, logstashArgs []string, testStream []*TestStream, keptEnvVars []string, configs ...string) (*ParallelProcess, error) {
 	if len(configs) == 0 {
 		return nil, errors.New("must provide non-empty list of configuration file or directory names")
 	}
@@ -190,6 +190,7 @@ func NewParallelProcess(logstashPath string, testStream []*TestStream, keptEnvVa
 		"-l",
 		logFile.Name(),
 	}
+	args = append(args, logstashArgs...)
 
 	p, err := newParallelProcessWithArgs(logstashPath, args, getLimitedEnvironment(os.Environ(), keptEnvVars))
 	if err != nil {

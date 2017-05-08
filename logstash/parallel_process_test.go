@@ -25,7 +25,7 @@ func TestParallelProcess(t *testing.T) {
 	}
 	configPaths := []string{file.Name()}
 
-	p, err := NewParallelProcess(os.Args[0], []*TestStream{ts}, []string{}, configPaths...)
+	p, err := NewParallelProcess(os.Args[0], []string{}, []*TestStream{ts}, []string{}, configPaths...)
 	if err != nil {
 		t.Fatalf("Unable to create ParallelProcess: %s", err)
 	}

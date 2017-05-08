@@ -251,6 +251,24 @@ For the test cases to work properly together with the unix domain socket input,
 the test case files need to include the property `codec` set to the value `line`
 (or `json_lines`, if json formatted input should be processed).
 
+## Notes about flag --logstash-arg
+
+The `--logstash-arg` flag is used to supply additional command line arguments
+or flags for Logstash. Those arguments are not processed by Logstash Filter
+Verifier other than just forwarding them to Logstash.
+For flags consisting of a flag name and a value, for both a seperate
+`--logstash-arg` in the correct order has to be provided.
+Because values, starting with one or two dashes (`-`) are treated as flag
+by Logstash Filter Verifier, for those flags the value MUST not be separated
+using a space but they have to be separated from the flag with the equal sign (`=`).
+
+For example to set the Logstash node name the following arguments have to be provided
+to Logstash Filter Verifier:
+
+```
+--logstash-arg=--node.name --logstash-arg MyInstanceName
+```
+
 ## Known limitations and future work
 
 * Some log formats don't include all timestamp components. For
