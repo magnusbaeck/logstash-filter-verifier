@@ -19,6 +19,8 @@ import (
 )
 
 var (
+	log = logging.MustGetLogger()
+
 	loglevels = []string{"CRITICAL", "ERROR", "WARNING", "NOTICE", "INFO", "DEBUG"}
 
 	// Flags
@@ -127,6 +129,19 @@ func runTests(logstashPath string, tests []testcase.TestCaseSet, configPaths []s
 // at least one test case fails or if there's a problem running the tests.
 func runParallelTests(logstashPath string, tests []testcase.TestCaseSet, configPaths []string, diffCommand []string, keptEnvVars []string) error {
 	var testStreams []*logstash.TestStream
+
+	badCodecs := map[string]string{
+		"json":  "json_lines",
+		"plain": "line",
+	}
+	for _, t := range tests {
+		if repl, ok := badCodecs[t.Codec]; ok {
+			log.Warning(
+				"The testcase file %q uses the %q codec. That codec "+
+					"will most likely not work as expected when --sockets is used. Try %q instead.",
+				t.File, t.Codec, repl)
+		}
+	}
 
 	for _, t := range tests {
 		ts, err := logstash.NewTestStream(t.Codec, t.InputFields, *unixSocketCommTimeout)
