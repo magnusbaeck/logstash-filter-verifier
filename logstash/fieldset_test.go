@@ -69,14 +69,6 @@ func TestLogstashHash(t *testing.T) {
 			`{ "a" => 1.23 }`,
 			nil,
 		},
-		// Single integer value is okay
-		{
-			FieldSet{
-				"a": 123,
-			},
-			`{ "a" => 123 }`,
-			nil,
-		},
 		// Large floats must not be converted to exponential notation, because this is not valid for Logstash
 		// https://github.com/elastic/logstash/blob/master/logstash-core/lib/logstash/config/grammar.treetop#L92
 		{
@@ -114,9 +106,9 @@ func TestLogstashHash(t *testing.T) {
 		{
 			FieldSet{
 				"a": "b",
-				"c": 123,
+				"c": 123.0,
 				"d": true,
-				"e": []interface{}{"f", 123, true},
+				"e": []interface{}{"f", 123.0, true},
 			},
 			`{ "a" => "b" "c" => 123 "d" => true "e" => ["f", 123, true] }`,
 			nil,
@@ -126,14 +118,14 @@ func TestLogstashHash(t *testing.T) {
 			FieldSet{
 				"z": map[string]interface{}{
 					"a": "b",
-					"c": 123,
+					"c": 123.0,
 					"d": true,
-					"e": []interface{}{"f", 123, true},
+					"e": []interface{}{"f", 123.0, true},
 					"g": map[string]interface{}{
 						"a": "b",
-						"c": 123,
+						"c": 123.0,
 						"d": true,
-						"e": []interface{}{"f", 123, true},
+						"e": []interface{}{"f", 123.0, true},
 					},
 				},
 			},
