@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
-	"reflect"
 	"testing"
 )
 
@@ -23,70 +22,6 @@ func newCloseableBuffer(s string) *closeableBuffer {
 
 func (cb *closeableBuffer) Close() error {
 	return nil
-}
-
-func TestGetLimitedEnvironment(t *testing.T) {
-	cases := []struct {
-		original []string
-		kept     []string
-		expected []string
-	}{
-		// Only TZ=UTC set if there are no keepers.
-		{
-			[]string{
-				"A=B",
-				"C=D",
-			},
-			[]string{},
-			[]string{
-				"TZ=UTC",
-			},
-		},
-		// Original variables can be kept.
-		{
-			[]string{
-				"A=B",
-				"C=D",
-			},
-			[]string{
-				"A",
-			},
-			[]string{
-				"A=B",
-				"TZ=UTC",
-			},
-		},
-		// TZ can be overridden.
-		{
-			[]string{
-				"TZ=Europe/Stockholm",
-			},
-			[]string{
-				"TZ",
-			},
-			[]string{
-				"TZ=Europe/Stockholm",
-			},
-		},
-		// Listing a keeper that isn't set is okay.
-		{
-			[]string{
-				"A=B",
-			},
-			[]string{
-				"UNDEFINED_KEEPER",
-			},
-			[]string{
-				"TZ=UTC",
-			},
-		},
-	}
-	for i, c := range cases {
-		actual := getLimitedEnvironment(c.original, c.kept)
-		if !reflect.DeepEqual(c.expected, actual) {
-			t.Errorf("Test %d:\nExpected:\n%#v\nGot:\n%#v", i, c.expected, actual)
-		}
-	}
 }
 
 func TestProcess(t *testing.T) {
