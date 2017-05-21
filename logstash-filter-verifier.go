@@ -29,13 +29,21 @@ var (
 			Default("diff -u").
 			String()
 	keptEnvVars = kingpin.
-			Flag("keep-env", "Add this environment variable to the list of variables that will be preserved from the calling process's environment. Defaults to an empty list, except TZ which will be set to \"UTC\".").
+			Flag("keep-env", "Add this environment variable to the list of variables that will be preserved from the calling process's environment. Defaults to an empty list.").
 			PlaceHolder("VARNAME").
 			Strings()
 	loglevel = kingpin.
 			Flag("loglevel", fmt.Sprintf("Set the desired level of logging (one of: %s).", strings.Join(loglevels, ", "))).
 			Default("WARNING").
 			Enum(loglevels...)
+	logstashArgs = kingpin.
+			Flag("logstash-arg", "Command line arguments, which are passed to Logstash. Flag and value have to be provided as a flag each, e.g.: --logstash-arg=-n --logstash-arg=InstanceName").
+			PlaceHolder("ARG").
+			Strings()
+	logstashOutput = kingpin.
+			Flag("logstash-output", "Print the debug output of logstash.").
+			Default("false").
+			Bool()
 	logstashPath = kingpin.
 			Flag("logstash-path", "Set the path to the Logstash executable.").
 			Default("/opt/logstash/bin/logstash").
@@ -45,16 +53,9 @@ var (
 			Default("false").
 			Bool()
 	unixSocketCommTimeout = kingpin.
-				Flag("sockets-timeout", "Timeout (duration) for the communication wit Logstash via Unix domain sockets.").
+				Flag("sockets-timeout", "Timeout (duration) for the communication with Logstash via Unix domain sockets. Has no effect unless --sockets is used.").
 				Default("60s").
 				Duration()
-	logstashOutput = kingpin.
-			Flag("logstash-output", "Print the debug output of logstash.").
-			Default("false").
-			Bool()
-	logstashArgs = kingpin.
-			Flag("logstash-arg", "Command line arguments, which are passed to Logstash. Flag and value have to be provided as a flag each, e.g.: --logstash-arg=-n --logstash-arg=InstanceName").
-			Strings()
 
 	// Arguments
 	testcasePath = kingpin.
