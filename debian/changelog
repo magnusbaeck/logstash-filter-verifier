@@ -1,3 +1,16 @@
+logstash-filter-verifier (1.3.0) RELEASED; urgency=medium
+
+  * The --sockets option is incompatible with a couple of input codecs
+    that happen to work if you don't use that option. Warn the use about
+    this.
+  * Addition of a --logstash-arg option that allows the user to pass
+    additional arguments to all started Logstash processes.
+  * The PATH environment variable is by default passed on to started
+    Logstash processes. This fixes a bug where Logstash under some
+    circumstances isn't able to find the JVM.
+
+ -- Magnus Bäck <magnus@noun.se>  Sun, 21 May 2017 21:14:40 +0200
+
 logstash-filter-verifier (1.2.1) RELEASED; urgency=medium
 
   * Addition of --sockets-timeout option to control how long to
