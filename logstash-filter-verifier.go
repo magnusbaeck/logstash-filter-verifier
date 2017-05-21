@@ -23,13 +23,17 @@ var (
 
 	loglevels = []string{"CRITICAL", "ERROR", "WARNING", "NOTICE", "INFO", "DEBUG"}
 
+	defaultKeptEnvVars = []string{
+		"PATH",
+	}
+
 	// Flags
 	diffCommand = kingpin.
 			Flag("diff-command", "Set the command to run to compare two events. The command will receive the two files to compare as arguments.").
 			Default("diff -u").
 			String()
 	keptEnvVars = kingpin.
-			Flag("keep-env", "Add this environment variable to the list of variables that will be preserved from the calling process's environment. Defaults to an empty list.").
+			Flag("keep-env", fmt.Sprintf("Add this environment variable to the list of variables that will be preserved from the calling process's environment. Initial list of variables: %s", strings.Join(defaultKeptEnvVars, ", "))).
 			PlaceHolder("VARNAME").
 			Strings()
 	loglevel = kingpin.
@@ -257,18 +261,20 @@ func main() {
 		userError(err.Error())
 		os.Exit(1)
 	}
+
+	allKeptEnvVars := append(defaultKeptEnvVars, *keptEnvVars...)
 	if *unixSockets {
 		if runtime.GOOS == "windows" {
 			userError("Use of Unix domain sockets for communication with Logstash is not supported on Windows.")
 			os.Exit(1)
 		}
 		fmt.Println("Use Unix domain sockets.")
-		if err = runParallelTests(*logstashPath, *logstashArgs, tests, *configPaths, diffCmd, *keptEnvVars); err != nil {
+		if err = runParallelTests(*logstashPath, *logstashArgs, tests, *configPaths, diffCmd, allKeptEnvVars); err != nil {
 			userError(err.Error())
 			os.Exit(1)
 		}
 	} else {
-		if err = runTests(*logstashPath, *logstashArgs, tests, *configPaths, diffCmd, *keptEnvVars); err != nil {
+		if err = runTests(*logstashPath, *logstashArgs, tests, *configPaths, diffCmd, allKeptEnvVars); err != nil {
 			userError(err.Error())
 			os.Exit(1)
 		}
