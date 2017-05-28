@@ -152,7 +152,19 @@ func getSocketInOutPlugins(testStream []*TestStream) ([]string, []string, error)
 	logstashOutput := make([]string, len(testStream))
 
 	for i, sp := range testStream {
-		sp.fields["@metadata"] = map[string]interface{}{"__lfv_testcase": strconv.Itoa(i)}
+		// Populate the [@metadata][__lfv_testcase] field with
+		// the testcase index so that we can route messages
+		// from each testcase to the right output stream.
+		if metadataField, exists := sp.fields["@metadata"]; exists {
+			if metadataSubfields, ok := metadataField.(map[string]interface{}); ok {
+				metadataSubfields["__lfv_testcase"] = strconv.Itoa(i)
+			} else {
+				return nil, nil, fmt.Errorf("the supplied contents of the @metadata field must be a hash (found %T instead)", metadataField)
+			}
+		} else {
+			sp.fields["@metadata"] = map[string]interface{}{"__lfv_testcase": strconv.Itoa(i)}
+		}
+
 		fieldHash, err := sp.fields.LogstashHash()
 		if err != nil {
 			return nil, nil, err

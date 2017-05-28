@@ -3,6 +3,7 @@
 package logstash
 
 import (
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -68,6 +69,7 @@ func TestGetSocketInOutPlugins(t *testing.T) {
 		streams         []*TestStream
 		expectedInputs  []string
 		expectedOutputs []string
+		err             error
 	}{
 		// Single TestStream struct.
 		{
@@ -86,6 +88,7 @@ func TestGetSocketInOutPlugins(t *testing.T) {
 			[]string{
 				fmt.Sprintf("if [@metadata][__lfv_testcase] == \"0\" { file { path => %q codec => \"json_lines\" } }", receiver.Name()),
 			},
+			nil,
 		},
 		// Multiple TestStream structs.
 		{
@@ -113,18 +116,66 @@ func TestGetSocketInOutPlugins(t *testing.T) {
 				fmt.Sprintf("if [@metadata][__lfv_testcase] == \"0\" { file { path => %q codec => \"json_lines\" } }", receiver.Name()),
 				fmt.Sprintf("if [@metadata][__lfv_testcase] == \"1\" { file { path => %q codec => \"json_lines\" } }", receiver.Name()),
 			},
+			nil,
+		},
+		// Single TestStream struct with additional fields set.
+		{
+			[]*TestStream{
+				&TestStream{
+					senderPath: "/tmp/foo",
+					inputCodec: "any_codec",
+					fields: FieldSet{
+						"@metadata": map[string]interface{}{
+							"foo": "bar",
+						},
+					},
+					receiver: receiver,
+				},
+			},
+			[]string{
+				"unix { mode => \"client\" path => \"/tmp/foo\" codec => \"any_codec\" " +
+					"add_field => { \"[@metadata][__lfv_testcase]\" => \"0\" \"[@metadata][foo]\" => \"bar\" } }",
+			},
+			[]string{
+				fmt.Sprintf("if [@metadata][__lfv_testcase] == \"0\" { file { path => %q codec => \"json_lines\" } }", receiver.Name()),
+			},
+			nil,
+		},
+		// Single TestStream struct with a non-map @metadata
+		// field should result in an error.
+		{
+			[]*TestStream{
+				&TestStream{
+					senderPath: "/tmp/foo",
+					inputCodec: "any_codec",
+					fields: FieldSet{
+						"@metadata": "foo",
+					},
+					receiver: receiver,
+				},
+			},
+			nil,
+			nil,
+			errors.New("the supplied contents of the @metadata field must be a hash (found string instead)"),
 		},
 	}
 	for i, c := range cases {
 		inputs, outputs, err := getSocketInOutPlugins(c.streams)
-		if err != nil {
+
+		if err == nil && c.err != nil {
+			t.Errorf("Test %d: Expected failure, got success.", i)
+		} else if err != nil && c.err == nil {
 			t.Errorf("Test %d: Expected success, got this error instead: %#v", i, err)
-		}
-		if !reflect.DeepEqual(c.expectedInputs, inputs) {
-			t.Errorf("Test %d:\nExpected:\n%#v\nGot:\n%#v", i, c.expectedInputs, inputs)
-		}
-		if !reflect.DeepEqual(c.expectedOutputs, outputs) {
-			t.Errorf("Test %d:\nExpected:\n%#v\nGot:\n%#v", i, c.expectedOutputs, outputs)
+		} else if err != nil && c.err != nil && err.Error() != c.err.Error() {
+			t.Errorf("Test %d: Didn't get the expected error.\nExpected:\n%s\nGot:\n%s", i, c.err, err)
+
+		} else {
+			if !reflect.DeepEqual(c.expectedInputs, inputs) {
+				t.Errorf("Test %d:\nExpected:\n%#v\nGot:\n%#v", i, c.expectedInputs, inputs)
+			}
+			if !reflect.DeepEqual(c.expectedOutputs, outputs) {
+				t.Errorf("Test %d:\nExpected:\n%#v\nGot:\n%#v", i, c.expectedOutputs, outputs)
+			}
 		}
 	}
 }
