@@ -140,6 +140,31 @@ type ParallelProcess struct {
 	stdio io.Reader
 }
 
+// getSocketInOutPlugins returns arrays of strings with the Logstash
+// input and output plugins, respectively, that should be included in
+// the Logstash configuration used for the supplied array of
+// TestStream structs.
+//
+// Each item in the returned array corresponds to the TestStream with
+// the same index.
+func getSocketInOutPlugins(testStream []*TestStream) ([]string, []string, error) {
+	logstashInput := make([]string, len(testStream))
+	logstashOutput := make([]string, len(testStream))
+
+	for i, sp := range testStream {
+		sp.fields["@metadata"] = map[string]interface{}{"__lfv_testcase": strconv.Itoa(i)}
+		fieldHash, err := sp.fields.LogstashHash()
+		if err != nil {
+			return nil, nil, err
+		}
+		logstashInput[i] = fmt.Sprintf("unix { mode => \"client\" path => %q codec => %q add_field => %s }",
+			sp.senderPath, sp.inputCodec, fieldHash)
+		logstashOutput[i] = fmt.Sprintf("if [@metadata][__lfv_testcase] == \"%s\" { file { path => %q codec => \"json_lines\" } }",
+			strconv.Itoa(i), sp.receiver.Name())
+	}
+	return logstashInput, logstashOutput, nil
+}
+
 // NewParallelProcess prepares for the execution of a new Logstash process but
 // doesn't actually start it. logstashPath is the path to the Logstash
 // executable (typically /opt/logstash/bin/logstash). The configs parameter is
@@ -149,18 +174,10 @@ func NewParallelProcess(logstashPath string, logstashArgs []string, testStream [
 		return nil, errors.New("must provide non-empty list of configuration file or directory names")
 	}
 
-	logstashInput := make([]string, len(testStream))
-	logstashOutput := make([]string, len(testStream))
-
-	for i, sp := range testStream {
-		sp.fields["@metadata"] = map[string]interface{}{"__lfv_testcase": strconv.Itoa(i)}
-		fieldHash, err := sp.fields.LogstashHash()
-		if err != nil {
-			CleanupTestStreams(testStream)
-			return nil, err
-		}
-		logstashInput[i] = fmt.Sprintf("unix { mode => \"client\" path => %q codec => %q add_field => %s }", sp.senderPath, sp.inputCodec, fieldHash)
-		logstashOutput[i] = fmt.Sprintf("if [@metadata][__lfv_testcase] == \"%s\" { file { path => %q codec => \"json_lines\" } }", strconv.Itoa(i), sp.receiver.Name())
+	logstashInput, logstashOutput, err := getSocketInOutPlugins(testStream)
+	if err != nil {
+		CleanupTestStreams(testStream)
+		return nil, err
 	}
 
 	logFile, err := newDeletedTempFile("", "")
