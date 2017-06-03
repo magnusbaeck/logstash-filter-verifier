@@ -36,7 +36,7 @@ type Process struct {
 // one or more configuration files containing Logstash filters.
 func NewProcess(logstashPath string, logstashArgs []string, inputCodec string, fields FieldSet, keptEnvVars []string, configs ...string) (*Process, error) {
 	if len(configs) == 0 {
-		return nil, errors.New("Must provide non-empty list of configuration file or directory names.")
+		return nil, errors.New("must provide non-empty list of configuration file or directory names")
 	}
 
 	// Unfortunately Logstash doesn't make it easy to just read
@@ -133,7 +133,7 @@ func (p *Process) Start() error {
 // returns the result of the execution.
 func (p *Process) Wait() (*Result, error) {
 	if p.child.Process == nil {
-		return nil, errors.New("Can't wait on an unborn process.")
+		return nil, errors.New("can't wait on an unborn process")
 	}
 	log.Debug("Waiting for child with pid %d to terminate.", p.child.Process.Pid)
 
