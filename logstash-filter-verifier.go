@@ -76,11 +76,11 @@ var (
 // slice of test cases and compares the actual events against the
 // expected set. Returns an error if at least one test case fails or
 // if there's a problem running the tests.
-func runTests(logstashPath string, logstashArgs []string, tests []testcase.TestCaseSet, configPaths []string, diffCommand []string, keptEnvVars []string) error {
+func runTests(inv *logstash.Invocation, tests []testcase.TestCaseSet, diffCommand []string, keptEnvVars []string) error {
 	ok := true
 	for _, t := range tests {
 		fmt.Printf("Running tests in %s...\n", filepath.Base(t.File))
-		p, err := logstash.NewProcess(logstashPath, logstashArgs, t.Codec, t.InputFields, keptEnvVars, configPaths...)
+		p, err := logstash.NewProcess(inv, t.Codec, t.InputFields, keptEnvVars)
 		if err != nil {
 			return err
 		}
@@ -135,7 +135,7 @@ func runTests(logstashPath string, logstashArgs []string, tests []testcase.TestC
 // instance of Logstash against a slice of test cases and compares
 // the actual events against the expected set. Returns an error if
 // at least one test case fails or if there's a problem running the tests.
-func runParallelTests(logstashPath string, logstashArgs []string, tests []testcase.TestCaseSet, configPaths []string, diffCommand []string, keptEnvVars []string) error {
+func runParallelTests(inv *logstash.Invocation, tests []testcase.TestCaseSet, diffCommand []string, keptEnvVars []string) error {
 	var testStreams []*logstash.TestStream
 
 	badCodecs := map[string]string{
@@ -160,7 +160,7 @@ func runParallelTests(logstashPath string, logstashArgs []string, tests []testca
 		testStreams = append(testStreams, ts)
 	}
 
-	p, err := logstash.NewParallelProcess(logstashPath, logstashArgs, testStreams, keptEnvVars, configPaths...)
+	p, err := logstash.NewParallelProcess(inv, testStreams, keptEnvVars)
 	if err != nil {
 		return err
 	}
@@ -263,18 +263,24 @@ func main() {
 	}
 
 	allKeptEnvVars := append(defaultKeptEnvVars, *keptEnvVars...)
+	inv, err := logstash.NewInvocation(*logstashPath, *logstashArgs, *configPaths...)
+	if err != nil {
+		userError("An error occurred while setting up the Logstash environment: %s", err.Error())
+		os.Exit(1)
+	}
+	defer inv.Release()
 	if *unixSockets {
 		if runtime.GOOS == "windows" {
 			userError("Use of Unix domain sockets for communication with Logstash is not supported on Windows.")
 			os.Exit(1)
 		}
 		fmt.Println("Use Unix domain sockets.")
-		if err = runParallelTests(*logstashPath, *logstashArgs, tests, *configPaths, diffCmd, allKeptEnvVars); err != nil {
+		if err = runParallelTests(inv, tests, diffCmd, allKeptEnvVars); err != nil {
 			userError(err.Error())
 			os.Exit(1)
 		}
 	} else {
-		if err = runTests(*logstashPath, *logstashArgs, tests, *configPaths, diffCmd, allKeptEnvVars); err != nil {
+		if err = runTests(inv, tests, diffCmd, allKeptEnvVars); err != nil {
 			userError(err.Error())
 			os.Exit(1)
 		}

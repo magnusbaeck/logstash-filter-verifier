@@ -246,8 +246,14 @@ func TestProcess(t *testing.T) {
 			t.Fatalf("Test %d: Unexpected error when creating process struct: %s", i, err)
 		}
 		defer p.Release()
+		p.inv = &Invocation{
+			LogstashPath: c.command,
+			args:         c.args,
+			configDir:    "",
+			logFile:      newCloseableBuffer(c.log),
+		}
+		defer p.inv.Release()
 		p.output = newCloseableBuffer(c.output)
-		p.log = newCloseableBuffer(c.log)
 
 		err = p.Start()
 		compareErrors(t, i, c.starterr, err)

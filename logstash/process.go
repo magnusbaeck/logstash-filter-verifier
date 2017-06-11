@@ -21,11 +21,10 @@ type Process struct {
 	// been written so that the process will terminate.
 	Input io.WriteCloser
 
-	child     *exec.Cmd
-	configDir *string
-	log       io.ReadCloser
-	output    io.ReadCloser
-	stdio     io.Reader
+	child  *exec.Cmd
+	inv    *Invocation
+	output io.ReadCloser
+	stdio  io.Reader
 }
 
 // NewProcess prepares for the execution of a new Logstash process but
@@ -34,11 +33,7 @@ type Process struct {
 // the desired codec for the stdin input and inputType the value of
 // the "type" field for ingested events. The configs parameter is
 // one or more configuration files containing Logstash filters.
-func NewProcess(logstashPath string, logstashArgs []string, inputCodec string, fields FieldSet, keptEnvVars []string, configs ...string) (*Process, error) {
-	if len(configs) == 0 {
-		return nil, errors.New("must provide non-empty list of configuration file or directory names")
-	}
-
+func NewProcess(inv *Invocation, inputCodec string, fields FieldSet, keptEnvVars []string) (*Process, error) {
 	// Unfortunately Logstash doesn't make it easy to just read
 	// events from a stdout-connected pipe and the log from a
 	// stderr-connected pipe. Stdout can contain other garbage (at
@@ -50,49 +45,22 @@ func NewProcess(logstashPath string, logstashArgs []string, inputCodec string, f
 	if err != nil {
 		return nil, err
 	}
-	logFile, err := newDeletedTempFile("", "")
-	if err != nil {
-		_ = outputFile.Close()
-		return nil, err
-	}
-
-	configDir, err := getConfigFileDir(configs)
-	if err != nil {
-		_ = logFile.Close()
-		_ = outputFile.Close()
-		return nil, err
-	}
 
 	fieldHash, err := fields.LogstashHash()
 	if err != nil {
-		_ = logFile.Close()
 		_ = outputFile.Close()
 		return nil, err
 	}
-	args := []string{
-		"-w", // Make messages arrive in order.
-		"1",
-		"--debug",
-		"-e",
-		fmt.Sprintf(
-			"input { stdin { codec => %q add_field => %s } } "+
-				"output { file { path => %q codec => \"json_lines\" } }",
-			inputCodec, fieldHash, outputFile.Name()),
-		"-f",
-		configDir,
-		"-l",
-		logFile.Name(),
-	}
-	args = append(args, logstashArgs...)
+	inputs := fmt.Sprintf("input { stdin { codec => %q add_field => %s } }", inputCodec, fieldHash)
+	outputs := fmt.Sprintf("output { file { path => %q codec => \"json_lines\" } }", outputFile.Name())
 
-	p, err := newProcessWithArgs(logstashPath, args, getLimitedEnvironment(os.Environ(), keptEnvVars))
+	env := getLimitedEnvironment(os.Environ(), keptEnvVars)
+	p, err := newProcessWithArgs(inv.LogstashPath, inv.Args(inputs, outputs), env)
 	if err != nil {
 		_ = outputFile.Close()
-		_ = logFile.Close()
 	}
-	p.configDir = &configDir
 	p.output = outputFile
-	p.log = logFile
+	p.inv = inv
 	return p, nil
 }
 
@@ -141,7 +109,7 @@ func (p *Process) Wait() (*Result, error) {
 
 	// Save the log output regardless of whether the child process
 	// succeeded or not.
-	logbuf, logerr := ioutil.ReadAll(p.log)
+	logbuf, logerr := ioutil.ReadAll(p.inv.logFile)
 	if logerr != nil {
 		// Log this weird error condition but don't let it
 		// fail the function. We don't care about the log
@@ -170,8 +138,4 @@ func (p *Process) Wait() (*Result, error) {
 // Release frees all allocated resources connected to this process.
 func (p *Process) Release() {
 	_ = p.output.Close()
-	_ = p.log.Close()
-	if p.configDir != nil {
-		_ = os.RemoveAll(*p.configDir)
-	}
 }

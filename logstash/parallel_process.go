@@ -133,9 +133,8 @@ func CleanupTestStreams(ts []*TestStream) {
 type ParallelProcess struct {
 	streams []*TestStream
 
-	child     *exec.Cmd
-	configDir *string
-	log       io.ReadCloser
+	child *exec.Cmd
+	inv   *Invocation
 
 	stdio io.Reader
 }
@@ -181,53 +180,21 @@ func getSocketInOutPlugins(testStream []*TestStream) ([]string, []string, error)
 // doesn't actually start it. logstashPath is the path to the Logstash
 // executable (typically /opt/logstash/bin/logstash). The configs parameter is
 // one or more configuration files containing Logstash filters.
-func NewParallelProcess(logstashPath string, logstashArgs []string, testStream []*TestStream, keptEnvVars []string, configs ...string) (*ParallelProcess, error) {
-	if len(configs) == 0 {
-		return nil, errors.New("must provide non-empty list of configuration file or directory names")
-	}
-
+func NewParallelProcess(inv *Invocation, testStream []*TestStream, keptEnvVars []string) (*ParallelProcess, error) {
 	logstashInput, logstashOutput, err := getSocketInOutPlugins(testStream)
 	if err != nil {
 		CleanupTestStreams(testStream)
 		return nil, err
 	}
 
-	logFile, err := newDeletedTempFile("", "")
+	env := getLimitedEnvironment(os.Environ(), keptEnvVars)
+	inputs := fmt.Sprintf("input { %s } ", strings.Join(logstashInput, " "))
+	outputs := fmt.Sprintf("output { %s }", strings.Join(logstashOutput, " "))
+	p, err := newParallelProcessWithArgs(inv.LogstashPath, inv.Args(inputs, outputs), env)
 	if err != nil {
 		CleanupTestStreams(testStream)
-		return nil, err
 	}
-
-	configDir, err := getConfigFileDir(configs)
-	if err != nil {
-		CleanupTestStreams(testStream)
-		_ = logFile.Close()
-		return nil, err
-	}
-
-	args := []string{
-		"-w", // Make messages arrive in order.
-		"1",
-		"--debug",
-		"-e",
-		fmt.Sprintf(
-			"input { %s } "+
-				"output { %s }",
-			strings.Join(logstashInput, " "), strings.Join(logstashOutput, " ")),
-		"-f",
-		configDir,
-		"-l",
-		logFile.Name(),
-	}
-	args = append(args, logstashArgs...)
-
-	p, err := newParallelProcessWithArgs(logstashPath, args, getLimitedEnvironment(os.Environ(), keptEnvVars))
-	if err != nil {
-		CleanupTestStreams(testStream)
-		_ = logFile.Close()
-	}
-	p.configDir = &configDir
-	p.log = logFile
+	p.inv = inv
 	p.streams = testStream
 	return p, nil
 }
@@ -271,7 +238,7 @@ func (p *ParallelProcess) Wait() (*ParallelResult, error) {
 
 	// Save the log output regardless of whether the child process
 	// succeeded or not.
-	logbuf, logerr := ioutil.ReadAll(p.log)
+	logbuf, logerr := ioutil.ReadAll(p.inv.logFile)
 	if logerr != nil {
 		// Log this weird error condition but don't let it
 		// fail the function. We don't care about the log
@@ -323,8 +290,4 @@ func (p *ParallelProcess) Wait() (*ParallelResult, error) {
 // Release frees all allocated resources connected to this process.
 func (p *ParallelProcess) Release() {
 	CleanupTestStreams(p.streams)
-	_ = p.log.Close()
-	if p.configDir != nil {
-		_ = os.RemoveAll(*p.configDir)
-	}
 }
