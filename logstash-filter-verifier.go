@@ -11,6 +11,7 @@ import (
 	"strings"
 
 	"github.com/alecthomas/kingpin"
+	"github.com/blang/semver"
 	"github.com/magnusbaeck/logstash-filter-verifier/logging"
 	"github.com/magnusbaeck/logstash-filter-verifier/logstash"
 	"github.com/magnusbaeck/logstash-filter-verifier/testcase"
@@ -22,6 +23,8 @@ var (
 	log = logging.MustGetLogger()
 
 	loglevels = []string{"CRITICAL", "ERROR", "WARNING", "NOTICE", "INFO", "DEBUG"}
+
+	autoVersion = "auto"
 
 	defaultKeptEnvVars = []string{
 		"PATH",
@@ -51,6 +54,11 @@ var (
 	logstashPath = kingpin.
 			Flag("logstash-path", "Set the path to the Logstash executable.").
 			Default("/opt/logstash/bin/logstash").
+			String()
+	logstashVersion = kingpin.
+			Flag("logstash-version", "The version of Logstash that's being targeted.").
+			PlaceHolder("VERSION").
+			Default(autoVersion).
 			String()
 	unixSockets = kingpin.
 			Flag("sockets", "Use Unix domain sockets for the communication with Logstash.").
@@ -263,7 +271,23 @@ func main() {
 	}
 
 	allKeptEnvVars := append(defaultKeptEnvVars, *keptEnvVars...)
-	inv, err := logstash.NewInvocation(*logstashPath, *logstashArgs, *configPaths...)
+
+	var targetVersion *semver.Version
+	if *logstashVersion == autoVersion {
+		targetVersion, err = logstash.DetectVersion(*logstashPath, allKeptEnvVars)
+		if err != nil {
+			userError("Could not auto-detect the Logstash version: %s", err.Error())
+			os.Exit(1)
+		}
+	} else {
+		targetVersion, err = semver.New(*logstashVersion)
+		if err != nil {
+			userError("The given Logstash version %q could not be parsed as a version number (%s).", *logstashVersion, err.Error())
+			os.Exit(1)
+		}
+	}
+
+	inv, err := logstash.NewInvocation(*logstashPath, *logstashArgs, targetVersion, *configPaths...)
 	if err != nil {
 		userError("An error occurred while setting up the Logstash environment: %s", err.Error())
 		os.Exit(1)

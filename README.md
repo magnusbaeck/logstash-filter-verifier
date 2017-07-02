@@ -269,6 +269,21 @@ to Logstash Filter Verifier:
 --logstash-arg=--node.name --logstash-arg MyInstanceName
 ```
 
+## Notes about Logstash compatibility
+
+Different versions of Logstash behave slightly differently and changes
+in Logstash may require changes in Logstash Filter Verifier. Upon
+startup, the program will attempt to auto-detect the version of
+Logstash used and will use this information to adapt its own behavior.
+
+Starting with Logstash 5.0 finding out the Logstash version is very
+quick but in previous versions the version string was printed by Ruby
+code in the JVM so it took several seconds. To avoid this you can use
+the `--logstash-version` flag to tell Logstash Filter Verifier which
+version of Logstash it should expect. Example:
+
+    logstash-filter-verifier ... --logstash-version 2.4.0
+
 ## Known limitations and future work
 
 * Some log formats don't include all timestamp components. For
@@ -285,6 +300,11 @@ to Logstash Filter Verifier:
   for Logstash ([Issue #31](https://github.com/magnusbaeck/logstash-filter-verifier/issues/31)).
   One possibility to resolve this problem is to disable the monitoring
   with the following configuration option in `logstash.yml`: `xpack.monitoring.enabled: false`.
+* Support for Logstash 5.0 is incomplete but will work under most
+  circumstances. The `--logstash-arg` flag (described above) may
+  come in handy. See
+  [Issue #8](https://github.com/magnusbaeck/logstash-filter-verifier/issues/8)
+  for the current status.
 
 ## License
 

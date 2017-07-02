@@ -6,7 +6,11 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"os"
+	"path/filepath"
+
+	"github.com/blang/semver"
 )
 
 // Invocation represents an invocation of Logstash, including the
@@ -17,18 +21,25 @@ type Invocation struct {
 
 	args      []string
 	configDir string
+	logDir    string
 	logFile   io.ReadCloser
 }
 
 // NewInvocation creates a new Invocation struct that contains all
 // information required to start Logstash with a caller-selected set
 // of configurations.
-func NewInvocation(logstashPath string, logstashArgs []string, configs ...string) (*Invocation, error) {
+func NewInvocation(logstashPath string, logstashArgs []string, logstashVersion *semver.Version, configs ...string) (*Invocation, error) {
 	if len(configs) == 0 {
 		return nil, errors.New("must provide non-empty list of configuration file or directory names")
 	}
 
-	logFile, err := newDeletedTempFile("", "")
+	logDir, err := ioutil.TempDir("", "")
+	if err != nil {
+		return nil, err
+	}
+
+	logfilePath := filepath.Join(logDir, "logstash-plain.log")
+	logFile, err := os.Create(logfilePath)
 	if err != nil {
 		return nil, err
 	}
@@ -36,6 +47,7 @@ func NewInvocation(logstashPath string, logstashArgs []string, configs ...string
 	configDir, err := getConfigFileDir(configs)
 	if err != nil {
 		_ = logFile.Close()
+		_ = os.RemoveAll(logDir)
 		return nil, err
 	}
 
@@ -45,8 +57,14 @@ func NewInvocation(logstashPath string, logstashArgs []string, configs ...string
 		"--debug",
 		"-f",
 		configDir,
-		"-l",
-		logFile.Name(),
+	}
+	if logstashVersion.GTE(semver.MustParse("5.0.0")) {
+		// Starting with Logstash 5.0 you don't configure
+		// the path to the log file but the path to the log
+		// directory.
+		args = append(args, "-l", filepath.Dir(logfilePath))
+	} else {
+		args = append(args, "-l", logfilePath)
 	}
 	args = append(args, logstashArgs...)
 
@@ -54,6 +72,7 @@ func NewInvocation(logstashPath string, logstashArgs []string, configs ...string
 		LogstashPath: logstashPath,
 		args:         args,
 		configDir:    configDir,
+		logDir:       logDir,
 		logFile:      logFile,
 	}, nil
 }
@@ -68,4 +87,5 @@ func (inv *Invocation) Args(inputs string, outputs string) []string {
 func (inv *Invocation) Release() {
 	inv.logFile.Close()
 	_ = os.RemoveAll(inv.configDir)
+	_ = os.RemoveAll(inv.logDir)
 }

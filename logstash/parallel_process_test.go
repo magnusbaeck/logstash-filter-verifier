@@ -10,6 +10,8 @@ import (
 	"reflect"
 	"testing"
 	"time"
+
+	"github.com/blang/semver"
 )
 
 func TestParallelProcess(t *testing.T) {
@@ -28,7 +30,12 @@ func TestParallelProcess(t *testing.T) {
 	}
 	configPaths := []string{file.Name()}
 
-	inv, err := NewInvocation(os.Args[0], []string{}, configPaths...)
+	v, err := semver.New("5.0.0")
+	if err != nil {
+		t.Fatalf("Unable to parse version number: %s", err)
+	}
+
+	inv, err := NewInvocation(os.Args[0], []string{}, v, configPaths...)
 	if err != nil {
 		t.Fatalf("Unable to create Invocation: %s", err)
 	}
