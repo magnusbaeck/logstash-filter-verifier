@@ -212,7 +212,10 @@ may have the following properties:
 * `ignore`: An array with the names of the fields that should be
   removed from the events that Logstash emit. This is for example
   useful for dynamically generated fields whose contents can't be
-  predicted and hardwired into the test case file.
+  predicted and hardwired into the test case file. Currently only
+  top-level fields can be ignored, i.e. subfields can't be ignored.
+  This is a known limitation that's tracked in
+  [issue 47](https://github.com/magnusbaeck/logstash-filter-verifier/issues/47).
 * `input`: An array with the lines of input (each line being a string)
   that should be fed to the Logstash process.
 * `testcases`: An array of test case hashes, consisting of a field `input`
