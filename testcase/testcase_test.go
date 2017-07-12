@@ -364,7 +364,7 @@ func TestMarshalToFile(t *testing.T) {
 	}
 	var event logstash.Event
 	if err = json.Unmarshal(buf, &event); err != nil {
-		t.Errorf("%s: %q", err.Error(), string(buf))
+		t.Errorf("%s: %q", err, string(buf))
 	}
 }
 

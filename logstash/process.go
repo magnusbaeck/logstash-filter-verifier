@@ -115,7 +115,7 @@ func (p *Process) Wait() (*Result, error) {
 		// fail the function. We don't care about the log
 		// contents unless Logstash fails, in which we'll
 		// report that problem anyway.
-		log.Error("Error reading the Logstash logfile: %s", logerr.Error())
+		log.Error("Error reading the Logstash logfile: %s", logerr)
 	}
 	outbuf, _ := ioutil.ReadAll(p.stdio)
 

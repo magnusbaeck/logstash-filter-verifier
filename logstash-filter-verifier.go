@@ -152,7 +152,7 @@ func runTests(inv *logstash.Invocation, tests []testcase.TestCaseSet, diffComman
 			userError("%s", message)
 		}
 		if err = t.Compare(result.Events, false, diffCommand); err != nil {
-			userError("Testcase failed, continuing with the rest: %s", err.Error())
+			userError("Testcase failed, continuing with the rest: %s", err)
 			ok = false
 		}
 	}
@@ -237,7 +237,7 @@ func runParallelTests(inv *logstash.Invocation, tests []testcase.TestCaseSet, di
 	ok := true
 	for i, t := range tests {
 		if err = t.Compare(result.Events[i], false, diffCommand); err != nil {
-			userError("Testcase failed, continuing with the rest: %s", err.Error())
+			userError("Testcase failed, continuing with the rest: %s", err)
 			ok = false
 		}
 	}
@@ -283,7 +283,7 @@ func main() {
 
 	diffCmd, err := shellwords.NewParser().Parse(*diffCommand)
 	if err != nil {
-		userError("Error parsing diff command %q: %s", *diffCommand, err.Error())
+		userError("Error parsing diff command %q: %s", *diffCommand, err)
 		os.Exit(1)
 	}
 
@@ -297,7 +297,7 @@ func main() {
 
 	logstashPath, err := findExecutable(append(*logstashPaths, defaultLogstashPaths...))
 	if err != nil {
-		userError("Error locating Logstash: %s", err.Error())
+		userError("Error locating Logstash: %s", err)
 		os.Exit(1)
 	}
 
@@ -305,20 +305,20 @@ func main() {
 	if *logstashVersion == autoVersion {
 		targetVersion, err = logstash.DetectVersion(logstashPath, allKeptEnvVars)
 		if err != nil {
-			userError("Could not auto-detect the Logstash version: %s", err.Error())
+			userError("Could not auto-detect the Logstash version: %s", err)
 			os.Exit(1)
 		}
 	} else {
 		targetVersion, err = semver.New(*logstashVersion)
 		if err != nil {
-			userError("The given Logstash version %q could not be parsed as a version number (%s).", *logstashVersion, err.Error())
+			userError("The given Logstash version %q could not be parsed as a version number (%s).", *logstashVersion, err)
 			os.Exit(1)
 		}
 	}
 
 	inv, err := logstash.NewInvocation(logstashPath, *logstashArgs, targetVersion, *configPaths...)
 	if err != nil {
-		userError("An error occurred while setting up the Logstash environment: %s", err.Error())
+		userError("An error occurred while setting up the Logstash environment: %s", err)
 		os.Exit(1)
 	}
 	defer inv.Release()

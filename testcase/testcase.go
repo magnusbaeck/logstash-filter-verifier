@@ -190,7 +190,7 @@ func (tcs *TestCaseSet) Compare(events []logstash.Event, quiet bool, diffCommand
 	}
 	defer func() {
 		if err := os.RemoveAll(tempdir); err != nil {
-			log.Error("Problem deleting temporary directory: %s", err.Error())
+			log.Error("Problem deleting temporary directory: %s", err)
 		}
 	}()
 
@@ -240,7 +240,7 @@ func (tcs *TestCaseSet) Compare(events []logstash.Event, quiet bool, diffCommand
 func marshalToFile(event logstash.Event, filename string) error {
 	buf, err := json.MarshalIndent(event, "", "  ")
 	if err != nil {
-		return fmt.Errorf("Failed to marshal %+v as JSON: %s", event, err.Error())
+		return fmt.Errorf("Failed to marshal %+v as JSON: %s", event)
 	}
 	if err = os.MkdirAll(filepath.Dir(filename), 0700); err != nil {
 		return err
@@ -271,7 +271,7 @@ func runDiffCommand(command []string, file1, file2 string, quiet bool) (bool, er
 		return false, err
 	}
 	if err := c.Wait(); err != nil {
-		log.Info("Child with pid %d failed: %s", c.Process.Pid, err.Error())
+		log.Info("Child with pid %d failed: %s", c.Process.Pid, err)
 		return false, nil
 	}
 	return true, nil
