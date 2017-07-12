@@ -86,7 +86,7 @@ func TestGetSocketInOutPlugins(t *testing.T) {
 		// Single TestStream struct.
 		{
 			[]*TestStream{
-				&TestStream{
+				{
 					senderPath: "/tmp/foo",
 					inputCodec: "any_codec",
 					fields:     FieldSet{},
@@ -105,13 +105,13 @@ func TestGetSocketInOutPlugins(t *testing.T) {
 		// Multiple TestStream structs.
 		{
 			[]*TestStream{
-				&TestStream{
+				{
 					senderPath: "/tmp/foo",
 					inputCodec: "any_codec",
 					fields:     FieldSet{},
 					receiver:   receiver,
 				},
-				&TestStream{
+				{
 					senderPath: "/tmp/bar",
 					inputCodec: "other_codec",
 					fields:     FieldSet{},
@@ -133,7 +133,7 @@ func TestGetSocketInOutPlugins(t *testing.T) {
 		// Single TestStream struct with additional fields set.
 		{
 			[]*TestStream{
-				&TestStream{
+				{
 					senderPath: "/tmp/foo",
 					inputCodec: "any_codec",
 					fields: FieldSet{
@@ -157,7 +157,7 @@ func TestGetSocketInOutPlugins(t *testing.T) {
 		// field should result in an error.
 		{
 			[]*TestStream{
-				&TestStream{
+				{
 					senderPath: "/tmp/foo",
 					inputCodec: "any_codec",
 					fields: FieldSet{
