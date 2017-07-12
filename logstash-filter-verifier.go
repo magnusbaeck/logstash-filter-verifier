@@ -1,4 +1,4 @@
-// Copyright (c) 2015-2016 Magnus Bäck <magnus@noun.se>
+// Copyright (c) 2015-2017 Magnus Bäck <magnus@noun.se>
 
 package main
 
@@ -29,6 +29,10 @@ var (
 	defaultKeptEnvVars = []string{
 		"PATH",
 	}
+	defaultLogstashPaths = []string{
+		"/opt/logstash/bin/logstash",
+		"/usr/share/logstash/bin/logstash",
+	}
 
 	// Flags
 	diffCommand = kingpin.
@@ -51,10 +55,10 @@ var (
 			Flag("logstash-output", "Print the debug output of logstash.").
 			Default("false").
 			Bool()
-	logstashPath = kingpin.
-			Flag("logstash-path", "Set the path to the Logstash executable.").
-			Default("/opt/logstash/bin/logstash").
-			String()
+	logstashPaths = kingpin.
+			Flag("logstash-path", "Add a path to the list of Logstash executable paths that will be tried in order (first match is used).").
+			PlaceHolder("PATH").
+			Strings()
 	logstashVersion = kingpin.
 			Flag("logstash-version", "The version of Logstash that's being targeted.").
 			PlaceHolder("VERSION").
@@ -79,6 +83,25 @@ var (
 			Required().
 			ExistingFilesOrDirs()
 )
+
+// findExecutable examines the passed file paths and returns the first
+// one that is an existing executable file.
+func findExecutable(paths []string) (string, error) {
+	for _, p := range paths {
+		stat, err := os.Stat(p)
+		if err != nil {
+			log.Debug("Logstash path candidate rejected: %s", err)
+			continue
+		}
+		if !stat.Mode().IsRegular() || stat.Mode().Perm()&0111 != 0111 {
+			log.Debug("Logstash path candidate not an executable regular file: %s", p)
+			continue
+		}
+		log.Debug("Logstash path candidate accepted: %s", p)
+		return p, nil
+	}
+	return "", fmt.Errorf("no existing executable found among candidates: %s", strings.Join(paths, ", "))
+}
 
 // runTests runs Logstash with a set of configuration files against a
 // slice of test cases and compares the actual events against the
@@ -272,9 +295,15 @@ func main() {
 
 	allKeptEnvVars := append(defaultKeptEnvVars, *keptEnvVars...)
 
+	logstashPath, err := findExecutable(append(*logstashPaths, defaultLogstashPaths...))
+	if err != nil {
+		userError("Error locating Logstash: %s", err.Error())
+		os.Exit(1)
+	}
+
 	var targetVersion *semver.Version
 	if *logstashVersion == autoVersion {
-		targetVersion, err = logstash.DetectVersion(*logstashPath, allKeptEnvVars)
+		targetVersion, err = logstash.DetectVersion(logstashPath, allKeptEnvVars)
 		if err != nil {
 			userError("Could not auto-detect the Logstash version: %s", err.Error())
 			os.Exit(1)
@@ -287,7 +316,7 @@ func main() {
 		}
 	}
 
-	inv, err := logstash.NewInvocation(*logstashPath, *logstashArgs, targetVersion, *configPaths...)
+	inv, err := logstash.NewInvocation(logstashPath, *logstashArgs, targetVersion, *configPaths...)
 	if err != nil {
 		userError("An error occurred while setting up the Logstash environment: %s", err.Error())
 		os.Exit(1)
