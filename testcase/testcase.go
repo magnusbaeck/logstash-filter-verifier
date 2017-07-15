@@ -240,7 +240,7 @@ func (tcs *TestCaseSet) Compare(events []logstash.Event, quiet bool, diffCommand
 func marshalToFile(event logstash.Event, filename string) error {
 	buf, err := json.MarshalIndent(event, "", "  ")
 	if err != nil {
-		return fmt.Errorf("Failed to marshal %+v as JSON: %s", event)
+		return fmt.Errorf("Failed to marshal %+v as JSON: %s", event, err)
 	}
 	if err = os.MkdirAll(filepath.Dir(filename), 0700); err != nil {
 		return err
