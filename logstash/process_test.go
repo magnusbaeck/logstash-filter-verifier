@@ -249,7 +249,7 @@ func TestProcess(t *testing.T) {
 		p.inv = &Invocation{
 			LogstashPath: c.command,
 			args:         c.args,
-			configDir:    "",
+			pipelineDir:  "",
 			logFile:      newCloseableBuffer(c.log),
 		}
 		defer p.inv.Release()

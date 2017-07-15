@@ -19,11 +19,11 @@ import (
 type Invocation struct {
 	LogstashPath string
 
-	args      []string
-	configDir string
-	logDir    string
-	logFile   io.ReadCloser
-	tempDir   string
+	args        []string
+	pipelineDir string
+	logDir      string
+	logFile     io.ReadCloser
+	tempDir     string
 }
 
 // NewInvocation creates a new Invocation struct that contains all
@@ -39,8 +39,8 @@ func NewInvocation(logstashPath string, logstashArgs []string, logstashVersion *
 		return nil, err
 	}
 	logDir := filepath.Join(tempDir, "log")
-	configDir := filepath.Join(tempDir, "config")
-	for _, dir := range []string{logDir, configDir} {
+	pipelineDir := filepath.Join(tempDir, "pipeline.d")
+	for _, dir := range []string{logDir, pipelineDir} {
 		if err = os.Mkdir(dir, 0755); err != nil {
 			_ = os.RemoveAll(tempDir)
 			return nil, err
@@ -54,7 +54,7 @@ func NewInvocation(logstashPath string, logstashArgs []string, logstashVersion *
 		return nil, err
 	}
 
-	if err := getConfigFileDir(configDir, configs); err != nil {
+	if err := getPipelineConfigDir(pipelineDir, configs); err != nil {
 		_ = logFile.Close()
 		_ = os.RemoveAll(tempDir)
 		return nil, err
@@ -65,7 +65,7 @@ func NewInvocation(logstashPath string, logstashArgs []string, logstashVersion *
 		"1",
 		"--debug",
 		"-f",
-		configDir,
+		pipelineDir,
 	}
 	if logstashVersion.GTE(semver.MustParse("5.0.0")) {
 		// Starting with Logstash 5.0 you don't configure
@@ -80,7 +80,7 @@ func NewInvocation(logstashPath string, logstashArgs []string, logstashVersion *
 	return &Invocation{
 		LogstashPath: logstashPath,
 		args:         args,
-		configDir:    configDir,
+		pipelineDir:  pipelineDir,
 		logDir:       logDir,
 		logFile:      logFile,
 		tempDir:      tempDir,

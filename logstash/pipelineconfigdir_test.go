@@ -45,7 +45,7 @@ func TestCopyFile(t *testing.T) {
 	}
 }
 
-func TestGetConfigFileDir(t *testing.T) {
+func TestGetPipelineConfigDir(t *testing.T) {
 	cases := []struct {
 		files  []string
 		result error
@@ -97,7 +97,7 @@ func TestGetConfigFileDir(t *testing.T) {
 		}
 
 		// Call the function under test.
-		actualResult := getConfigFileDir(resultDir, configFiles)
+		actualResult := getPipelineConfigDir(resultDir, configFiles)
 		if actualResult == nil && c.result != nil {
 			t.Fatalf("Test %d: Expected failure, got success.", i)
 		} else if actualResult != nil && c.result == nil {

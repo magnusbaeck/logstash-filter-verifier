@@ -28,11 +28,12 @@ func copyFile(sourcePath, destPath string) error {
 	return err
 }
 
-// getConfigFileDir copies one or more configuration files into the
-// root of the specified directory. Returns an error if any I/O error
-// occurs but also if the basenames of the configuration files aren't
-// unique, i.e. if they'd overwrite one another in the directory.
-func getConfigFileDir(dir string, configs []string) error {
+// getPipelineConfigDir copies one or more Logstash pipeline
+// configuration files into the root of the specified directory.
+// Returns an error if any I/O error occurs but also if the
+// basenames of the configuration files aren't unique, i.e. if
+// they'd overwrite one another in the directory.
+func getPipelineConfigDir(dir string, configs []string) error {
 	for _, f := range configs {
 		dest := filepath.Join(dir, filepath.Base(f))
 		_, err := os.Stat(dest)
