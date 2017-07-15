@@ -1,4 +1,4 @@
-// Copyright (c) 2016 Magnus Bäck <magnus@noun.se>
+// Copyright (c) 2016-2017 Magnus Bäck <magnus@noun.se>
 
 package logstash
 
@@ -16,10 +16,14 @@ func copyFile(sourcePath, destPath string) error {
 	if err != nil {
 		return err
 	}
+	defer r.Close()
 	w, err := os.Create(destPath)
 	if err != nil {
 		return err
 	}
 	_, err = io.Copy(w, r)
-	return err
+	if err != nil {
+		return err
+	}
+	return w.Close()
 }
