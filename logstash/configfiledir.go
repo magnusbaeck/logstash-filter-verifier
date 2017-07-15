@@ -29,33 +29,27 @@ func copyFile(sourcePath, destPath string) error {
 }
 
 // getConfigFileDir copies one or more configuration files into the
-// root of a newly created temporary directory and returns the path to
-// that directory. Returns an error if any I/O error occurs but also
-// if the basenames of the configuration files aren't unique, i.e. if
-// they'd overwrite one another in the directory.
-func getConfigFileDir(configs []string) (string, error) {
-	dir, err := ioutil.TempDir("", "")
-	if err != nil {
-		return "", err
-	}
-
+// root of the specified directory. Returns an error if any I/O error
+// occurs but also if the basenames of the configuration files aren't
+// unique, i.e. if they'd overwrite one another in the directory.
+func getConfigFileDir(dir string, configs []string) error {
 	for _, f := range configs {
 		dest := filepath.Join(dir, filepath.Base(f))
-		_, err = os.Stat(dest)
+		_, err := os.Stat(dest)
 		if err == nil {
 			_ = os.RemoveAll(dir)
-			return "", fmt.Errorf(
+			return fmt.Errorf(
 				"The collected list of configuration files contains "+
 					"two files with the name %q which isn't allowed.",
 				filepath.Base(f))
 		} else if !os.IsNotExist(err) {
 			_ = os.RemoveAll(dir)
-			return "", err
+			return err
 		}
 		err = copyFile(f, dest)
 		if err != nil {
 			_ = os.RemoveAll(dir)
-			return "", fmt.Errorf("Config file copy failed: %s", err)
+			return fmt.Errorf("Config file copy failed: %s", err)
 		}
 	}
 	fileList, err := getFilesInDir(dir)
@@ -68,7 +62,7 @@ func getConfigFileDir(configs []string) (string, error) {
 		// problems.
 		log.Warning("Unexpected error when locating configuration files: %s", err)
 	}
-	return dir, nil
+	return nil
 }
 
 // getFilesInDir returns a sorted list of the names of the

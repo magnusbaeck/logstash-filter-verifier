@@ -77,6 +77,12 @@ func TestGetConfigFileDir(t *testing.T) {
 		}
 		defer os.RemoveAll(tempdir)
 
+		resultDir, err := ioutil.TempDir("", "")
+		if err != nil {
+			t.Fatalf("Test %d: Unexpected error when creating temp dir: %s", i, err)
+		}
+		defer os.RemoveAll(resultDir)
+
 		var configFiles []string
 		for _, f := range c.files {
 			err = os.MkdirAll(filepath.Join(tempdir, filepath.Dir(f)), 0755)
@@ -91,10 +97,7 @@ func TestGetConfigFileDir(t *testing.T) {
 		}
 
 		// Call the function under test.
-		dir, actualResult := getConfigFileDir(configFiles)
-		if dir != "" {
-			defer os.RemoveAll(dir)
-		}
+		actualResult := getConfigFileDir(resultDir, configFiles)
 		if actualResult == nil && c.result != nil {
 			t.Fatalf("Test %d: Expected failure, got success.", i)
 		} else if actualResult != nil && c.result == nil {
@@ -107,7 +110,7 @@ func TestGetConfigFileDir(t *testing.T) {
 
 		// Get a sorted list of names of the files in the
 		// returned directory.
-		actualConfigFiles, err := getFilesInDir(dir)
+		actualConfigFiles, err := getFilesInDir(resultDir)
 		if err != nil {
 			t.Fatalf("Test %d: Unexpected error when reading dir: %s", i, err)
 		}
@@ -125,7 +128,7 @@ func TestGetConfigFileDir(t *testing.T) {
 
 		// Check that each file contains its own name.
 		for _, f := range actualConfigFiles {
-			buf, err := ioutil.ReadFile(filepath.Join(dir, f))
+			buf, err := ioutil.ReadFile(filepath.Join(resultDir, f))
 			if err != nil {
 				t.Fatalf("Test %d: Unexpected error when reading file: %s", i, err)
 			}

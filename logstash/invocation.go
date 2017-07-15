@@ -23,6 +23,7 @@ type Invocation struct {
 	configDir string
 	logDir    string
 	logFile   io.ReadCloser
+	tempDir   string
 }
 
 // NewInvocation creates a new Invocation struct that contains all
@@ -33,21 +34,29 @@ func NewInvocation(logstashPath string, logstashArgs []string, logstashVersion *
 		return nil, errors.New("must provide non-empty list of configuration file or directory names")
 	}
 
-	logDir, err := ioutil.TempDir("", "")
+	tempDir, err := ioutil.TempDir("", "")
 	if err != nil {
 		return nil, err
+	}
+	logDir := filepath.Join(tempDir, "log")
+	configDir := filepath.Join(tempDir, "config")
+	for _, dir := range []string{logDir, configDir} {
+		if err = os.Mkdir(dir, 0755); err != nil {
+			_ = os.RemoveAll(tempDir)
+			return nil, err
+		}
 	}
 
 	logfilePath := filepath.Join(logDir, "logstash-plain.log")
 	logFile, err := os.Create(logfilePath)
 	if err != nil {
+		_ = os.RemoveAll(tempDir)
 		return nil, err
 	}
 
-	configDir, err := getConfigFileDir(configs)
-	if err != nil {
+	if err := getConfigFileDir(configDir, configs); err != nil {
 		_ = logFile.Close()
-		_ = os.RemoveAll(logDir)
+		_ = os.RemoveAll(tempDir)
 		return nil, err
 	}
 
@@ -74,6 +83,7 @@ func NewInvocation(logstashPath string, logstashArgs []string, logstashVersion *
 		configDir:    configDir,
 		logDir:       logDir,
 		logFile:      logFile,
+		tempDir:      tempDir,
 	}, nil
 }
 
@@ -86,6 +96,5 @@ func (inv *Invocation) Args(inputs string, outputs string) []string {
 // Release releases any resources allocated by the struct.
 func (inv *Invocation) Release() {
 	inv.logFile.Close()
-	_ = os.RemoveAll(inv.configDir)
-	_ = os.RemoveAll(inv.logDir)
+	_ = os.RemoveAll(inv.tempDir)
 }
