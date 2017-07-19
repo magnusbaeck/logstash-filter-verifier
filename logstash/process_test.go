@@ -8,6 +8,8 @@ import (
 	"os"
 	"os/exec"
 	"testing"
+
+	"github.com/magnusbaeck/logstash-filter-verifier/testhelpers"
 )
 
 type closeableBuffer struct {
@@ -256,7 +258,7 @@ func TestProcess(t *testing.T) {
 		p.output = newCloseableBuffer(c.output)
 
 		err = p.Start()
-		compareErrors(t, i, c.starterr, err)
+		testhelpers.CompareErrors(t, i, c.starterr, err)
 		if err != nil {
 			break
 		}
@@ -269,7 +271,7 @@ func TestProcess(t *testing.T) {
 		_ = p.Input.Close()
 
 		result, err := p.Wait()
-		compareErrors(t, i, c.waiterr, err)
+		testhelpers.CompareErrors(t, i, c.waiterr, err)
 
 		if result.Success != c.result.Success {
 			t.Errorf("Test %d: Expected Success=%v, got Success=%v instead", i, c.result.Success, result.Success)

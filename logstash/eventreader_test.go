@@ -6,6 +6,8 @@ import (
 	"bytes"
 	"fmt"
 	"testing"
+
+	"github.com/magnusbaeck/logstash-filter-verifier/testhelpers"
 )
 
 func TestReadEvents(t *testing.T) {
@@ -70,6 +72,6 @@ func TestReadEvents(t *testing.T) {
 			t.Errorf("Test %d:\nExpected events:\n%q\nGot:\n%q", i, expectedEvents, actualEvents)
 		}
 
-		compareErrors(t, i, c.err, err)
+		testhelpers.CompareErrors(t, i, c.err, err)
 	}
 }

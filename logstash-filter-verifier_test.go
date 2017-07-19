@@ -8,38 +8,14 @@ import (
 	"path/filepath"
 	"regexp"
 	"testing"
+
+	"github.com/magnusbaeck/logstash-filter-verifier/testhelpers"
 )
-
-type fileWithMode struct {
-	path string
-	mode os.FileMode
-}
-
-func (fwp fileWithMode) create(dir string) error {
-	path := filepath.Join(dir, fwp.path)
-	if fwp.mode&os.ModeDir != 0 {
-		err := os.Mkdir(path, fwp.mode&os.ModePerm)
-		if err != nil {
-			return err
-		}
-		return nil
-	}
-	f, err := os.Create(path)
-	if err != nil {
-		return err
-	}
-	defer f.Close()
-	err = f.Chmod(fwp.mode & os.ModePerm)
-	if err != nil {
-		return err
-	}
-	return nil
-}
 
 func TestFindExecutable(t *testing.T) {
 	cases := []struct {
 		// Test setup
-		files []fileWithMode
+		files []testhelpers.FileWithMode
 
 		// Input & expected output
 		inputs      []string
@@ -48,14 +24,14 @@ func TestFindExecutable(t *testing.T) {
 	}{
 		// No input paths.
 		{
-			[]fileWithMode{},
+			[]testhelpers.FileWithMode{},
 			[]string{},
 			"",
 			regexp.MustCompile(`^no existing executable found among candidates: `),
 		},
 		// No matches.
 		{
-			[]fileWithMode{},
+			[]testhelpers.FileWithMode{},
 			[]string{
 				"foo",
 				"bar",
@@ -65,7 +41,7 @@ func TestFindExecutable(t *testing.T) {
 		},
 		// Only matching file is a directory.
 		{
-			[]fileWithMode{
+			[]testhelpers.FileWithMode{
 				{"foo", os.ModeDir | 0755},
 			},
 			[]string{
@@ -77,7 +53,7 @@ func TestFindExecutable(t *testing.T) {
 		},
 		// Only matching file is not executable.
 		{
-			[]fileWithMode{
+			[]testhelpers.FileWithMode{
 				{"foo", 0644},
 			},
 			[]string{
@@ -89,7 +65,7 @@ func TestFindExecutable(t *testing.T) {
 		},
 		// Multiple matches, returning first one.
 		{
-			[]fileWithMode{
+			[]testhelpers.FileWithMode{
 				{"foo", 0755},
 				{"bar", 0755},
 			},
@@ -102,7 +78,7 @@ func TestFindExecutable(t *testing.T) {
 		},
 		// Multiple matches, skipping the matching directory.
 		{
-			[]fileWithMode{
+			[]testhelpers.FileWithMode{
 				{"foo", os.ModeDir | 0755},
 				{"bar", 0755},
 			},
@@ -115,7 +91,7 @@ func TestFindExecutable(t *testing.T) {
 		},
 		// Multiple matches, skipping the matching non-executable.
 		{
-			[]fileWithMode{
+			[]testhelpers.FileWithMode{
 				{"foo", 0644},
 				{"bar", 0755},
 			},
@@ -135,7 +111,7 @@ func TestFindExecutable(t *testing.T) {
 		}
 
 		for _, fwp := range c.files {
-			if err = fwp.create(tempdir); err != nil {
+			if err = fwp.Create(tempdir); err != nil {
 				t.Fatalf("Test %d: Unexpected error when creating test file: %s", i, err)
 			}
 		}
