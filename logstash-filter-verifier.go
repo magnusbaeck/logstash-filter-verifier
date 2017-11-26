@@ -270,27 +270,29 @@ func userError(format string, a ...interface{}) {
 	}
 }
 
-func main() {
+// mainEntrypoint functions as the main function of the program and
+// returns the desired exit code.
+func mainEntrypoint() int {
 	kingpin.Version(fmt.Sprintf("%s %s", kingpin.CommandLine.Name, version))
 	kingpin.Parse()
 
 	level, err := oplogging.LogLevel(*loglevel)
 	if err != nil {
 		prefixedUserError("Bad loglevel: %s", loglevel)
-		os.Exit(1)
+		return 1
 	}
 	logging.SetLevel(level)
 
 	diffCmd, err := shellwords.NewParser().Parse(*diffCommand)
 	if err != nil {
 		userError("Error parsing diff command %q: %s", *diffCommand, err)
-		os.Exit(1)
+		return 1
 	}
 
 	tests, err := testcase.DiscoverTests(*testcasePath)
 	if err != nil {
 		userError(err.Error())
-		os.Exit(1)
+		return 1
 	}
 
 	allKeptEnvVars := append(defaultKeptEnvVars, *keptEnvVars...)
@@ -298,7 +300,7 @@ func main() {
 	logstashPath, err := findExecutable(append(*logstashPaths, defaultLogstashPaths...))
 	if err != nil {
 		userError("Error locating Logstash: %s", err)
-		os.Exit(1)
+		return 1
 	}
 
 	var targetVersion *semver.Version
@@ -306,37 +308,41 @@ func main() {
 		targetVersion, err = logstash.DetectVersion(logstashPath, allKeptEnvVars)
 		if err != nil {
 			userError("Could not auto-detect the Logstash version: %s", err)
-			os.Exit(1)
+			return 1
 		}
 	} else {
 		targetVersion, err = semver.New(*logstashVersion)
 		if err != nil {
 			userError("The given Logstash version %q could not be parsed as a version number (%s).", *logstashVersion, err)
-			os.Exit(1)
+			return 1
 		}
 	}
 
 	inv, err := logstash.NewInvocation(logstashPath, *logstashArgs, targetVersion, *configPaths...)
 	if err != nil {
 		userError("An error occurred while setting up the Logstash environment: %s", err)
-		os.Exit(1)
+		return 1
 	}
 	defer inv.Release()
 	if *unixSockets {
 		if runtime.GOOS == "windows" {
 			userError("Use of Unix domain sockets for communication with Logstash is not supported on Windows.")
-			os.Exit(1)
+			return 1
 		}
 		fmt.Println("Use Unix domain sockets.")
 		if err = runParallelTests(inv, tests, diffCmd, allKeptEnvVars); err != nil {
 			userError(err.Error())
-			os.Exit(1)
+			return 1
 		}
 	} else {
 		if err = runTests(inv, tests, diffCmd, allKeptEnvVars); err != nil {
 			userError(err.Error())
-			os.Exit(1)
+			return 1
 		}
 	}
-	os.Exit(0)
+	return 0
+}
+
+func main() {
+	os.Exit(mainEntrypoint())
 }
