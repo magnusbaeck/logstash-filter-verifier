@@ -56,6 +56,7 @@ func TestNewInvocation(t *testing.T) {
 		for j := 0; j < len(inv.args)-1; j++ {
 			if inv.args[j] == "-l" {
 				logOption = inv.args[j+1]
+				j++
 			}
 		}
 
