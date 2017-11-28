@@ -3,6 +3,7 @@
 package logstash
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"testing"
@@ -12,13 +13,21 @@ import (
 
 func TestNewInvocation(t *testing.T) {
 	cases := []struct {
-		version       string
-		logOptionTest func(os.FileInfo) error
+		version     string
+		optionTests func(options map[string]string) error
 	}{
 		// Logstash 2.4 gets a regular file as a log file argument.
 		{
 			"2.4.0",
-			func(fi os.FileInfo) error {
+			func(options map[string]string) error {
+				logOption, exists := options["-l"]
+				if !exists {
+					return errors.New("no logfile option found")
+				}
+				fi, err := os.Stat(logOption)
+				if err != nil {
+					return fmt.Errorf("could not stat logfile: %s", err)
+				}
 				if !fi.Mode().IsRegular() {
 					return fmt.Errorf("log path not a regular file: %s", fi.Name())
 				}
@@ -28,9 +37,17 @@ func TestNewInvocation(t *testing.T) {
 		// Logstash 5.0 gets a directory as a log file argument.
 		{
 			"5.0.0",
-			func(fi os.FileInfo) error {
-				if !fi.Mode().IsDir() {
-					return fmt.Errorf("log path not a directory: %s", fi.Name())
+			func(options map[string]string) error {
+				logOption, exists := options["-l"]
+				if !exists {
+					return errors.New("no logfile option found")
+				}
+				fi, err := os.Stat(logOption)
+				if err != nil {
+					return fmt.Errorf("could not stat logfile: %s", err)
+				}
+				if fi.Mode().IsRegular() {
+					return fmt.Errorf("log path not a regular file: %s", fi.Name())
 				}
 				return nil
 			},
@@ -52,27 +69,31 @@ func TestNewInvocation(t *testing.T) {
 		}
 		defer inv.Release()
 
-		var logOption string
-		for j := 0; j < len(inv.args)-1; j++ {
-			if inv.args[j] == "-l" {
-				logOption = inv.args[j+1]
-				j++
-			}
-		}
-
-		if logOption != "" {
-			fi, err := os.Stat(logOption)
-			if err != nil {
-				t.Errorf("could not stat logfile: %s", err)
-			} else {
-				err = c.logOptionTest(fi)
-				if err != nil {
-					t.Errorf("Test %d: Bad logfile option: %s", i, err)
-				}
-			}
-		} else {
-			t.Errorf("Test %d: No logfile option found in args: %v", i, inv.args)
+		err = c.optionTests(simpleOptionParser(inv.args))
+		if err != nil {
+			t.Errorf("Test %d: Command option test failed for %v: %s", i, inv.args, err)
 		}
 	}
 
+}
+
+// simpleOptionParser is a super-simple command line option parser
+// that just builds a map of all the options and their values. For
+// options not taking any arguments the option's value will be an
+// empty string.
+func simpleOptionParser(args []string) map[string]string {
+	result := map[string]string{}
+	for i := 0; i < len(args); i++ {
+		if args[i][0] != '-' {
+			continue
+		}
+
+		if i+1 < len(args) && args[i+1] != "-" {
+			result[args[i]] = args[i+1]
+			i++
+		} else {
+			result[args[i]] = ""
+		}
+	}
+	return result
 }
