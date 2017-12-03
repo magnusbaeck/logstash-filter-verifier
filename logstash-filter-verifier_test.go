@@ -42,7 +42,7 @@ func TestFindExecutable(t *testing.T) {
 		// Only matching file is a directory.
 		{
 			[]testhelpers.FileWithMode{
-				{"foo", os.ModeDir | 0755},
+				{"foo", os.ModeDir | 0755, ""},
 			},
 			[]string{
 				"foo",
@@ -54,7 +54,7 @@ func TestFindExecutable(t *testing.T) {
 		// Only matching file is not executable.
 		{
 			[]testhelpers.FileWithMode{
-				{"foo", 0644},
+				{"foo", 0644, ""},
 			},
 			[]string{
 				"foo",
@@ -66,8 +66,8 @@ func TestFindExecutable(t *testing.T) {
 		// Multiple matches, returning first one.
 		{
 			[]testhelpers.FileWithMode{
-				{"foo", 0755},
-				{"bar", 0755},
+				{"foo", 0755, ""},
+				{"bar", 0755, ""},
 			},
 			[]string{
 				"foo",
@@ -79,8 +79,8 @@ func TestFindExecutable(t *testing.T) {
 		// Multiple matches, skipping the matching directory.
 		{
 			[]testhelpers.FileWithMode{
-				{"foo", os.ModeDir | 0755},
-				{"bar", 0755},
+				{"foo", os.ModeDir | 0755, ""},
+				{"bar", 0755, ""},
 			},
 			[]string{
 				"foo",
@@ -92,8 +92,8 @@ func TestFindExecutable(t *testing.T) {
 		// Multiple matches, skipping the matching non-executable.
 		{
 			[]testhelpers.FileWithMode{
-				{"foo", 0644},
-				{"bar", 0755},
+				{"foo", 0644, ""},
+				{"bar", 0755, ""},
 			},
 			[]string{
 				"foo",

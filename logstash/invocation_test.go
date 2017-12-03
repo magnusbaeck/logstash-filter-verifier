@@ -5,10 +5,13 @@ package logstash
 import (
 	"errors"
 	"fmt"
+	"io/ioutil"
 	"os"
+	"path/filepath"
 	"testing"
 
 	"github.com/blang/semver"
+	"github.com/magnusbaeck/logstash-filter-verifier/testhelpers"
 )
 
 func TestNewInvocation(t *testing.T) {
@@ -31,10 +34,16 @@ func TestNewInvocation(t *testing.T) {
 				if !fi.Mode().IsRegular() {
 					return fmt.Errorf("log path not a regular file: %s", fi.Name())
 				}
+
+				if _, exists = options["--path.settings"]; exists {
+					return errors.New("unsupported --path.settings option provided")
+				}
 				return nil
 			},
 		},
-		// Logstash 5.0 gets a directory as a log file argument.
+		// Logstash 5.0 gets a directory as a log file
+		// argument and --path.settings pointing to a
+		// directory with the expected files.
 		{
 			"5.0.0",
 			func(options map[string]string) error {
@@ -49,11 +58,45 @@ func TestNewInvocation(t *testing.T) {
 				if fi.Mode().IsRegular() {
 					return fmt.Errorf("log path not a regular file: %s", fi.Name())
 				}
+
+				pathOption, exists := options["--path.settings"]
+				if !exists {
+					return errors.New("--path.settings option missing")
+				}
+				requiredFiles := []string{
+					"jvm.options",
+					"log4j2.properties",
+					"logstash.yml",
+				}
+				if !allFilesExist(pathOption, requiredFiles) {
+					return fmt.Errorf("Not all required files found in %q: %v",
+						pathOption, requiredFiles)
+				}
+
 				return nil
 			},
 		},
 	}
 	for i, c := range cases {
+		tempdir, err := ioutil.TempDir("", "")
+		if err != nil {
+			t.Fatalf("Test %d: Unexpected error when creating temp dir: %s", i, err)
+		}
+		defer os.RemoveAll(tempdir)
+
+		files := []testhelpers.FileWithMode{
+			{"bin", os.ModeDir | 0755, ""},
+			{"bin/logstash", 0755, ""},
+			{"config", os.ModeDir | 0755, ""},
+			{"config/jvm.options", 0644, ""},
+			{"config/log4j2.properties", 0644, ""},
+		}
+		for _, fwm := range files {
+			if err = fwm.Create(tempdir); err != nil {
+				t.Fatalf("Test %d: Unexpected error when creating test file: %s", i, err)
+			}
+		}
+
 		version, err := semver.New(c.version)
 		if err != nil {
 			t.Fatalf("Test %d: Unexpected error when parsing version number: %s", i, err)
@@ -63,7 +106,8 @@ func TestNewInvocation(t *testing.T) {
 			t.Fatalf("Test %d: Unexpected error when creating tempfile: %s", i, err)
 		}
 		defer configFile.Close()
-		inv, err := NewInvocation("/path/to/logstash", []string{}, version, configFile.Name())
+		logstashPath := filepath.Join(tempdir, "bin/logstash")
+		inv, err := NewInvocation(logstashPath, []string{}, version, configFile.Name())
 		if err != nil {
 			t.Fatalf("Test %d: Unexpected error when creation Invocation: %s", i, err)
 		}

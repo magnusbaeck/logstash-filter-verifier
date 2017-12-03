@@ -8,11 +8,12 @@ import (
 )
 
 // FileWithMode contains information about a pathname and its desired
-// filemode and can be used to quickly create those files in tests
-// that rely on files in the file system.
+// filemode and contents. It can be used to quickly create those files
+// in tests that rely on files in the file system.
 type FileWithMode struct {
-	Path string
-	Mode os.FileMode
+	Path     string
+	Mode     os.FileMode
+	Contents string
 }
 
 // Create creates the regular file or directory described by the
@@ -31,6 +32,10 @@ func (fwp FileWithMode) Create(dir string) error {
 		return err
 	}
 	defer f.Close()
+	_, err = f.WriteString(fwp.Contents)
+	if err != nil {
+		return err
+	}
 	err = f.Chmod(fwp.Mode & os.ModePerm)
 	if err != nil {
 		return err

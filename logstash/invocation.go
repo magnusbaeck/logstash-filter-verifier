@@ -38,9 +38,10 @@ func NewInvocation(logstashPath string, logstashArgs []string, logstashVersion *
 	if err != nil {
 		return nil, err
 	}
+	configDir := filepath.Join(tempDir, "config")
 	logDir := filepath.Join(tempDir, "log")
 	pipelineDir := filepath.Join(tempDir, "pipeline.d")
-	for _, dir := range []string{logDir, pipelineDir} {
+	for _, dir := range []string{configDir, logDir, pipelineDir} {
 		if err = os.Mkdir(dir, 0755); err != nil {
 			_ = os.RemoveAll(tempDir)
 			return nil, err
@@ -72,6 +73,28 @@ func NewInvocation(logstashPath string, logstashArgs []string, logstashVersion *
 		// the path to the log file but the path to the log
 		// directory.
 		args = append(args, "-l", filepath.Dir(logfilePath))
+
+		_, err = copyConfigFiles(logstashPath, configDir)
+		if err != nil {
+			_ = logFile.Close()
+			_ = os.RemoveAll(tempDir)
+			return nil, err
+		}
+
+		// We need to create a settings file to avoid warnings
+		// (and possibly preventing Logstash from defaulting
+		// to another file) but right now there's nothing to
+		// put there. The various path settings that we need
+		// to provide can just as well be passed as command
+		// arguments.
+		err := ioutil.WriteFile(filepath.Join(configDir, "logstash.yml"), []byte{}, 0644)
+		if err != nil {
+			_ = logFile.Close()
+			_ = os.RemoveAll(tempDir)
+			return nil, err
+		}
+
+		args = append(args, "--path.settings", configDir)
 	} else {
 		args = append(args, "-l", logfilePath)
 	}
@@ -97,4 +120,24 @@ func (inv *Invocation) Args(inputs string, outputs string) []string {
 func (inv *Invocation) Release() {
 	inv.logFile.Close()
 	_ = os.RemoveAll(inv.tempDir)
+}
+
+// copyConfigFiles copies the non-pipeline related configuration files
+// from the Logstash distribution so that e.g. JVM and logging is set
+// up properly even though we provide our own logstash.yml.
+//
+// The files to copy are either dug up from ../config relative to the
+// Logstash executable or from /etc/logstash, where they're stored in
+// the RPM/Debian case. If successful, the directory where the files
+// were found is returned.
+func copyConfigFiles(logstashPath string, configDir string) (string, error) {
+	sourceDirs := []string{
+		filepath.Clean(filepath.Join(filepath.Dir(logstashPath), "../config")),
+		"/etc/logstash",
+	}
+	sourceFiles := []string{
+		"jvm.options",
+		"log4j2.properties",
+	}
+	return copyAllFiles(sourceDirs, sourceFiles, configDir)
 }
