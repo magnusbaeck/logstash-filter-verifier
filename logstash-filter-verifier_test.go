@@ -105,10 +105,10 @@ func TestFindExecutable(t *testing.T) {
 	}
 	for i, c := range cases {
 		tempdir, err := ioutil.TempDir("", "")
-		defer os.RemoveAll(tempdir)
 		if err != nil {
 			t.Fatalf("Test %d: Unexpected error when creating temp dir: %s", i, err)
 		}
+		defer os.RemoveAll(tempdir)
 
 		for _, fwp := range c.files {
 			if err = fwp.Create(tempdir); err != nil {
