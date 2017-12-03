@@ -193,6 +193,7 @@ func NewParallelProcess(inv *Invocation, testStream []*TestStream, keptEnvVars [
 	p, err := newParallelProcessWithArgs(inv.LogstashPath, inv.Args(inputs, outputs), env)
 	if err != nil {
 		CleanupTestStreams(testStream)
+		return nil, err
 	}
 	p.inv = inv
 	p.streams = testStream

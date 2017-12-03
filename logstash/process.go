@@ -58,6 +58,7 @@ func NewProcess(inv *Invocation, inputCodec string, fields FieldSet, keptEnvVars
 	p, err := newProcessWithArgs(inv.LogstashPath, inv.Args(inputs, outputs), env)
 	if err != nil {
 		_ = outputFile.Close()
+		return nil, err
 	}
 	p.output = outputFile
 	p.inv = inv
