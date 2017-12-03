@@ -39,6 +39,7 @@ func NewInvocation(logstashPath string, logstashArgs []string, logstashVersion *
 		return nil, err
 	}
 	configDir := filepath.Join(tempDir, "config")
+	dataDir := filepath.Join(tempDir, "data")
 	logDir := filepath.Join(tempDir, "log")
 	pipelineDir := filepath.Join(tempDir, "pipeline.d")
 	for _, dir := range []string{configDir, logDir, pipelineDir} {
@@ -95,6 +96,7 @@ func NewInvocation(logstashPath string, logstashArgs []string, logstashVersion *
 		}
 
 		args = append(args, "--path.settings", configDir)
+		args = append(args, "--path.data", dataDir)
 	} else {
 		args = append(args, "-l", logfilePath)
 	}
