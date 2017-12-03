@@ -132,7 +132,7 @@ func simpleOptionParser(args []string) map[string]string {
 			continue
 		}
 
-		if i+1 < len(args) && args[i+1] != "-" {
+		if i+1 < len(args) && args[i+1][0] != '-' {
 			result[args[i]] = args[i+1]
 			i++
 		} else {
