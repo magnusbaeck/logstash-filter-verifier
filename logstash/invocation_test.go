@@ -14,6 +14,79 @@ import (
 	"github.com/magnusbaeck/logstash-filter-verifier/testhelpers"
 )
 
+func TestArgs(t *testing.T) {
+	tinv, err := createTestInvocation(semver.MustParse("6.0.0"))
+	if err != nil {
+		t.Fatalf("%s", err)
+	}
+
+	args, err := tinv.Inv.Args("input", "output")
+	if err != nil {
+		t.Fatalf("Error generating args: %s", err)
+	}
+	options := simpleOptionParser(args)
+	configOption, exists := options["-f"]
+	if !exists {
+		t.Fatalf("no -f option found")
+	}
+	configDir, err := os.Open(configOption)
+	if err != nil {
+		t.Fatalf("Error opening configuration file directory: %s", err)
+	}
+
+	files, err := configDir.Readdirnames(0)
+	if err != nil {
+		t.Fatalf("Error reading configuration file directory: %s", err)
+	}
+
+	// Three aspects of the pipeline config file directory concern us:
+	//   - The file that normally contains filters exists and has the
+	//     expected contents.
+	//   - The file with the inputs and outputs exists and has the
+	//     expected contents.
+	//   - No other files are present.
+	var filterOk bool
+	var ioOk bool
+	for _, file := range files {
+		buf, err := ioutil.ReadFile(filepath.Join(configOption, file))
+		if err != nil {
+			t.Errorf("Error reading configuration file: %s", err)
+			continue
+		}
+		fileContents := string(buf)
+
+		// Filter configuration file.
+		if file == tinv.configFile {
+			if fileContents != tinv.configContents {
+				t.Errorf("Filter configuration file didn't contain the expected data.\nExpected: %q\nGot: %q", tinv.configContents, fileContents)
+			}
+			filterOk = true
+			continue
+		}
+
+		// Input/Output configuration file.
+		if file == filepath.Base(tinv.Inv.ioConfig) {
+			expectedIoConfig := "input\noutput"
+			if fileContents != expectedIoConfig {
+				t.Errorf("Input/output configuration file didn't contain the expected data.\nExpected: %q\nGot: %q",
+					expectedIoConfig, fileContents)
+			}
+			ioOk = true
+			continue
+		}
+
+		// We should never get here.
+		t.Errorf("Unexpected file found: %s", file)
+	}
+
+	if !filterOk {
+		t.Errorf("No filter configuration file found in %s: %v", configOption, files)
+	}
+	if !ioOk {
+		t.Errorf("No input/output configuration file found in %s: %v", configOption, files)
+	}
+}
+
 func TestNewInvocation(t *testing.T) {
 	cases := []struct {
 		version     string
@@ -78,47 +151,67 @@ func TestNewInvocation(t *testing.T) {
 		},
 	}
 	for i, c := range cases {
-		tempdir, err := ioutil.TempDir("", "")
+		tinv, err := createTestInvocation(semver.MustParse(c.version))
 		if err != nil {
-			t.Fatalf("Test %d: Unexpected error when creating temp dir: %s", i, err)
+			t.Errorf("Test %d: %s", i, err)
 		}
-		defer os.RemoveAll(tempdir)
+		defer tinv.Release()
 
-		files := []testhelpers.FileWithMode{
-			{"bin", os.ModeDir | 0755, ""},
-			{"bin/logstash", 0755, ""},
-			{"config", os.ModeDir | 0755, ""},
-			{"config/jvm.options", 0644, ""},
-			{"config/log4j2.properties", 0644, ""},
-		}
-		for _, fwm := range files {
-			if err = fwm.Create(tempdir); err != nil {
-				t.Fatalf("Test %d: Unexpected error when creating test file: %s", i, err)
-			}
-		}
-
-		version, err := semver.New(c.version)
+		args, err := tinv.Inv.Args("input", "output")
 		if err != nil {
-			t.Fatalf("Test %d: Unexpected error when parsing version number: %s", i, err)
+			t.Errorf("Test %d: Error generating args: %s", i, err)
 		}
-		configFile, err := newDeletedTempFile("", "")
+		err = c.optionTests(simpleOptionParser(args))
 		if err != nil {
-			t.Fatalf("Test %d: Unexpected error when creating tempfile: %s", i, err)
-		}
-		defer configFile.Close()
-		logstashPath := filepath.Join(tempdir, "bin/logstash")
-		inv, err := NewInvocation(logstashPath, []string{}, version, configFile.Name())
-		if err != nil {
-			t.Fatalf("Test %d: Unexpected error when creation Invocation: %s", i, err)
-		}
-		defer inv.Release()
-
-		err = c.optionTests(simpleOptionParser(inv.args))
-		if err != nil {
-			t.Errorf("Test %d: Command option test failed for %v: %s", i, inv.args, err)
+			t.Errorf("Test %d: Command option test failed for %v: %s", i, args, err)
 		}
 	}
 
+}
+
+type testInvocation struct {
+	Inv            *Invocation
+	tempdir        string
+	configFile     string
+	configContents string
+}
+
+func createTestInvocation(version semver.Version) (*testInvocation, error) {
+	tempdir, err := ioutil.TempDir("", "")
+	if err != nil {
+		return nil, fmt.Errorf("Unexpected error when creating temp dir: %s", err)
+	}
+
+	files := []testhelpers.FileWithMode{
+		{"bin", os.ModeDir | 0755, ""},
+		{"bin/logstash", 0755, ""},
+		{"config", os.ModeDir | 0755, ""},
+		{"config/jvm.options", 0644, ""},
+		{"config/log4j2.properties", 0644, ""},
+	}
+	for _, fwm := range files {
+		if err = fwm.Create(tempdir); err != nil {
+			return nil, fmt.Errorf("Unexpected error when creating test file: %s", err)
+		}
+	}
+
+	configFile := filepath.Join(tempdir, "configfile.conf")
+	configContents := "dummy configuration file"
+	if err = ioutil.WriteFile(configFile, []byte(configContents), 0644); err != nil {
+		return nil, fmt.Errorf("Unexpected error when creating dummy configuration file: %s", err)
+	}
+	logstashPath := filepath.Join(tempdir, "bin/logstash")
+	inv, err := NewInvocation(logstashPath, []string{}, &version, configFile)
+	if err != nil {
+		return nil, fmt.Errorf("Unexpected error when creating Invocation: %s", err)
+	}
+
+	return &testInvocation{inv, tempdir, filepath.Base(configFile), configContents}, nil
+}
+
+func (ti *testInvocation) Release() {
+	ti.Inv.Release()
+	_ = os.RemoveAll(ti.tempdir)
 }
 
 // simpleOptionParser is a super-simple command line option parser

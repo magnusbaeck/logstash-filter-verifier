@@ -19,11 +19,11 @@ import (
 type Invocation struct {
 	LogstashPath string
 
-	args        []string
-	pipelineDir string
-	logDir      string
-	logFile     io.ReadCloser
-	tempDir     string
+	args     []string
+	ioConfig string
+	logDir   string
+	logFile  io.ReadCloser
+	tempDir  string
 }
 
 // NewInvocation creates a new Invocation struct that contains all
@@ -57,6 +57,17 @@ func NewInvocation(logstashPath string, logstashArgs []string, logstashVersion *
 	}
 
 	if err := getPipelineConfigDir(pipelineDir, configs); err != nil {
+		_ = logFile.Close()
+		_ = os.RemoveAll(tempDir)
+		return nil, err
+	}
+
+	// In Logstash 6+ you're not allowed to pass both the -e and
+	// -f options so the invocation-specific input and output
+	// configurations need to go in a file in the pipeline
+	// directory. Generate a unique file for that purpose.
+	ioConfigFile, err := getTempFileWithSuffix(pipelineDir, ".conf")
+	if err != nil {
 		_ = logFile.Close()
 		_ = os.RemoveAll(tempDir)
 		return nil, err
@@ -105,7 +116,7 @@ func NewInvocation(logstashPath string, logstashArgs []string, logstashVersion *
 	return &Invocation{
 		LogstashPath: logstashPath,
 		args:         args,
-		pipelineDir:  pipelineDir,
+		ioConfig:     ioConfigFile,
 		logDir:       logDir,
 		logFile:      logFile,
 		tempDir:      tempDir,
@@ -114,8 +125,12 @@ func NewInvocation(logstashPath string, logstashArgs []string, logstashVersion *
 
 // Args returns a complete slice of Logstash command arguments for the
 // given input and output plugin configuration strings.
-func (inv *Invocation) Args(inputs string, outputs string) []string {
-	return append(inv.args, "-e", fmt.Sprintf("%s %s", inputs, outputs))
+func (inv *Invocation) Args(inputs string, outputs string) ([]string, error) {
+	ioConfig := fmt.Sprintf("%s\n%s", inputs, outputs)
+	if err := ioutil.WriteFile(inv.ioConfig, []byte(ioConfig), 0600); err != nil {
+		return nil, err
+	}
+	return inv.args, nil
 }
 
 // Release releases any resources allocated by the struct.

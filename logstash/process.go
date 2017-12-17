@@ -55,7 +55,12 @@ func NewProcess(inv *Invocation, inputCodec string, fields FieldSet, keptEnvVars
 	outputs := fmt.Sprintf("output { file { path => %q codec => \"json_lines\" } }", outputFile.Name())
 
 	env := getLimitedEnvironment(os.Environ(), keptEnvVars)
-	p, err := newProcessWithArgs(inv.LogstashPath, inv.Args(inputs, outputs), env)
+	args, err := inv.Args(inputs, outputs)
+	if err != nil {
+		_ = outputFile.Close()
+		return nil, err
+	}
+	p, err := newProcessWithArgs(inv.LogstashPath, args, env)
 	if err != nil {
 		_ = outputFile.Close()
 		return nil, err
