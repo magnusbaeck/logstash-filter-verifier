@@ -132,22 +132,9 @@ func runTests(inv *logstash.Invocation, tests []testcase.TestCaseSet, diffComman
 
 		result, err := p.Wait()
 		if err != nil || *logstashOutput {
-			var message string
+			message := getLogstashOutputMessage(result.Output, result.Log)
 			if err != nil {
-				message += fmt.Sprintf("Error running Logstash: %s.", err)
-			}
-			if result.Output != "" {
-				message += fmt.Sprintf("\nProcess output:\n%s", result.Output)
-			} else {
-				message += "\nThe process wrote nothing to stdout or stderr."
-			}
-			if result.Log != "" {
-				message += fmt.Sprintf("\nLog:\n%s", result.Log)
-			} else {
-				message += "\nThe process wrote nothing to its logfile."
-			}
-			if err != nil {
-				return errors.New(message)
+				return fmt.Errorf("Error running Logstash: %s.%s", err, message)
 			}
 			userError("%s", message)
 		}
@@ -215,22 +202,9 @@ func runParallelTests(inv *logstash.Invocation, tests []testcase.TestCaseSet, di
 
 	result, err := p.Wait()
 	if err != nil || *logstashOutput {
-		var message string
+		message := getLogstashOutputMessage(result.Output, result.Log)
 		if err != nil {
-			message += fmt.Sprintf("Error running Logstash: %s.", err)
-		}
-		if result.Output != "" {
-			message += fmt.Sprintf("\nProcess output:\n%s", result.Output)
-		} else {
-			message += "\nThe process wrote nothing to stdout or stderr."
-		}
-		if result.Log != "" {
-			message += fmt.Sprintf("\nLog:\n%s", result.Log)
-		} else {
-			message += "\nThe process wrote nothing to its logfile."
-		}
-		if err != nil {
-			return errors.New(message)
+			return fmt.Errorf("Error running Logstash: %s.%s", err, message)
 		}
 		userError("%s", message)
 	}
@@ -246,6 +220,24 @@ func runParallelTests(inv *logstash.Invocation, tests []testcase.TestCaseSet, di
 		return errors.New("one or more testcases failed")
 	}
 	return nil
+}
+
+// getLogstashOutputMessage examines the test result and prepares a
+// message describing the process's output, log output, or neither
+// (resulting in an empty string).
+func getLogstashOutputMessage(output string, log string) string {
+	var message string
+	if output != "" {
+		message += fmt.Sprintf("\nProcess output:\n%s", output)
+	} else {
+		message += "\nThe process wrote nothing to stdout or stderr."
+	}
+	if log != "" {
+		message += fmt.Sprintf("\nLog:\n%s", log)
+	} else {
+		message += "\nThe process wrote nothing to its logfile."
+	}
+	return message
 }
 
 // prefixedUserError prints an error message to stderr and prefixes it
