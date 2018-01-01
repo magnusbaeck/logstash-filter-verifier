@@ -1,3 +1,10 @@
+logstash-filter-verifier (1.4.1) RELEASED; urgency=medium
+
+  * Fix for a crash when using --sockets with a testcase file without
+    a "fields" option.
+
+ -- Magnus Bäck <magnus@noun.se>  Mon, 1 Jan 2018 17:11:00 +0200
+
 logstash-filter-verifier (1.4.0) RELEASED; urgency=medium
 
   * Full support for Logstash 5 and later. By default the version used
