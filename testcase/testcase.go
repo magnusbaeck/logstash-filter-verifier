@@ -1,4 +1,4 @@
-// Copyright (c) 2015-2016 Magnus Bäck <magnus@noun.se>
+// Copyright (c) 2015-2018 Magnus Bäck <magnus@noun.se>
 
 package testcase
 
@@ -115,7 +115,8 @@ var (
 // ignore those will be ignored in addition to @version.
 func New(reader io.Reader) (*TestCaseSet, error) {
 	tcs := TestCaseSet{
-		Codec: "line",
+		Codec:       "line",
+		InputFields: logstash.FieldSet{},
 	}
 	buf, err := ioutil.ReadAll(reader)
 	if err != nil {

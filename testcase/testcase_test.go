@@ -1,4 +1,4 @@
-// Copyright (c) 2015-2016 Magnus Bäck <magnus@noun.se>
+// Copyright (c) 2015-2018 Magnus Bäck <magnus@noun.se>
 
 package testcase
 
@@ -46,6 +46,7 @@ func TestNew(t *testing.T) {
 			`{"ignore": ["foo"]}`,
 			TestCaseSet{
 				Codec:         "line",
+				InputFields:   logstash.FieldSet{},
 				IgnoredFields: []string{"@version", "foo"},
 			},
 		},
