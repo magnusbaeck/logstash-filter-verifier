@@ -128,9 +128,7 @@ func New(reader io.Reader) (*TestCaseSet, error) {
 	if err = tcs.InputFields.IsValid(); err != nil {
 		return nil, err
 	}
-	for _, f := range defaultIgnoredFields {
-		tcs.IgnoredFields = append(tcs.IgnoredFields, f)
-	}
+	tcs.IgnoredFields = append(tcs.IgnoredFields, defaultIgnoredFields...)
 	sort.Strings(tcs.IgnoredFields)
 	tcs.descriptions = make([]string, len(tcs.ExpectedEvents))
 	for _, tc := range tcs.TestCases {

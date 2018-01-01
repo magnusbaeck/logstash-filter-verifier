@@ -21,11 +21,7 @@ type FileWithMode struct {
 func (fwp FileWithMode) Create(dir string) error {
 	path := filepath.Join(dir, fwp.Path)
 	if fwp.Mode&os.ModeDir != 0 {
-		err := os.Mkdir(path, fwp.Mode&os.ModePerm)
-		if err != nil {
-			return err
-		}
-		return nil
+		return os.Mkdir(path, fwp.Mode&os.ModePerm)
 	}
 	f, err := os.Create(path)
 	if err != nil {
@@ -36,9 +32,5 @@ func (fwp FileWithMode) Create(dir string) error {
 	if err != nil {
 		return err
 	}
-	err = f.Chmod(fwp.Mode & os.ModePerm)
-	if err != nil {
-		return err
-	}
-	return nil
+	return f.Chmod(fwp.Mode & os.ModePerm)
 }

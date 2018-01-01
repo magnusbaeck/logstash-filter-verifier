@@ -32,7 +32,7 @@ func DetectVersion(logstashPath string, keptEnvVars []string) (*semver.Version, 
 func parseLogstashVersionOutput(processOutput string) (*semver.Version, error) {
 	for _, line := range strings.Split(processOutput, "\n") {
 		m := logstashVersionRegexp.FindStringSubmatch(line)
-		if m != nil && len(m) > 1 {
+		if len(m) > 1 {
 			v, err := semver.New(m[1])
 			if err == nil {
 				return v, nil
