@@ -36,7 +36,6 @@ func getLimitedEnvironment(originalVars, keptVars []string) []string {
 		tokens := strings.SplitN(keyval, "=", 2)
 		if keepVar(tokens[0]) {
 			result = append(result, keyval)
-			break
 		}
 	}
 	if !keepVar("TZ") {
