@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/magnusbaeck/logstash-filter-verifier/testhelpers"
+	"github.com/arielstolerman/logstash-filter-verifier/testhelpers"
 )
 
 func TestReadEvents(t *testing.T) {

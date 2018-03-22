@@ -12,9 +12,9 @@ import (
 
 	"github.com/alecthomas/kingpin"
 	"github.com/blang/semver"
-	"github.com/magnusbaeck/logstash-filter-verifier/logging"
-	"github.com/magnusbaeck/logstash-filter-verifier/logstash"
-	"github.com/magnusbaeck/logstash-filter-verifier/testcase"
+	"github.com/arielstolerman/logstash-filter-verifier/logging"
+	"github.com/arielstolerman/logstash-filter-verifier/logstash"
+	"github.com/arielstolerman/logstash-filter-verifier/testcase"
 	"github.com/mattn/go-shellwords"
 	oplogging "github.com/op/go-logging"
 )

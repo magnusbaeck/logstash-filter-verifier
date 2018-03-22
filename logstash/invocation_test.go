@@ -11,7 +11,7 @@ import (
 	"testing"
 
 	"github.com/blang/semver"
-	"github.com/magnusbaeck/logstash-filter-verifier/testhelpers"
+	"github.com/arielstolerman/logstash-filter-verifier/testhelpers"
 )
 
 func TestArgs(t *testing.T) {

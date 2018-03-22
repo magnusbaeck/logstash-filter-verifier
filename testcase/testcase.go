@@ -13,8 +13,8 @@ import (
 	"sort"
 	"strconv"
 
-	"github.com/magnusbaeck/logstash-filter-verifier/logging"
-	"github.com/magnusbaeck/logstash-filter-verifier/logstash"
+	"github.com/arielstolerman/logstash-filter-verifier/logging"
+	"github.com/arielstolerman/logstash-filter-verifier/logstash"
 	unjson "github.com/mitchellh/packer/common/json"
 )
 
