@@ -9,7 +9,7 @@ import (
 	"os/exec"
 	"testing"
 
-	"github.com/arielstolerman/logstash-filter-verifier/testhelpers"
+	"github.com/magnusbaeck/logstash-filter-verifier/testhelpers"
 )
 
 type closeableBuffer struct {

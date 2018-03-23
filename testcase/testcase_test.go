@@ -11,7 +11,7 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/arielstolerman/logstash-filter-verifier/logstash"
+	"github.com/magnusbaeck/logstash-filter-verifier/logstash"
 )
 
 func TestNew(t *testing.T) {
