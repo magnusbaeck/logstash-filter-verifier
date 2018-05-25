@@ -170,3 +170,52 @@ func TestGetFilesInDir(t *testing.T) {
 		}
 	}
 }
+
+func TestRemoveInputOutputBasicConfig(t *testing.T) {
+	f, err := ioutil.TempFile("", "lsconf")
+	if err != nil {
+		t.Error(err)
+	}
+
+	path := f.Name()
+	defer os.Remove(path)
+
+	err = ioutil.WriteFile(path, []byte("input { beats { port => 5044 } } filter { grok {} } output{ elasticsearch {} }"), 0644)
+	if err != nil {
+		t.Error(err)
+	}
+
+	err = removeInputOutput(path)
+	if err != nil {
+		t.Error(err)
+	}
+
+	data, err := ioutil.ReadFile(path)
+    if err != nil {
+        t.Error(err)
+    }
+
+	t.Logf("CONFIG IS: %s", data)
+}
+
+func TestRemoveInputOutputEmptyFile(t *testing.T) {
+	f, err := ioutil.TempFile("", "lsconf")
+	if err != nil {
+		t.Error(err)
+	}
+
+	path := f.Name()
+	defer os.Remove(path)
+
+	err = removeInputOutput(path)
+	if err != nil {
+		t.Error(err)
+	}
+
+	data, err := ioutil.ReadFile(path)
+    if err != nil {
+        t.Error(err)
+    }
+
+	t.Logf("CONFIG IS: %s", data)
+}
