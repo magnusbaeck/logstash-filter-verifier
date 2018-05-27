@@ -38,6 +38,23 @@ func TestGetLimitedEnvironment(t *testing.T) {
 				"TZ=UTC",
 			},
 		},
+		// Multiple original variables
+		{
+			[]string{
+				"A=B",
+				"C=D",
+				"E=F",
+			},
+			[]string{
+				"A",
+				"E",
+			},
+			[]string{
+				"A=B",
+				"E=F",
+				"TZ=UTC",
+			},
+		},
 		// TZ can be overridden.
 		{
 			[]string{
