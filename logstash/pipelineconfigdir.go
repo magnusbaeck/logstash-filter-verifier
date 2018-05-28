@@ -101,7 +101,7 @@ func getTempFileWithSuffix(dir string, suffix string) (string, error) {
 }
 
 // removeInputOutput removes the input and output sections in the
-// given logtsash configuration file. The operation is done in place
+// given logstash configuration file. The operation is done in place
 // and the original file content is replaced.
 func removeInputOutput(path string) error {
 	parsed, err := lsparser.ParseFile(path)
@@ -110,7 +110,7 @@ func removeInputOutput(path string) error {
 	}
 
 	if parsed == nil {
-		return fmt.Errorf("count not parse the following logstash config file: %v", path)
+		return fmt.Errorf("could not parse the following logstash config file: %v", path)
 	}
 
 	config := parsed.(ast.Config)
