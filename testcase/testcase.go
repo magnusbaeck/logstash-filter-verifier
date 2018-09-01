@@ -244,10 +244,7 @@ func marshalToFile(event logstash.Event, filename string) error {
 	if err = os.MkdirAll(filepath.Dir(filename), 0700); err != nil {
 		return err
 	}
-	if err = ioutil.WriteFile(filename, []byte(string(buf)+"\n"), 0600); err != nil {
-		return err
-	}
-	return nil
+	return ioutil.WriteFile(filename, []byte(string(buf)+"\n"), 0600)
 }
 
 // runDiffCommand passes two files to the supplied command (executable
