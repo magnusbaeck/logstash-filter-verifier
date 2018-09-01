@@ -9,6 +9,9 @@ import (
 	"os"
 	"path/filepath"
 	"sort"
+
+	lsparser "github.com/breml/logstash-config"
+	"github.com/breml/logstash-config/ast"
 )
 
 // getPipelineConfigDir copies one or more Logstash pipeline
@@ -34,6 +37,12 @@ func getPipelineConfigDir(dir string, configs []string) error {
 		if err != nil {
 			_ = os.RemoveAll(dir)
 			return fmt.Errorf("Config file copy failed: %s", err)
+		}
+
+		err = removeInputOutput(dest)
+		if err != nil {
+			_ = os.RemoveAll(dir)
+			return fmt.Errorf("Failed to remove the input and output sections: %s", err)
 		}
 	}
 	fileList, err := getFilesInDir(dir)
@@ -89,4 +98,24 @@ func getTempFileWithSuffix(dir string, suffix string) (string, error) {
 		return filename, nil
 	}
 	return "", fmt.Errorf("unable to generate a temporary filename despite %d attempts", maxAttempts)
+}
+
+// removeInputOutput removes the input and output sections in the
+// given logstash configuration file. The operation is done in place
+// and the original file content is replaced.
+func removeInputOutput(path string) error {
+	parsed, err := lsparser.ParseFile(path)
+	if err != nil {
+		return err
+	}
+
+	if parsed == nil {
+		return fmt.Errorf("could not parse the following logstash config file: %v", path)
+	}
+
+	config := parsed.(ast.Config)
+	config.Input = nil
+	config.Output = nil
+
+	return ioutil.WriteFile(path, []byte(config.String()), 0644)
 }
