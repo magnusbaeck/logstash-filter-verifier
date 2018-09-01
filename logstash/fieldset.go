@@ -1,8 +1,9 @@
-// Copyright (c) 2015-2016 Magnus Bäck <magnus@noun.se>
+// Copyright (c) 2015-2018 Magnus Bäck <magnus@noun.se>
 
 package logstash
 
 import (
+	"errors"
 	"fmt"
 	"sort"
 	"strings"
@@ -17,6 +18,9 @@ type FieldSet map[string]interface{}
 // any values that Logstash obviously would disapprove of (like
 // objects in arrays).
 func (fs FieldSet) IsValid() error {
+	if fs == nil {
+		return errors.New("Fields must not be \"null\".")
+	}
 	_, err := fs.LogstashHash()
 	return err
 }

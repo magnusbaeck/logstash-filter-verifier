@@ -1,8 +1,9 @@
-// Copyright (c) 2015 Magnus Bäck <magnus@noun.se>
+// Copyright (c) 2015-2018 Magnus Bäck <magnus@noun.se>
 
 package logstash
 
 import (
+	"errors"
 	"fmt"
 	"testing"
 )
@@ -16,6 +17,11 @@ func TestIsValid(t *testing.T) {
 		{
 			FieldSet{},
 			nil,
+		},
+		// Nil field set is rejected
+		{
+			nil,
+			errors.New("Fields must not be \"null\"."),
 		},
 		// Value of object type is rejected
 		{
