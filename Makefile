@@ -13,8 +13,10 @@ DESTDIR :=
 
 ifeq ($(OS),Windows_NT)
 EXEC_SUFFIX := .exe
+OS_NAME := Windows
 else
 EXEC_SUFFIX :=
+OS_NAME := $(shell uname -s)
 endif
 
 # The Docker image to use when building release images.
@@ -132,7 +134,11 @@ install: $(DESTDIR)$(PREFIX)/bin/$(PROGRAM)$(EXEC_SUFFIX)
 
 $(DESTDIR)$(PREFIX)/bin/%: %
 	mkdir -p $(dir $@)
+ifeq ($(OS_NAME),Darwin)
+	$(INSTALL) -m 0755 $< $@
+else
 	$(INSTALL) -m 0755 --strip $< $@
+endif
 
 .PHONY: release-tarballs
 release-tarballs: dist/$(PROGRAM)_$(VERSION).tar.gz \
