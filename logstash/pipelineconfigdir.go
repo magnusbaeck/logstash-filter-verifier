@@ -1,4 +1,4 @@
-// Copyright (c) 2016 Magnus Bäck <magnus@noun.se>
+// Copyright (c) 2016-2018 Magnus Bäck <magnus@noun.se>
 
 package logstash
 
@@ -110,7 +110,7 @@ func removeInputOutput(path string) error {
 	}
 
 	if parsed == nil {
-		return fmt.Errorf("could not parse the following logstash config file: %v", path)
+		return fmt.Errorf("could not parse the following Logstash config file: %v", path)
 	}
 
 	config := parsed.(ast.Config)

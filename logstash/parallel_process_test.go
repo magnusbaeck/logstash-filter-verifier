@@ -1,4 +1,4 @@
-// Copyright (c) 2016 Magnus Bäck <magnus@noun.se>
+// Copyright (c) 2016-2018 Magnus Bäck <magnus@noun.se>
 
 package logstash
 
@@ -57,7 +57,7 @@ func TestParallelProcess(t *testing.T) {
 
 	_, err = ts.Write([]byte(testLine))
 	if err != nil {
-		t.Fatalf("Unable to wirte to TestStream: %s", err)
+		t.Fatalf("Unable to write to TestStream: %s", err)
 	}
 	if err = ts.Close(); err != nil {
 		t.Fatalf("Unable to close TestStream: %s", err)
@@ -65,7 +65,7 @@ func TestParallelProcess(t *testing.T) {
 
 	result, err := p.Wait()
 	if err != nil {
-		t.Fatalf("Error while Wait for ParallelProcess to finish: %s", err)
+		t.Fatalf("Error while waiting for ParallelProcess to finish: %s", err)
 	}
 	if result.Output != testLine {
 		t.Errorf("Unexpected return from ParallelProcess, expected: %s, got: %s", testLine, result.Output)

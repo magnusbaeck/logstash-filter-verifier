@@ -1,4 +1,4 @@
-// Copyright (c) 2016 Magnus Bäck <magnus@noun.se>
+// Copyright (c) 2016-2018 Magnus Bäck <magnus@noun.se>
 
 package logstash
 
@@ -7,7 +7,7 @@ import (
 )
 
 // getLimitedEnvironment returns a list of "key=value" strings
-// representing a process's enviroment based on an original set of
+// representing a process's environment based on an original set of
 // variables (e.g. returned by os.Environ()) that's intersected with a
 // list of the names of variables that should be kept.
 //
