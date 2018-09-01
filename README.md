@@ -296,18 +296,6 @@ version of Logstash it should expect. Example:
   double quotes, and escaped double quotes everywhere and no native
   support for comments. We should support YAML in addition to JSON to
   make it more pleasant to write test case files.
-* All Logstash processes are run serially. By running them in parallel
-  the execution time can be reduced drastically on multi-core
-  machines.
-* There have been reports regarding problems in combination with X-Pack plugins
-  for Logstash ([Issue #31](https://github.com/magnusbaeck/logstash-filter-verifier/issues/31)).
-  One possibility to resolve this problem is to disable the monitoring
-  with the following configuration option in `logstash.yml`: `xpack.monitoring.enabled: false`.
-* Support for Logstash 5.0 is incomplete but will work under most
-  circumstances. The `--logstash-arg` flag (described above) may
-  come in handy. See
-  [Issue #8](https://github.com/magnusbaeck/logstash-filter-verifier/issues/8)
-  for the current status.
 
 ## License
 
