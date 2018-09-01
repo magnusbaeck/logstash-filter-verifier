@@ -13,7 +13,6 @@ import (
 	"testing"
 
 	"github.com/breml/logstash-config/ast"
-	"github.com/magnusbaeck/logstash-filter-verifier/testhelpers"
 )
 
 func createLogstashConfigWithString(s string) string {
@@ -183,52 +182,65 @@ func TestGetFilesInDir(t *testing.T) {
 	}
 }
 
-func TestRemoveInputOutputBasicConfig(t *testing.T) {
-	f, err := ioutil.TempFile("", "lsconf")
-	if err != nil {
-		t.Error(err)
+func TestRemoveInputOutput(t *testing.T) {
+	cases := []struct {
+		input    string
+		expected string
+	}{
+		{
+			// Input, output, and filter
+			"input { beats { port => 5044 } } filter { grok {} } output{ elasticsearch {} }",
+			"filter {  grok {      }}",
+		},
+		{
+			// Input and filter
+			"input { beats { port => 5044 } } filter { grok {} }",
+			"filter {  grok {      }}",
+		},
+		{
+			// Output and filter
+			"filter { grok {} } output{ elasticsearch {} }",
+			"filter {  grok {      }}",
+		},
+		{
+			// Filter only
+			"filter { grok {} }",
+			"filter {  grok {      }}",
+		},
+		{
+			// Empty file
+			"",
+			"",
+		},
 	}
+	for i, c := range cases {
+		f, err := ioutil.TempFile("", "lsconf")
+		if err != nil {
+			t.Fatalf("Test %d: Unexpected error when creating temp file: %s", i, err)
+		}
 
-	path := f.Name()
-	defer os.Remove(path)
+		path := f.Name()
+		defer os.Remove(path)
 
-	err = ioutil.WriteFile(path, []byte("input { beats { port => 5044 } } filter { grok {} } output{ elasticsearch {} }"), 0644)
-	if err != nil {
-		t.Error(err)
+		err = ioutil.WriteFile(path, []byte(c.input), 0644)
+		if err != nil {
+			t.Fatalf("Test %d: Unexpected error when writing to temp file: %s", i, err)
+		}
+
+		err = removeInputOutput(path)
+		if err != nil {
+			t.Errorf("Test %d: Unexpected error returned: %s", i, err)
+			continue
+		}
+
+		data, err := ioutil.ReadFile(path)
+		if err != nil {
+			t.Error(err)
+		}
+
+		actual := strings.Replace(string(data), "\n", "", -1)
+		if actual != c.expected {
+			t.Errorf("Test %d: Expected:\n%#v\nGot:\n%#v", i, c.expected, actual)
+		}
 	}
-
-	err = removeInputOutput(path)
-	if err != nil {
-		t.Error(err)
-	}
-
-	data, err := ioutil.ReadFile(path)
-	if err != nil {
-		t.Error(err)
-	}
-
-	actual := strings.Replace(string(data), "\n", "", -1)
-	testhelpers.AssertEqual(t, "filter {  grok {      }}", actual)
-}
-
-func TestRemoveInputOutputEmptyFile(t *testing.T) {
-	f, err := ioutil.TempFile("", "lsconf")
-	if err != nil {
-		t.Error(err)
-	}
-
-	path := f.Name()
-	defer os.Remove(path)
-
-	err = removeInputOutput(path)
-	if err != nil {
-		t.Error(err)
-	}
-
-	data, err := ioutil.ReadFile(path)
-	if err != nil {
-		t.Error(err)
-	}
-
-	testhelpers.AssertEqual(t, "", string(data))
 }

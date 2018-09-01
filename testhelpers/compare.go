@@ -17,11 +17,3 @@ func CompareErrors(t *testing.T, idx int, expected, actual error) {
 		t.Errorf("Test %d: Expected result:\n%#v\nGot:\n%#v", idx, expected, actual)
 	}
 }
-
-// AssertEqual compares any two values and reports an error if their
-// values are not equal.
-func AssertEqual(t *testing.T, expected interface{}, actual interface{}) {
-	if expected != actual {
-		t.Errorf("%v != %v", expected, actual)
-	}
-}
