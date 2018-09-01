@@ -1,4 +1,4 @@
-// Copyright (c) 2016 Magnus Bäck <magnus@noun.se>
+// Copyright (c) 2016-2018 Magnus Bäck <magnus@noun.se>
 
 package logstash
 
@@ -12,8 +12,15 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/breml/logstash-config/ast"
 	"github.com/magnusbaeck/logstash-filter-verifier/testhelpers"
 )
+
+func createLogstashConfigWithString(s string) string {
+	plugin := ast.NewPlugin("mutate", ast.NewStringAttribute("id", s, ast.DoubleQuoted))
+	conf := ast.NewConfig(nil, []ast.PluginSection{ast.NewPluginSection(ast.Filter, plugin)}, nil)
+	return conf.String()
+}
 
 func TestGetPipelineConfigDir(t *testing.T) {
 	cases := []struct {
@@ -59,7 +66,8 @@ func TestGetPipelineConfigDir(t *testing.T) {
 			if err != nil {
 				t.Fatalf("Test %d: Unexpected error when creating temp dir: %s", i, err)
 			}
-			err = ioutil.WriteFile(filepath.Join(tempdir, f), []byte(""), 0644)
+
+			err = ioutil.WriteFile(filepath.Join(tempdir, f), []byte(createLogstashConfigWithString(filepath.Base(f))), 0644)
 			if err != nil {
 				t.Fatalf("Test %d: Unexpected error when writing to temp file: %s", i, err)
 			}
@@ -102,8 +110,10 @@ func TestGetPipelineConfigDir(t *testing.T) {
 			if err != nil {
 				t.Fatalf("Test %d: Unexpected error when reading file: %s", i, err)
 			}
-
-			testhelpers.AssertEqual(t, "", string(buf))
+			expected := createLogstashConfigWithString(f)
+			if expected != string(buf) {
+				t.Errorf("Test %d: Expected file contents:\n%#v\nGot:\n%#v", i, expected, string(buf))
+			}
 		}
 	}
 }
@@ -197,8 +207,7 @@ func TestRemoveInputOutputBasicConfig(t *testing.T) {
 		t.Error(err)
 	}
 
-
-	actual := strings.Replace(string(data), "\n","",-1)
+	actual := strings.Replace(string(data), "\n", "", -1)
 	testhelpers.AssertEqual(t, "filter {  grok {      }}", actual)
 }
 
