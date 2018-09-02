@@ -153,7 +153,8 @@ func TestNewInvocation(t *testing.T) {
 	for i, c := range cases {
 		tinv, err := createTestInvocation(semver.MustParse(c.version))
 		if err != nil {
-			t.Errorf("Test %d: %s", i, err)
+			t.Errorf("Test %d: Error unexpectedly returned: %s", i, err)
+			continue
 		}
 		defer tinv.Release()
 
