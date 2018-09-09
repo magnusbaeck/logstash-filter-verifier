@@ -1,3 +1,20 @@
+logstash-filter-verifier (1.5.0) RELEASED; urgency=medium
+
+  * Allow keeping multiple environment variables with --keep-env.
+  * Input and outputs sections are automatically removed from the
+    Logstash configurations under test. That way you don't have to
+    segregate different kinds of plugin into different configuration
+    files and take care to never pass any files containing inputs
+    and outputs to LFV.
+  * The command line argument for Logstash configuration files to
+    test can now include directories and not just files.
+  * Testcase files with the "fields" key set to null no longer causes
+    LFV to panic.
+  * Fix "make install" on Mac OS X by omitting the -s/--strip option
+    to install(1).
+
+ -- Magnus Bäck <magnus@noun.se>  Sun, 9 Sep 2018 19:51:22 +0200
+
 logstash-filter-verifier (1.4.1) RELEASED; urgency=medium
 
   * Fix for a crash when using --sockets with a testcase file without
