@@ -13,12 +13,118 @@ import (
 	"testing"
 
 	"github.com/breml/logstash-config/ast"
+	"github.com/magnusbaeck/logstash-filter-verifier/testhelpers"
 )
 
 func createLogstashConfigWithString(s string) string {
 	plugin := ast.NewPlugin("mutate", ast.NewStringAttribute("id", s, ast.DoubleQuoted))
 	conf := ast.NewConfig(nil, []ast.PluginSection{ast.NewPluginSection(ast.Filter, plugin)}, nil)
 	return conf.String()
+}
+
+func addPathPrefix(prefix string, strings []string) []string {
+	result := make([]string, len(strings))
+	for i, s := range strings {
+		result[i] = filepath.Join(prefix, s)
+	}
+	return result
+}
+
+func TestFlattenFilenames(t *testing.T) {
+	cases := []struct {
+		existingFiles []testhelpers.FileWithMode
+		inputFiles    []string
+		expected      []string
+	}{
+		// Files only.
+		{
+			[]testhelpers.FileWithMode{
+				{"a", 0644, ""},
+				{"b", 0644, ""},
+			},
+			[]string{"a", "b"},
+			[]string{"a", "b"},
+		},
+		// Files only, and only a subset of them.
+		{
+			[]testhelpers.FileWithMode{
+				{"a", 0644, ""},
+				{"b", 0644, ""},
+				{"c", 0644, ""},
+			},
+			[]string{"a", "b"},
+			[]string{"a", "b"},
+		},
+		// Files and an empty subdirectory.
+		{
+			[]testhelpers.FileWithMode{
+				{"a", 0644, ""},
+				{"b", 0644, ""},
+				{"c", os.ModeDir | 0755, ""},
+			},
+			[]string{"a", "b", "c"},
+			[]string{"a", "b"},
+		},
+		// Files and a file in a subdirectory.
+		{
+			[]testhelpers.FileWithMode{
+				{"a", 0644, ""},
+				{"b", 0644, ""},
+				{"c", os.ModeDir | 0755, ""},
+				{"c/d", 0644, ""},
+			},
+			[]string{"a", "b", "c"},
+			[]string{"a", "b", "c/d"},
+		},
+		// Files and multiple levels of subdirectories.
+		{
+			[]testhelpers.FileWithMode{
+				{"a", 0644, ""},
+				{"b", 0644, ""},
+				{"c", os.ModeDir | 0755, ""},
+				{"c/d", os.ModeDir | 0755, ""},
+				{"c/d/e", 0644, ""},
+				{"c/f", 0644, ""},
+			},
+			[]string{"a", "b", "c"},
+			[]string{"a", "b", "c/f"},
+		},
+		// Just as directory with files.
+		{
+			[]testhelpers.FileWithMode{
+				{"a", os.ModeDir | 0755, ""},
+				{"a/b", 0644, ""},
+			},
+			[]string{"a"},
+			[]string{"a/b"},
+		},
+	}
+	for i, c := range cases {
+		tempdir, err := ioutil.TempDir("", "")
+		if err != nil {
+			t.Fatalf("Test %d: Unexpected error when creating temp dir: %s", i, err)
+		}
+		defer os.RemoveAll(tempdir)
+
+		for _, fwm := range c.existingFiles {
+			if err = fwm.Create(tempdir); err != nil {
+				t.Fatalf("Test %d: Unexpected error when creating test file: %s", i, err)
+			}
+		}
+		expected := addPathPrefix(tempdir, c.expected)
+		sort.Strings(expected)
+
+		actual, err := flattenFilenames(addPathPrefix(tempdir, c.inputFiles))
+		if err != nil {
+			t.Errorf("Test %d: Error unexpectedly returned: %s", i, err)
+			continue
+		}
+		sort.Strings(actual)
+
+		if !reflect.DeepEqual(expected, actual) {
+			t.Errorf("Test %d:\nExpected:\n%#v\nGot:\n%#v", i, expected, actual)
+		}
+	}
 }
 
 func TestGetPipelineConfigDir(t *testing.T) {
@@ -87,7 +193,7 @@ func TestGetPipelineConfigDir(t *testing.T) {
 
 		// Get a sorted list of names of the files in the
 		// returned directory.
-		actualConfigFiles, err := getFilesInDir(resultDir)
+		actualConfigFiles, err := getFilesInDir(resultDir, false)
 		if err != nil {
 			t.Fatalf("Test %d: Unexpected error when reading dir: %s", i, err)
 		}
@@ -165,7 +271,7 @@ func TestGetFilesInDir(t *testing.T) {
 		}
 
 		// Call the function under test.
-		files, actualResult := getFilesInDir(tempdir)
+		files, actualResult := getFilesInDir(tempdir, false)
 		if actualResult == nil && c.result != nil {
 			t.Fatalf("Test %d: Expected failure, got success.", i)
 		} else if actualResult != nil && c.result == nil {
