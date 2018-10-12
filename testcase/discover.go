@@ -12,7 +12,7 @@ import (
 
 // DiscoverTests reads a test case JSON file and returns a slice of
 // TestCase structs or, if the input path is a directory, reads all
-// .json files in that directorory and returns them as TestCase
+// .json files in that directory and returns them as TestCase
 // structs.
 func DiscoverTests(path string) ([]TestCaseSet, error) {
 	pathinfo, err := os.Stat(path)

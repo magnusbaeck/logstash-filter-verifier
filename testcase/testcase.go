@@ -31,7 +31,7 @@ type TestCaseSet struct {
 
 	// IgnoredFields contains a list of fields that will be
 	// deleted from the events that Logstash returns before
-	// they're compared to the events in ExpectedEevents.
+	// they're compared to the events in ExpectedEvents.
 	//
 	// This can be used for skipping fields that Logstash
 	// populates with unpredictable contents (hostnames or
