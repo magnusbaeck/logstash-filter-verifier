@@ -10,6 +10,17 @@ import (
 	"strings"
 )
 
+var supportedFileExtensions = []string{"json", "yml", "yaml"}
+
+func inList(allowed []string, search string) (result bool) {
+	for _, allowedEntry := range allowed {
+		if search == allowedEntry {
+			return true
+		}
+	}
+	return false
+}
+
 // DiscoverTests reads a test case JSON file and returns a slice of
 // TestCase structs or, if the input path is a directory, reads all
 // .json files in that directory and returns them as TestCase
@@ -31,11 +42,23 @@ func discoverTestDirectory(path string) ([]TestCaseSet, error) {
 	if err != nil {
 		return nil, fmt.Errorf("Error discovering test case files: %s", err)
 	}
+
 	var result []TestCaseSet
 	for _, f := range files {
-		if f.IsDir() || !strings.HasSuffix(f.Name(), ".json") {
+		if f.IsDir() {
 			continue
 		}
+
+		extensionCaseInsensitive := strings.ToLower(filepath.Ext(f.Name()))
+		if len(extensionCaseInsensitive) == 0 {
+			continue
+		}
+
+		extensionDotlessCaseInsensitive := extensionCaseInsensitive[1:]
+		if !inList(supportedFileExtensions, extensionDotlessCaseInsensitive) {
+			continue
+		}
+
 		fullpath := filepath.Join(path, f.Name())
 		tcs, err := NewFromFile(fullpath)
 		if err != nil {

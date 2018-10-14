@@ -40,9 +40,24 @@ func TestDiscoverTests_Directory(t *testing.T) {
 			[]string{"test1.json", "test2.json"},
 		},
 		{
-			[]string{"otherfile.txt", "test1.json", "test2.json"},
+			[]string{"test1.yml", "test2.yml"},
 			[]string{},
-			[]string{"test1.json", "test2.json"},
+			[]string{"test1.yml", "test2.yml"},
+		},
+		{
+			[]string{"test1.yaml", "test2.yaml"},
+			[]string{},
+			[]string{"test1.yaml", "test2.yaml"},
+		},
+		{
+			[]string{"test1.json", "test2.yml", "test3.yaml"},
+			[]string{},
+			[]string{"test1.json", "test2.yml", "test3.yaml"},
+		},
+		{
+			[]string{"otherfile.txt", "test1.json", "test2.yaml"},
+			[]string{},
+			[]string{"test1.json", "test2.yaml"},
 		},
 	}
 	for cnum, c := range cases {

@@ -5,13 +5,12 @@ package testcase
 import (
 	"bytes"
 	"encoding/json"
+	"github.com/magnusbaeck/logstash-filter-verifier/logstash"
 	"io/ioutil"
 	"os"
 	"path/filepath"
 	"reflect"
 	"testing"
-
-	"github.com/magnusbaeck/logstash-filter-verifier/logstash"
 )
 
 func TestNew(t *testing.T) {
@@ -24,6 +23,20 @@ func TestNew(t *testing.T) {
 			`{"fields": {"type": "mytype"}}`,
 			TestCaseSet{
 				Codec: "line",
+				InputFields: logstash.FieldSet{
+					"type": "mytype",
+				},
+				IgnoredFields: []string{"@version"},
+			},
+		},
+		{
+			`---
+codec: yaml
+fields:
+  type: mytype
+`,
+			TestCaseSet{
+				Codec: "yaml",
 				InputFields: logstash.FieldSet{
 					"type": "mytype",
 				},
@@ -48,6 +61,52 @@ func TestNew(t *testing.T) {
 				Codec:         "line",
 				InputFields:   logstash.FieldSet{},
 				IgnoredFields: []string{"@version", "foo"},
+			},
+		},
+		// Reading all the fields
+		{
+			`---
+File: should_be_ignored.log
+ignore: []
+fields:
+  type: mytype
+input: 
+  - "[2018-10-14T10:00:00Z] INFO  Foo"
+  - "[2018-10-14T10:00:01Z] WARN  Bar"
+expected:
+  - "@timestamp": "2018-10-14T10:00:00Z"
+    loglevel: INFO
+    message: Foo
+    type: mytype
+  - "@timestamp": "2018-10-14T10:00:01Z"
+    loglevel: WARN
+    message: Bar
+    type: mytype
+`,
+			TestCaseSet{
+				Codec: "line",
+				InputFields: logstash.FieldSet{
+					"type": "mytype",
+				},
+				IgnoredFields: []string{"@version"},
+				InputLines: []string{
+					"[2018-10-14T10:00:00Z] INFO  Foo",
+					"[2018-10-14T10:00:01Z] WARN  Bar",
+				},
+				ExpectedEvents: []logstash.Event{
+					map[string]interface{}{
+						"@timestamp": "2018-10-14T10:00:00Z",
+						"loglevel":   "INFO",
+						"message":    "Foo",
+						"type":       "mytype",
+					},
+					map[string]interface{}{
+						"@timestamp": "2018-10-14T10:00:01Z",
+						"loglevel":   "WARN",
+						"message":    "Bar",
+						"type":       "mytype",
+					},
+				},
 			},
 		},
 	}

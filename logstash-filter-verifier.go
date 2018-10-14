@@ -270,7 +270,7 @@ func mainEntrypoint() int {
 
 	level, err := oplogging.LogLevel(*loglevel)
 	if err != nil {
-		prefixedUserError("Bad loglevel: %s", loglevel)
+		prefixedUserError("Bad loglevel: %v", loglevel)
 		return 1
 	}
 	logging.SetLevel(level)

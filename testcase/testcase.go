@@ -5,6 +5,9 @@ package testcase
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/magnusbaeck/logstash-filter-verifier/logging"
+	"github.com/magnusbaeck/logstash-filter-verifier/logstash"
+	"gopkg.in/yaml.v2"
 	"io"
 	"io/ioutil"
 	"os"
@@ -12,10 +15,6 @@ import (
 	"path/filepath"
 	"sort"
 	"strconv"
-
-	"github.com/magnusbaeck/logstash-filter-verifier/logging"
-	"github.com/magnusbaeck/logstash-filter-verifier/logstash"
-	unjson "github.com/mitchellh/packer/common/json"
 )
 
 // TestCaseSet contains the configuration of a Logstash filter test case.
@@ -23,11 +22,11 @@ import (
 type TestCaseSet struct {
 	// File is the absolute path to the file from which this
 	// test case was read.
-	File string `json:"-"`
+	File string `yaml:"-"`
 
 	// Codec names the Logstash codec that should be used when
 	// events are read. This is normally "line" or "json_lines".
-	Codec string `json:"codec"`
+	Codec string `yaml:"codec"`
 
 	// IgnoredFields contains a list of fields that will be
 	// deleted from the events that Logstash returns before
@@ -41,29 +40,29 @@ type TestCaseSet struct {
 	// It's also useful for the @version field that Logstash
 	// always adds with a constant value so that one doesn't have
 	// to include that field in every event in ExpectedEvents.
-	IgnoredFields []string `json:"ignore"`
+	IgnoredFields []string `yaml:"ignore"`
 
 	// InputFields contains a mapping of fields that should be
 	// added to input events, like "type" or "tags". The map
 	// values may be scalar values or arrays of scalar
 	// values. This is often important since filters typically are
 	// configured based on the event's type or its tags.
-	InputFields logstash.FieldSet `json:"fields"`
+	InputFields logstash.FieldSet `yaml:"fields"`
 
 	// InputLines contains the lines of input that should be fed
 	// to the Logstash process.
-	InputLines []string `json:"input"`
+	InputLines []string `yaml:"input"`
 
 	// ExpectedEvents contains a slice of expected events to be
 	// compared to the actual events produced by the Logstash
 	// process.
-	ExpectedEvents []logstash.Event `json:"expected"`
+	ExpectedEvents []logstash.Event `yaml:"expected"`
 
 	// TestCases is a slice of test cases, which include at minimum
 	// a pair of an input and an expected event
 	// Optionally other information regarding the test case
 	// may be supplied.
-	TestCases []TestCase `json:"testcases"`
+	TestCases []TestCase `yaml:"testcases"`
 
 	descriptions []string
 }
@@ -74,16 +73,16 @@ type TestCaseSet struct {
 type TestCase struct {
 	// InputLines contains the lines of input that should be fed
 	// to the Logstash process.
-	InputLines []string `json:"input"`
+	InputLines []string `yaml:"input"`
 
 	// ExpectedEvents contains a slice of expected events to be
 	// compared to the actual events produced by the Logstash
 	// process.
-	ExpectedEvents []logstash.Event `json:"expected"`
+	ExpectedEvents []logstash.Event `yaml:"expected"`
 
 	// Description contains an optional description of the test case
 	// which will be printed while the tests are executed.
-	Description string `json:"description"`
+	Description string `yaml:"description"`
 }
 
 // ComparisonError indicates that there was a mismatch when the
@@ -118,13 +117,16 @@ func New(reader io.Reader) (*TestCaseSet, error) {
 		Codec:       "line",
 		InputFields: logstash.FieldSet{},
 	}
+
 	buf, err := ioutil.ReadAll(reader)
 	if err != nil {
 		return nil, err
 	}
-	if err = unjson.Unmarshal(buf, &tcs); err != nil {
+
+	if err = yaml.Unmarshal(buf, &tcs); err != nil {
 		return nil, err
 	}
+
 	if err = tcs.InputFields.IsValid(); err != nil {
 		return nil, err
 	}
@@ -159,7 +161,7 @@ func NewFromFile(path string) (*TestCaseSet, error) {
 
 	tcs, err := New(f)
 	if err != nil {
-		return nil, fmt.Errorf("Error reading/unmarshalling %s: %s", path, err)
+		return nil, fmt.Errorf("error reading/unmarshalling %s: %s", path, err)
 	}
 	tcs.File = abspath
 	return tcs, nil
