@@ -88,31 +88,26 @@ log. They also highlight how to deal with different features in logs.
 Logstash is often used to parse syslog messages, so let's use that as
 a first example.
 
-Test case files are in JSON format and contain a single object with
+Test case files are in YAML format and contain a single object with
 about a handful of supported properties.
+Notice that, as JSON is a subset of YAML, you are also able to write
+your test definitions in JSON in case you prefer that.
 
-```javascript
-{
-  "fields": {
-    "type": "syslog"
-  },
-  "input": [
-    "Oct  6 20:55:29 myhost myprogram[31993]: This is a test message"
-  ],
-  "expected": [
-    {
-      "@timestamp": "2015-10-06T20:55:29.000Z",
-      "host": "myhost",
-      "message": "This is a test message",
-      "pid": 31993,
-      "program": "myprogram",
-      "type": "syslog"
-    }
-  ]
-}
+```yaml
+fields:
+  type: syslog
+input:
+  - "Oct  6 20:55:29 myhost myprogram[31993]: This is a test message"
+expected:
+  - "@timestamp": '2015-10-06T20:55:29.000Z'
+    host: myhost
+    message: This is a test message
+    pid: 31993
+    program: myprogram
+    type: syslog
 ```
 
-In this example, `type` is set to "syslog" which means that the input
+In this example, `type` is set to `"syslog"` which means that the input
 events in this test case will have that in their `type` field when
 they're passed to Logstash. Next, in `input`, we define a single test
 string that we want to feed through Logstash, and the `expected` array
@@ -128,7 +123,7 @@ This command will run this test case file through
 Logstash Filter Verifier (replace all "path/to" with the actual paths
 to the files, obviously):
 
-    $ path/to/logstash-filter-verifier path/to/syslog.json path/to/filters
+    $ path/to/logstash-filter-verifier path/to/syslog.yml path/to/filters
 
 If the test is successful, Logstash Filter Verifier will terminate
 with a zero exit code and (almost) no output. If the test fails it'll
@@ -156,31 +151,34 @@ input used will have its codec set to "json_lines". This is something we
 should mimic on the Logstash Filter Verifier side too. Use `codec` for
 that:
 
-```javascript
-{
-  "fields": {
-    "type": "app"
-  }
-  "codec": "json_lines",
-  "ignore": ["host"],
-  "input": [
-    "{\"message\": \"This is a test message\", \"client\": \"127.0.0.1\", \"time\": \"2015-10-06T20:55:29Z\"}"
-  ],
-  "expected": [
-    {
-      "@timestamp": "2015-10-06T20:55:29.000Z",
-      "client": "localhost",
-      "clientip": "127.0.0.1",
-      "message": "This is a test message",
-      "type": "app"
-    }
-  ]
-}
+```yaml
+fields:
+  type: app
+codec: json_lines
+ignore:
+  - host
+input:
+  - >
+    {"message": "This is a test message", "client": "127.0.0.1", "time": "2015-10-06T20:55:29Z"}
+expected:
+  - "@timestamp": '2015-10-06T20:55:29.000Z'
+    client: localhost
+    clientip: '127.0.0.1'
+    message: This is a test message
+    type: app
 ```
 
 There are a few points to be made here:
 
-* The double quotes inside the string must be escaped.
+* JSON objects can be pasted as-is. Just make sure you use the
+  [YAML block literal `>`](http://yaml.org/spec/1.2/spec.html#id2796251)
+  which takes a block and strips all the newlines, effectively building a
+  single-line string out of your JSON.
+  Even if your JSON object already is a one-liner, said block literal
+  is required to tell the YAML interpreter to take the JSON object literally
+  and not as YAML structure written in JSON.
+  And as a neat side effect, using `>` also spares you the labor of escaping
+  all the quotes.
 * The filters being tested here use Logstash's [dns
   filter](https://www.elastic.co/guide/en/logstash/current/plugins-filters-dns.html)
   to transform the IP address in the "client" field into a hostname
@@ -195,12 +193,12 @@ There are a few points to be made here:
 
 ## Test case file reference
 
-Test case files are JSON files containing a single object. That object
+Test case files are YAML files containing a single object. That object
 may have the following properties:
 
 * `codec`: A string value naming the Logstash codec that should be
-  used when events are read. This is normally "line" or "json_lines".
-* `expected`: An array of JSON objects with the events to be
+  used when events are read. This is normally `"line"` or `"json_lines"`.
+* `expected`: An array of dicts (JSON objects) with the events to be
   expected. They will be compared to the actual events produced by the
   Logstash process.
 * `fields`: An object containing the fields that all input messages
@@ -235,11 +233,22 @@ could be used (run this command in the directory containing the test case
 files):
 
 ```
-for f in `ls -1 *.json`; do jq '{ codec, fields, ignore, testcases:[[.input[]], [.expected[]]] | transpose | map({input: [.[0]], expected: [.[1]]})}' $f > $f.migrated && mv $f.migrated $f; done
+for f in $(ls -1 *.json) ; do \
+    jq '{ codec, fields, ignore, testcases:[[.input[]], [.expected[]]] | transpose | map({input: [.[0]], expected: [.[1]]})}' $f > $f.migrated \
+    && mv "$f{.migrated,}" ; \
+done
 ```
 
 This command only works for test case files, where for every line in
 `input` an element in `expected` exists.
+
+## Migrate testcase files from JSON to YAML format
+
+```
+for f in $(ls -1 *.json) ; do \
+    ruby -ryaml -rjson -e 'puts YAML.dump(JSON.parse(STDIN.read))' < "$f" > "${f%.json}.yml"
+done
+```
 
 ## Notes about the flag --sockets
 
@@ -289,13 +298,9 @@ version of Logstash it should expect. Example:
 
 ## Known limitations and future work
 
-* Some log formats don't include all timestamp components. For
-  example, most syslog formats don't include the year. This should be
-  dealt with somehow.
-* JSON files are tedious to write for a human with brackets, braces,
-  double quotes, and escaped double quotes everywhere and no native
-  support for comments. We should support YAML in addition to JSON to
-  make it more pleasant to write test case files.
+Some log formats don't include all timestamp components. For
+example, most syslog formats don't include the year. This should be
+dealt with somehow.
 
 ## License
 
