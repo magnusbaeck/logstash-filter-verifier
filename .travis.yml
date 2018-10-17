@@ -1,5 +1,6 @@
 ---
 language: go
+go_import_path: github.com/magnusbaeck/logstash-filter-verifier
 go:
   - 1.8
 script:
