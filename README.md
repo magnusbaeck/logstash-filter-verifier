@@ -244,11 +244,16 @@ This command only works for test case files, where for every line in
 
 ## Migrate testcase files from JSON to YAML format
 
+To migrate test case files from JSON format to YAML, run this command
+in the directory containing the test case files:
+
 ```
 for f in $(ls -1 *.json) ; do \
     ruby -ryaml -rjson -e 'puts YAML.dump(JSON.parse(STDIN.read))' < "$f" > "${f%.json}.yml"
 done
 ```
+
+It won't remove your original files. Please move or delete them yourself.
 
 ## Notes about the flag --sockets
 

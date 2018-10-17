@@ -18,7 +18,7 @@ import (
 )
 
 // TestCaseSet contains the configuration of a Logstash filter test case.
-// Most of the fields are supplied by the user via a JSON file.
+// Most of the fields are supplied by the user via a JSON or YAML file.
 type TestCaseSet struct {
 	// File is the absolute path to the file from which this
 	// test case was read.
