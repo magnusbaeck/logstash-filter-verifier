@@ -174,7 +174,7 @@ func TestCompare(t *testing.T) {
 		// Empty test case with no messages is okay.
 		{
 			&TestCaseSet{
-				File: "/path/to/filename.json",
+				File: "/path/to/filename.yml",
 				InputFields: logstash.FieldSet{
 					"type": "test",
 				},
@@ -189,7 +189,7 @@ func TestCompare(t *testing.T) {
 		// Too few messages received.
 		{
 			&TestCaseSet{
-				File: "/path/to/filename.json",
+				File: "/path/to/filename.yml",
 				InputFields: logstash.FieldSet{
 					"type": "test",
 				},
@@ -219,7 +219,7 @@ func TestCompare(t *testing.T) {
 		// Too many messages received.
 		{
 			&TestCaseSet{
-				File: "/path/to/filename.json",
+				File: "/path/to/filename.yml",
 				InputFields: logstash.FieldSet{
 					"type": "test",
 				},
@@ -249,7 +249,7 @@ func TestCompare(t *testing.T) {
 		// Different fields.
 		{
 			&TestCaseSet{
-				File: "/path/to/filename.json",
+				File: "/path/to/filename.yml",
 				InputFields: logstash.FieldSet{
 					"type": "test",
 				},
@@ -286,7 +286,7 @@ func TestCompare(t *testing.T) {
 		// Same field with different values.
 		{
 			&TestCaseSet{
-				File: "/path/to/filename.json",
+				File: "/path/to/filename.yml",
 				InputFields: logstash.FieldSet{
 					"type": "test",
 				},
@@ -323,7 +323,7 @@ func TestCompare(t *testing.T) {
 		// Ignored fields are ignored.
 		{
 			&TestCaseSet{
-				File: "/path/to/filename.json",
+				File: "/path/to/filename.yml",
 				InputFields: logstash.FieldSet{
 					"type": "test",
 				},
@@ -348,7 +348,7 @@ func TestCompare(t *testing.T) {
 		// Diff command execution errors are propagated correctly.
 		{
 			&TestCaseSet{
-				File: "/path/to/filename.json",
+				File: "/path/to/filename.yml",
 				InputFields: logstash.FieldSet{
 					"type": "test",
 				},
