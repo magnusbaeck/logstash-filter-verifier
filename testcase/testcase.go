@@ -5,9 +5,6 @@ package testcase
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/magnusbaeck/logstash-filter-verifier/logging"
-	"github.com/magnusbaeck/logstash-filter-verifier/logstash"
-	"gopkg.in/yaml.v2"
 	"io"
 	"io/ioutil"
 	"os"
@@ -15,6 +12,10 @@ import (
 	"path/filepath"
 	"sort"
 	"strconv"
+
+	"github.com/magnusbaeck/logstash-filter-verifier/logging"
+	"github.com/magnusbaeck/logstash-filter-verifier/logstash"
+	"gopkg.in/yaml.v2"
 )
 
 // TestCaseSet contains the configuration of a Logstash filter test case.

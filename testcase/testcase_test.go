@@ -5,12 +5,13 @@ package testcase
 import (
 	"bytes"
 	"encoding/json"
-	"github.com/magnusbaeck/logstash-filter-verifier/logstash"
 	"io/ioutil"
 	"os"
 	"path/filepath"
 	"reflect"
 	"testing"
+
+	"github.com/magnusbaeck/logstash-filter-verifier/logstash"
 )
 
 func TestNew(t *testing.T) {
