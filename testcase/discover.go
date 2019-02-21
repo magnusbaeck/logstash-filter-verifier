@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"sort"
 	"strings"
 )
 
@@ -31,11 +32,22 @@ func discoverTestDirectory(path string) ([]TestCaseSet, error) {
 	if err != nil {
 		return nil, fmt.Errorf("Error discovering test case files: %s", err)
 	}
-	var result []TestCaseSet
+
+	var fileInfos []os.FileInfo
 	for _, f := range files {
 		if f.IsDir() || !strings.HasSuffix(f.Name(), ".json") {
 			continue
 		}
+
+		fileInfos = append(fileInfos, f)
+	}
+
+	sort.Slice(fileInfos[:], func(i, j int) bool {
+		return fileInfos[i].ModTime().Before(fileInfos[j].ModTime())
+	})
+
+	var result []TestCaseSet
+	for _, f := range fileInfos {
 		fullpath := filepath.Join(path, f.Name())
 		tcs, err := NewFromFile(fullpath)
 		if err != nil {
