@@ -43,7 +43,7 @@ func NewInvocation(logstashPath string, logstashArgs []string, logstashVersion *
 	logDir := filepath.Join(tempDir, "log")
 	pipelineDir := filepath.Join(tempDir, "pipeline.d")
 	for _, dir := range []string{configDir, logDir, pipelineDir} {
-		if err = os.Mkdir(dir, 0755); err != nil {
+		if err = os.Mkdir(dir, 0700); err != nil {
 			_ = os.RemoveAll(tempDir)
 			return nil, err
 		}
