@@ -80,7 +80,19 @@ func NewInvocation(logstashPath string, logstashArgs []string, logstashVersion *
 		"-f",
 		pipelineDir,
 	}
+	if logstashVersion.GTE(semver.MustParse("2.2.0")) {
+		// The ordering of messages within a batch is
+		// non-deterministic as of Logstash 7, resulting in
+		// flaky test results. This can be addressed with a
+		// batch size of one (1). Although the problem hasn't
+		// been seen with earlier Logstash releases, limit the
+		// batch size everywhere we can for consistent
+		// behavior across Logstash versions. It appears the
+		// option was introduced in Logstash 2.2.
+		args = append(args, "-b", "1")
+	}
 	if logstashVersion.GTE(semver.MustParse("5.0.0")) {
+
 		// Starting with Logstash 5.0 you don't configure
 		// the path to the log file but the path to the log
 		// directory.
