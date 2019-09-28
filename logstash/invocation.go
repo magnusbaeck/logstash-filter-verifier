@@ -10,7 +10,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/Masterminds/semver"
+	semver "github.com/Masterminds/semver/v3"
 )
 
 // Invocation represents an invocation of Logstash, including the

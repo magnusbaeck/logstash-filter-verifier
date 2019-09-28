@@ -1,10 +1,7 @@
 # Copyright (c) 2015-2019 Magnus Bäck <magnus@noun.se>
 
-# An empty GOPATH can result in slightly confusing error messages.
-ifeq ($(GOPATH),)
-$(error The GOPATH environment variable needs to be set)
-endif
-GOPATH_PRIMARY := $(firstword $(subst :, ,${GOPATH}))
+export GOBIN := $(shell pwd)/bin
+export PATH := $(GOBIN):$(PATH)
 
 # Installation root directory. Should be left alone except for
 # e.g. package installations. If you want to control the installation
@@ -38,11 +35,10 @@ TARGETS := darwin_amd64 linux_386 linux_amd64 windows_386 windows_amd64
 
 VERSION := $(shell git describe --tags --always)
 
-GOCOV         := $(GOPATH_PRIMARY)/bin/gocov$(EXEC_SUFFIX)
-GOCOV_HTML    := $(GOPATH_PRIMARY)/bin/gocov-html$(EXEC_SUFFIX)
-GOLANGCI_LINT := $(GOPATH_PRIMARY)/bin/golangci-lint$(EXEC_SUFFIX)
-GPM           := $(GOPATH_PRIMARY)/bin/gpm
-OVERALLS      := $(GOPATH_PRIMARY)/bin/overalls$(EXEC_SUFFIX)
+GOCOV         := $(GOBIN)/gocov$(EXEC_SUFFIX)
+GOCOV_HTML    := $(GOBIN)/gocov-html$(EXEC_SUFFIX)
+GOLANGCI_LINT := $(GOBIN)/golangci-lint$(EXEC_SUFFIX)
+OVERALLS      := $(GOBIN)/overalls$(EXEC_SUFFIX)
 
 GOLANGCI_LINT_VERSION := v1.19.1
 
@@ -67,43 +63,33 @@ version.go: .FORCE
 	    fi && \
 	    rm -f $$TMPFILE
 
-$(GOCOV): deps
+$(GOCOV):
 	go get github.com/axw/gocov/gocov
 
-$(GOCOV_HTML): deps
-	go get gopkg.in/matm/v1/gocov-html
+$(GOCOV_HTML):
+	go get github.com/matm/gocov-html
 
 $(GOLANGCI_LINT):
 	curl --silent --show-error --location \
 	    https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh \
 		| sh -s -- -b $(dir $(GOLANGCI_LINT)) $(GOLANGCI_LINT_VERSION)
 
-$(GPM):
-	mkdir -p $(dir $@)
-	curl --silent --show-error \
-	    https://raw.githubusercontent.com/pote/gpm/v1.4.0/bin/gpm > $@
-	chmod +x $@
-
-$(OVERALLS): deps
+$(OVERALLS):
 	go get github.com/go-playground/overalls
 
 # The Go compiler is fast and pretty good about figuring out what to
 # build so we don't try to to outsmart it.
-$(PROGRAM)$(EXEC_SUFFIX): .FORCE version.go deps
+$(PROGRAM)$(EXEC_SUFFIX): .FORCE version.go
 	go build -o $@
 
 .PHONY: check
-check: $(GOLANGCI_LINT) version.go deps
-	PATH=$$PATH:$(GOPATH_PRIMARY)/bin golangci-lint run
+check: $(GOLANGCI_LINT) version.go
+	golangci-lint run
 
 .PHONY: clean
 clean:
 	rm -f $(PROGRAM)$(EXEC_SUFFIX) $(GOCOV) $(GOCOV_HTML) $(GOLANGCI_LINT) $(GPM) $(OVERALLS)
 	rm -rf dist
-
-.PHONY: deps
-deps: $(GPM) Godeps
-	$(GPM) get
 
 .PHONY: install
 install: $(DESTDIR)$(PREFIX)/bin/$(PROGRAM)$(EXEC_SUFFIX)
@@ -135,7 +121,7 @@ dist/$(PROGRAM)_$(VERSION)_%.tar.gz: version.go
 	    BINDMOUNTS=$$(echo $$GOPATH | \
 	        awk -F: '{ for (i = 1; i<= NF; i++) { printf " -v %s:%s\n", $$i, $$i } }') && \
 	    docker run -it --rm $$BINDMOUNTS -w $$(pwd) \
-	        -e GOPATH=$$GOPATH -e GOOS=$$GOOS -e GOARCH=$$GOARCH \
+	        -e GOOS=$$GOOS -e GOARCH=$$GOARCH \
 	        $(GOLANG_DOCKER_IMAGE) \
 	        go build -o $$DISTDIR/$(PROGRAM)$$EXEC_SUFFIX && \
 	    tar -C $$DISTDIR -zcpf $@ . && \
@@ -143,5 +129,5 @@ dist/$(PROGRAM)_$(VERSION)_%.tar.gz: version.go
 
 .PHONY: test
 test: $(GOCOV) $(GOCOV_HTML) $(OVERALLS) $(PROGRAM)$(EXEC_SUFFIX)
-	GOPATH=$(GOPATH_PRIMARY) $(OVERALLS) -project=$$(go list .) -covermode=count -debug
+	$(OVERALLS) -project=$$(go list .) -covermode=count -debug
 	$(GOCOV) convert overalls.coverprofile | $(GOCOV_HTML) > coverage.html

@@ -10,7 +10,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/Masterminds/semver"
+	semver "github.com/Masterminds/semver/v3"
 	"github.com/magnusbaeck/logstash-filter-verifier/testhelpers"
 )
 

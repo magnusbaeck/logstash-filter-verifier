@@ -11,7 +11,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/Masterminds/semver"
+	semver "github.com/Masterminds/semver/v3"
 )
 
 func TestParallelProcess(t *testing.T) {

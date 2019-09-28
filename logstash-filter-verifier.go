@@ -10,7 +10,7 @@ import (
 	"runtime"
 	"strings"
 
-	"github.com/Masterminds/semver"
+	semver "github.com/Masterminds/semver/v3"
 	"github.com/alecthomas/kingpin"
 	"github.com/magnusbaeck/logstash-filter-verifier/logging"
 	"github.com/magnusbaeck/logstash-filter-verifier/logstash"

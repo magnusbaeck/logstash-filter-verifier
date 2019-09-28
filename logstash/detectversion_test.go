@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/Masterminds/semver"
+	semver "github.com/Masterminds/semver/v3"
 )
 
 func TestParseLogstashVersionOutput(t *testing.T) {

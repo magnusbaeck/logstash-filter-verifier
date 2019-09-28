@@ -1,9 +1,0 @@
-github.com/alecthomas/kingpin                         v2.2.6
-github.com/axw/gocov/gocov                            v1.0.0
-github.com/breml/logstash-config                      v0.1.0
-github.com/go-playground/overalls                     22ec1a223b7c
-github.com/hashicorp/packer                           v1.4.4
-github.com/Masterminds/semver                         v3.0.1
-github.com/mattn/go-shellwords                        v1.0.6
-github.com/op/go-logging                              970db520ece7
-gopkg.in/matm/v1/gocov-html                           v1.0
