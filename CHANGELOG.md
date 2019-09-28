@@ -1,4 +1,11 @@
-logstash-filter-verifier (1.5.1) RELEASED; urgency=medium
+Logstash Filter Verifier Change Log
+===================================
+
+All timestamps are in the Europe/Stockholm timezone.
+
+
+1.5.1 (2019-07-11)
+------------------
 
   * The temporary directory to which the configuration files are
     copied is now created with mode 0700. This addresses a security
@@ -6,9 +13,9 @@ logstash-filter-verifier (1.5.1) RELEASED; urgency=medium
   * Test flakiness when used with Logstash 7 is addressed by limiting
     the pipeline batch size to a single message.
 
- -- Magnus Bäck <magnus@noun.se>  Thu, 11 Jul 2019 23:42:09 +0200
 
-logstash-filter-verifier (1.5.0) RELEASED; urgency=medium
+1.5.0 (2018-09-09)
+------------------
 
   * Allow keeping multiple environment variables with --keep-env.
   * Input and outputs sections are automatically removed from the
@@ -23,16 +30,16 @@ logstash-filter-verifier (1.5.0) RELEASED; urgency=medium
   * Fix "make install" on Mac OS X by omitting the -s/--strip option
     to install(1).
 
- -- Magnus Bäck <magnus@noun.se>  Sun, 9 Sep 2018 19:51:22 +0200
 
-logstash-filter-verifier (1.4.1) RELEASED; urgency=medium
+1.4.1 (2018-01-01)
+------------------
 
   * Fix for a crash when using --sockets with a testcase file without
     a "fields" option.
 
- -- Magnus Bäck <magnus@noun.se>  Mon, 1 Jan 2018 17:11:00 +0100
 
-logstash-filter-verifier (1.4.0) RELEASED; urgency=medium
+1.4.0 (2017-12-17)
+------------------
 
   * Full support for Logstash 5 and later. By default the version used
     with LFV is auto-detected (in order to adapt the LFV behavior) but
@@ -44,9 +51,9 @@ logstash-filter-verifier (1.4.0) RELEASED; urgency=medium
     added, but it would clobber any existing @metadata fields. This field
     is now appended to any existing @metadata fields.
 
- -- Magnus Bäck <magnus@noun.se>  Sun, 17 Dec 2017 15:00:00 +0100
 
-logstash-filter-verifier (1.3.0) RELEASED; urgency=medium
+1.3.0 (2017-05-21)
+------------------
 
   * The --sockets option is incompatible with a couple of input codecs
     that happen to work if you don't use that option. Warn the use about
@@ -57,9 +64,9 @@ logstash-filter-verifier (1.3.0) RELEASED; urgency=medium
     Logstash processes. This fixes a bug where Logstash under some
     circumstances isn't able to find the JVM.
 
- -- Magnus Bäck <magnus@noun.se>  Sun, 21 May 2017 21:14:40 +0200
 
-logstash-filter-verifier (1.2.1) RELEASED; urgency=medium
+1.2.1 (2017-04-05)
+------------------
 
   * Addition of --sockets-timeout option to control how long to
     wait for Logstash to start up and become ready to process
@@ -69,9 +76,9 @@ logstash-filter-verifier (1.2.1) RELEASED; urgency=medium
   * Addition of a "description" field for test cases that e.g. can be
     used as a short piece of documentation.
 
- -- Magnus Bäck <magnus@noun.se>  Wed, 5 Apr 2017 22:07:33 +0200
 
-logstash-filter-verifier (1.2.0) RELEASED; urgency=medium
+1.2.0 (2017-02-21)
+------------------
 
   * Logstash 5.2 compatibility. Issues still exist with Logstash 5.0
     and possibly 5.1.
@@ -94,9 +101,9 @@ logstash-filter-verifier (1.2.0) RELEASED; urgency=medium
     acceptable to Logstash.
   * Minor improvements in the messages given when running the program.
 
- -- Magnus Bäck <magnus@noun.se>  Tue, 21 Feb 2017 21:49:23 +0100
 
-logstash-filter-verifier (1.1.1) RELEASED; urgency=medium
+1.1.1 (2016-07-31)
+------------------
 
   * Multiple filter configuration files now work. Previously only one
     of the files would be picked up by Logstash, possibly resulting in
@@ -104,9 +111,9 @@ logstash-filter-verifier (1.1.1) RELEASED; urgency=medium
   * When invoking with --help to get command-line help, the exit code
     is now zero.
 
- -- Magnus Bäck <magnus@noun.se>  Sun, 31 Jul 2016 17:59:04 +0200
 
-logstash-filter-verifier (1.1.0) RELEASED; urgency=medium
+1.1.0 (2016-02-25)
+------------------
 
   * Adds the --keep-env option to keep select environment variables
     when invoking Logstash. Useful to propagate JAVA_HOME and any
@@ -116,19 +123,17 @@ logstash-filter-verifier (1.1.0) RELEASED; urgency=medium
     relying on the log output. If Logstash fails very early, e.g. before
     the JVM starts up, there won't be a logfile.
 
- -- Magnus Bäck <magnus@noun.se>  Thu, 25 Feb 2016 21:48:28 +0100
 
-logstash-filter-verifier (1.0.1) RELEASED; urgency=medium
+1.0.1 (2016-02-11)
+------------------
 
   * Fixes Logstash 2.2.0 incompatibility problem.
   * If the Logstash child process terminates with a non-zero exit code,
     the contents of Logstash's log file is now included in the error
     message.
 
- -- Magnus Bäck <magnus@noun.se>  Thu, 11 Feb 2016 21:09:28 +0100
 
-logstash-filter-verifier (1.0.0) RELEASED; urgency=medium
+1.0.0 (2016-01-10)
+------------------
 
   * Initial release.
-
- -- Magnus Bäck <magnus@noun.se>  Sun, 10 Jan 2016 21:07:19 +0100
