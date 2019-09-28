@@ -38,11 +38,13 @@ TARGETS := darwin_amd64 linux_386 linux_amd64 windows_386 windows_amd64
 
 VERSION := $(shell git describe --tags --always)
 
-GOCOV        := $(GOPATH_PRIMARY)/bin/gocov$(EXEC_SUFFIX)
-GOCOV_HTML   := $(GOPATH_PRIMARY)/bin/gocov-html$(EXEC_SUFFIX)
-GOMETALINTER := $(GOPATH_PRIMARY)/bin/gometalinter
-GPM          := $(GOPATH_PRIMARY)/bin/gpm
-OVERALLS     := $(GOPATH_PRIMARY)/bin/overalls$(EXEC_SUFFIX)
+GOCOV         := $(GOPATH_PRIMARY)/bin/gocov$(EXEC_SUFFIX)
+GOCOV_HTML    := $(GOPATH_PRIMARY)/bin/gocov-html$(EXEC_SUFFIX)
+GOLANGCI_LINT := $(GOPATH_PRIMARY)/bin/golangci-lint$(EXEC_SUFFIX)
+GPM           := $(GOPATH_PRIMARY)/bin/gpm
+OVERALLS      := $(GOPATH_PRIMARY)/bin/overalls$(EXEC_SUFFIX)
+
+GOLANGCI_LINT_VERSION := v1.19.1
 
 .PHONY: all
 all: $(PROGRAM)$(EXEC_SUFFIX)
@@ -71,11 +73,10 @@ $(GOCOV): deps
 $(GOCOV_HTML): deps
 	go get gopkg.in/matm/v1/gocov-html
 
-# Should ideally list all its dependencies in the Godeps file
-# and not use gometalinter for the installation.
-$(GOMETALINTER): deps
-	go get github.com/alecthomas/gometalinter
-	$@ --install --update
+$(GOLANGCI_LINT):
+	curl --silent --show-error --location \
+	    https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh \
+		| sh -s -- -b $(dir $(GOLANGCI_LINT)) $(GOLANGCI_LINT_VERSION)
 
 $(GPM):
 	mkdir -p $(dir $@)
@@ -92,15 +93,12 @@ $(PROGRAM)$(EXEC_SUFFIX): .FORCE version.go deps
 	go build -o $@
 
 .PHONY: check
-check: $(GOMETALINTER)
-	PATH=$$PATH:$(GOPATH_PRIMARY)/bin gometalinter --deadline 15s \
-	    --disable=gotype --enable=gofmt \
-	    '--linter=errcheck:errcheck -ignoretests -abspath .:^(?P<path>[^:]+):(?P<line>\d+):(?P<col>\d+)\t(?P<message>.*)$$' \
-	    ./...
+check: $(GOLANGCI_LINT) version.go deps
+	PATH=$$PATH:$(GOPATH_PRIMARY)/bin golangci-lint run
 
 .PHONY: clean
 clean:
-	rm -f $(PROGRAM)$(EXEC_SUFFIX) $(GOCOV) $(GOCOV_HTML) $(GPM) $(OVERALLS)
+	rm -f $(PROGRAM)$(EXEC_SUFFIX) $(GOCOV) $(GOCOV_HTML) $(GOLANGCI_LINT) $(GPM) $(OVERALLS)
 	rm -rf dist
 
 .PHONY: deps

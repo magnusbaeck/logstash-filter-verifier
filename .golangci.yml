@@ -1,0 +1,16 @@
+---
+linters:
+  disable-all: true
+  enable:
+    - deadcode
+    - gocyclo
+    - gofmt
+    - gosec
+    - gosimple
+    - ineffassign
+    - staticcheck
+    - structcheck
+    - typecheck
+    - unconvert
+    - unused
+    - varcheck
