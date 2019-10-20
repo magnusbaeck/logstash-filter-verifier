@@ -13,9 +13,9 @@ import (
 	"sort"
 	"strconv"
 
+	unjson "github.com/hashicorp/packer/common/json"
 	"github.com/magnusbaeck/logstash-filter-verifier/logging"
 	"github.com/magnusbaeck/logstash-filter-verifier/logstash"
-	unjson "github.com/mitchellh/packer/common/json"
 )
 
 // TestCaseSet contains the configuration of a Logstash filter test case.
