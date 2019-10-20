@@ -9,7 +9,7 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/blang/semver"
+	"github.com/Masterminds/semver"
 )
 
 var (
@@ -33,7 +33,7 @@ func parseLogstashVersionOutput(processOutput string) (*semver.Version, error) {
 	for _, line := range strings.Split(processOutput, "\n") {
 		m := logstashVersionRegexp.FindStringSubmatch(line)
 		if len(m) > 1 {
-			v, err := semver.New(m[1])
+			v, err := semver.NewVersion(m[1])
 			if err == nil {
 				return v, nil
 			}

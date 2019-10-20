@@ -11,7 +11,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/blang/semver"
+	"github.com/Masterminds/semver"
 )
 
 func TestParallelProcess(t *testing.T) {
@@ -33,7 +33,7 @@ func TestParallelProcess(t *testing.T) {
 	// Pretend it's an old Logstash; if NewInvocation() is called
 	// for 5.0 or newer it'll try to copy configuration files so
 	// we'd have to generate such files too.
-	v, err := semver.New("2.4.0")
+	v, err := semver.NewVersion("2.4.0")
 	if err != nil {
 		t.Fatalf("Unable to parse version number: %s", err)
 	}

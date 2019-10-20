@@ -10,7 +10,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/blang/semver"
+	"github.com/Masterminds/semver"
 )
 
 // Invocation represents an invocation of Logstash, including the
@@ -80,7 +80,7 @@ func NewInvocation(logstashPath string, logstashArgs []string, logstashVersion *
 		"-f",
 		pipelineDir,
 	}
-	if logstashVersion.GTE(semver.MustParse("2.2.0")) {
+	if logstashVersion.GreaterThan(semver.MustParse("2.2.0")) || logstashVersion.Equal(semver.MustParse("2.2.0")) {
 		// The ordering of messages within a batch is
 		// non-deterministic as of Logstash 7, resulting in
 		// flaky test results. This can be addressed with a
@@ -91,8 +91,7 @@ func NewInvocation(logstashPath string, logstashArgs []string, logstashVersion *
 		// option was introduced in Logstash 2.2.
 		args = append(args, "-b", "1")
 	}
-	if logstashVersion.GTE(semver.MustParse("5.0.0")) {
-
+	if logstashVersion.GreaterThan(semver.MustParse("5.0.0")) || logstashVersion.Equal(semver.MustParse("5.0.0")) {
 		// Starting with Logstash 5.0 you don't configure
 		// the path to the log file but the path to the log
 		// directory.

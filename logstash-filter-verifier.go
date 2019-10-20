@@ -10,8 +10,8 @@ import (
 	"runtime"
 	"strings"
 
+	"github.com/Masterminds/semver"
 	"github.com/alecthomas/kingpin"
-	"github.com/blang/semver"
 	"github.com/magnusbaeck/logstash-filter-verifier/logging"
 	"github.com/magnusbaeck/logstash-filter-verifier/logstash"
 	"github.com/magnusbaeck/logstash-filter-verifier/testcase"
@@ -303,7 +303,7 @@ func mainEntrypoint() int {
 			return 1
 		}
 	} else {
-		targetVersion, err = semver.New(*logstashVersion)
+		targetVersion, err = semver.NewVersion(*logstashVersion)
 		if err != nil {
 			userError("The given Logstash version %q could not be parsed as a version number (%s).", *logstashVersion, err)
 			return 1

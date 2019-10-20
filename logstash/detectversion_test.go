@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/blang/semver"
+	"github.com/Masterminds/semver"
 )
 
 func TestParseLogstashVersionOutput(t *testing.T) {
@@ -56,7 +56,7 @@ func TestParseLogstashVersionOutput(t *testing.T) {
 		var expectedVersion *semver.Version
 		var err error
 		if len(c.expected) > 0 {
-			expectedVersion, err = semver.New(c.expected)
+			expectedVersion, err = semver.NewVersion(c.expected)
 			if err != nil {
 				t.Fatalf("Test %d: Unexpected error when parsing version number: %s", i, err)
 			}
@@ -69,7 +69,7 @@ func TestParseLogstashVersionOutput(t *testing.T) {
 			t.Errorf("Test %d: Expected success, got this error instead: %#v", i, err)
 		} else if err != nil && c.err != nil && err.Error() != c.err.Error() {
 			t.Errorf("Test %d:\nExpected error:\n%s\nGot:\n%s", i, c.err, err)
-		} else if version != nil && !version.Equals(*expectedVersion) {
+		} else if version != nil && !version.Equal(expectedVersion) {
 			t.Errorf("Test %d:\nExpected:\n%s\nGot:\n%s", i, expectedVersion, version)
 		}
 	}

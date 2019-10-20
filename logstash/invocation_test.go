@@ -10,12 +10,12 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/blang/semver"
+	"github.com/Masterminds/semver"
 	"github.com/magnusbaeck/logstash-filter-verifier/testhelpers"
 )
 
 func TestArgs(t *testing.T) {
-	tinv, err := createTestInvocation(semver.MustParse("6.0.0"))
+	tinv, err := createTestInvocation(*semver.MustParse("6.0.0"))
 	if err != nil {
 		t.Fatalf("%s", err)
 	}
@@ -151,7 +151,7 @@ func TestNewInvocation(t *testing.T) {
 		},
 	}
 	for i, c := range cases {
-		tinv, err := createTestInvocation(semver.MustParse(c.version))
+		tinv, err := createTestInvocation(*semver.MustParse(c.version))
 		if err != nil {
 			t.Errorf("Test %d: Error unexpectedly returned: %s", i, err)
 			continue
