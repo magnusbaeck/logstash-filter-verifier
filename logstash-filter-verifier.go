@@ -1,4 +1,4 @@
-// Copyright (c) 2015-2017 Magnus Bäck <magnus@noun.se>
+// Copyright (c) 2015-2019 Magnus Bäck <magnus@noun.se>
 
 package main
 
@@ -20,6 +20,10 @@ import (
 )
 
 var (
+	// GitSummary contains "git describe" output and is automatically
+	// populated via linker options when building with govvv.
+	GitSummary = "(unknown)"
+
 	log = logging.MustGetLogger()
 
 	loglevels = []string{"CRITICAL", "ERROR", "WARNING", "NOTICE", "INFO", "DEBUG"}
@@ -265,7 +269,7 @@ func userError(format string, a ...interface{}) {
 // mainEntrypoint functions as the main function of the program and
 // returns the desired exit code.
 func mainEntrypoint() int {
-	kingpin.Version(fmt.Sprintf("%s %s", kingpin.CommandLine.Name, version))
+	kingpin.Version(fmt.Sprintf("%s %s", kingpin.CommandLine.Name, GitSummary))
 	kingpin.Parse()
 
 	level, err := oplogging.LogLevel(*loglevel)

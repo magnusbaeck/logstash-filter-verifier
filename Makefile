@@ -38,6 +38,7 @@ VERSION := $(shell git describe --tags --always)
 GOCOV         := $(GOBIN)/gocov$(EXEC_SUFFIX)
 GOCOV_HTML    := $(GOBIN)/gocov-html$(EXEC_SUFFIX)
 GOLANGCI_LINT := $(GOBIN)/golangci-lint$(EXEC_SUFFIX)
+GOVVV         := $(GOBIN)/govvv$(EXEC_SUFFIX)
 OVERALLS      := $(GOBIN)/overalls$(EXEC_SUFFIX)
 
 GOLANGCI_LINT_VERSION := v1.19.1
@@ -47,21 +48,6 @@ all: $(PROGRAM)$(EXEC_SUFFIX)
 
 # Depend on this target to force a rebuild every time.
 .FORCE:
-
-# Generate version.go based on the "git describe" output so that
-# the reported version number is always descriptive and useful.
-# This rule must always run but the target file is only updated if
-# there's an actual change in the version number.
-.PRECIOUS: version.go
-version.go: .FORCE
-	TMPFILE=$$(mktemp $@.XXXX) && \
-	    echo "package main" >> $$TMPFILE && \
-	    echo "const version = \"$(VERSION)\"" >> $$TMPFILE && \
-	    gofmt -w $$TMPFILE && \
-	    if ! cmp --quiet $$TMPFILE $@ ; then \
-	        mv $$TMPFILE $@ ; \
-	    fi && \
-	    rm -f $$TMPFILE
 
 $(GOCOV):
 	go get github.com/axw/gocov/gocov
@@ -74,16 +60,19 @@ $(GOLANGCI_LINT):
 	    https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh \
 		| sh -s -- -b $(dir $(GOLANGCI_LINT)) $(GOLANGCI_LINT_VERSION)
 
+$(GOVVV):
+	go get github.com/ahmetb/govvv
+
 $(OVERALLS):
 	go get github.com/go-playground/overalls
 
 # The Go compiler is fast and pretty good about figuring out what to
 # build so we don't try to to outsmart it.
-$(PROGRAM)$(EXEC_SUFFIX): .FORCE version.go
-	go build -o $@
+$(PROGRAM)$(EXEC_SUFFIX): .FORCE $(GOVVV)
+	govvv build -o $@
 
 .PHONY: check
-check: $(GOLANGCI_LINT) version.go
+check: $(GOLANGCI_LINT)
 	golangci-lint run
 
 .PHONY: clean
@@ -110,7 +99,7 @@ dist/$(PROGRAM)_$(VERSION).tar.gz:
 	mkdir -p $(dir $@)
 	git archive --output=$@ HEAD
 
-dist/$(PROGRAM)_$(VERSION)_%.tar.gz: version.go
+dist/$(PROGRAM)_$(VERSION)_%.tar.gz: $(GOVVV)
 	mkdir -p $(dir $@)
 	GOOS="$$(basename $@ .tar.gz | awk -F_ '{print $$3}')" && \
 	    GOARCH="$$(basename $@ .tar.gz | awk -F_ '{print $$4}')" && \
@@ -123,7 +112,7 @@ dist/$(PROGRAM)_$(VERSION)_%.tar.gz: version.go
 	    docker run -it --rm $$BINDMOUNTS -w $$(pwd) \
 	        -e GOOS=$$GOOS -e GOARCH=$$GOARCH \
 	        $(GOLANG_DOCKER_IMAGE) \
-	        go build -o $$DISTDIR/$(PROGRAM)$$EXEC_SUFFIX && \
+	        govvv build -o $$DISTDIR/$(PROGRAM)$$EXEC_SUFFIX && \
 	    tar -C $$DISTDIR -zcpf $@ . && \
 	    rm -rf $$DISTDIR
 

@@ -6,6 +6,7 @@
 package tools
 
 import (
+	_ "github.com/ahmetb/govvv"
 	_ "github.com/axw/gocov/gocov"
 	_ "github.com/go-playground/overalls"
 	_ "github.com/matm/gocov-html"
