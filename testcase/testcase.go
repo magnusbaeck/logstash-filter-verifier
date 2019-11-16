@@ -10,24 +10,28 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"reflect"
 	"sort"
 	"strconv"
+	"strings"
 
 	unjson "github.com/hashicorp/packer/common/json"
 	"github.com/magnusbaeck/logstash-filter-verifier/logging"
 	"github.com/magnusbaeck/logstash-filter-verifier/logstash"
+	"github.com/mikefarah/yaml/v2"
+	"github.com/pkg/errors"
 )
 
 // TestCaseSet contains the configuration of a Logstash filter test case.
-// Most of the fields are supplied by the user via a JSON file.
+// Most of the fields are supplied by the user via a JSON file or YAML file.
 type TestCaseSet struct {
 	// File is the absolute path to the file from which this
 	// test case was read.
-	File string `json:"-"`
+	File string `json:"-" yaml:"-"`
 
 	// Codec names the Logstash codec that should be used when
 	// events are read. This is normally "line" or "json_lines".
-	Codec string `json:"codec"`
+	Codec string `json:"codec" yaml:"codec"`
 
 	// IgnoredFields contains a list of fields that will be
 	// deleted from the events that Logstash returns before
@@ -41,31 +45,31 @@ type TestCaseSet struct {
 	// It's also useful for the @version field that Logstash
 	// always adds with a constant value so that one doesn't have
 	// to include that field in every event in ExpectedEvents.
-	IgnoredFields []string `json:"ignore"`
+	IgnoredFields []string `json:"ignore" yaml:"ignore"`
 
 	// InputFields contains a mapping of fields that should be
 	// added to input events, like "type" or "tags". The map
 	// values may be scalar values or arrays of scalar
 	// values. This is often important since filters typically are
 	// configured based on the event's type or its tags.
-	InputFields logstash.FieldSet `json:"fields"`
+	InputFields logstash.FieldSet `json:"fields" yaml:"fields"`
 
 	// InputLines contains the lines of input that should be fed
 	// to the Logstash process.
-	InputLines []string `json:"input"`
+	InputLines []string `json:"input" yaml:"input"`
 
 	// ExpectedEvents contains a slice of expected events to be
 	// compared to the actual events produced by the Logstash
 	// process.
-	ExpectedEvents []logstash.Event `json:"expected"`
+	ExpectedEvents []logstash.Event `json:"expected" yaml:"expected"`
 
 	// TestCases is a slice of test cases, which include at minimum
 	// a pair of an input and an expected event
 	// Optionally other information regarding the test case
 	// may be supplied.
-	TestCases []TestCase `json:"testcases"`
+	TestCases []TestCase `json:"testcases" yaml:"testcases"`
 
-	descriptions []string
+	descriptions []string `json:"descriptions" yaml:"descriptions"`
 }
 
 // TestCase is a pair of an input line that should be fed
@@ -74,16 +78,16 @@ type TestCaseSet struct {
 type TestCase struct {
 	// InputLines contains the lines of input that should be fed
 	// to the Logstash process.
-	InputLines []string `json:"input"`
+	InputLines []string `json:"input" yaml:"input"`
 
 	// ExpectedEvents contains a slice of expected events to be
 	// compared to the actual events produced by the Logstash
 	// process.
-	ExpectedEvents []logstash.Event `json:"expected"`
+	ExpectedEvents []logstash.Event `json:"expected" yaml:"expected"`
 
 	// Description contains an optional description of the test case
 	// which will be printed while the tests are executed.
-	Description string `json:"description"`
+	Description string `json:"description" yaml:"description"`
 }
 
 // ComparisonError indicates that there was a mismatch when the
@@ -109,11 +113,47 @@ var (
 	defaultIgnoredFields = []string{"@version"}
 )
 
+func (t *TestCaseSet) convertDotFileds() error {
+
+	// Convert fields in input fields
+	t.InputFields = parseAllDotProperties(t.InputFields)
+
+	// Convert fields in expected events
+	for i, expected := range t.ExpectedEvents {
+		t.ExpectedEvents[i] = parseAllDotProperties(expected)
+	}
+
+	// Convert  fields in input json string
+	if t.Codec == "json_lines" {
+		for i, line := range t.InputLines {
+			var jsonObj map[string]interface{}
+			if err := json.Unmarshal([]byte(line), &jsonObj); err != nil {
+				return err
+			}
+			jsonObj = parseAllDotProperties(jsonObj)
+			data, err := json.Marshal(jsonObj)
+			if err != nil {
+				return err
+			}
+			t.InputLines[i] = string(data)
+		}
+	}
+
+	return nil
+
+}
+
 // New reads a test case configuration from a reader and returns a
 // TestCase. Defaults to a "line" codec and ignoring the @version
 // field. If the configuration being read lists additional fields to
 // ignore those will be ignored in addition to @version.
-func New(reader io.Reader) (*TestCaseSet, error) {
+// configType must be json or yaml.
+func New(reader io.Reader, configType string) (*TestCaseSet, error) {
+
+	if configType != "json" && configType != "yaml" {
+		return nil, errors.New("Config type must be json or yaml")
+	}
+
 	tcs := TestCaseSet{
 		Codec:       "line",
 		InputFields: logstash.FieldSet{},
@@ -122,9 +162,19 @@ func New(reader io.Reader) (*TestCaseSet, error) {
 	if err != nil {
 		return nil, err
 	}
-	if err = unjson.Unmarshal(buf, &tcs); err != nil {
-		return nil, err
+
+	if configType == "json" {
+		if err = unjson.Unmarshal(buf, &tcs); err != nil {
+			return nil, err
+		}
+	} else {
+		// Fix issue https://github.com/go-yaml/yaml/issues/139
+		yaml.DefaultMapType = reflect.TypeOf(map[string]interface{}{})
+		if err = yaml.Unmarshal(buf, &tcs); err != nil {
+			return nil, err
+		}
 	}
+
 	if err = tcs.InputFields.IsValid(); err != nil {
 		return nil, err
 	}
@@ -138,6 +188,12 @@ func New(reader io.Reader) (*TestCaseSet, error) {
 			tcs.descriptions = append(tcs.descriptions, tc.Description)
 		}
 	}
+
+	// Convert dot fields
+	if err := tcs.convertDotFileds(); err != nil {
+		return nil, err
+	}
+
 	return &tcs, nil
 }
 
@@ -147,6 +203,8 @@ func NewFromFile(path string) (*TestCaseSet, error) {
 	if err != nil {
 		return nil, err
 	}
+	ext := strings.TrimPrefix(filepath.Ext(abspath), ".")
+	log.Debugf("File extension: %s", ext)
 
 	log.Debug("Reading test case file: %s (%s)", path, abspath)
 	f, err := os.Open(path)
@@ -157,7 +215,7 @@ func NewFromFile(path string) (*TestCaseSet, error) {
 		_ = f.Close()
 	}()
 
-	tcs, err := New(f)
+	tcs, err := New(f, ext)
 	if err != nil {
 		return nil, fmt.Errorf("Error reading/unmarshalling %s: %s", path, err)
 	}
@@ -203,7 +261,10 @@ func (tcs *TestCaseSet) Compare(events []logstash.Event, quiet bool, diffCommand
 		}
 
 		for _, ignored := range tcs.IgnoredFields {
-			delete(actualEvent, ignored)
+			// Ignored fields can be in a sub object
+			fieldTree := strings.Split(ignored, ".")
+			actualEvent = removeFields(fieldTree, actualEvent)
+
 		}
 
 		// Create a directory structure for the JSON file being

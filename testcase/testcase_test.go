@@ -52,7 +52,7 @@ func TestNew(t *testing.T) {
 		},
 	}
 	for i, c := range cases {
-		tcs, err := New(bytes.NewReader([]byte(c.input)))
+		tcs, err := New(bytes.NewReader([]byte(c.input)), "json")
 		if err != nil {
 			t.Errorf("Test %d: %q input: %s", i, c.input, err)
 			break
