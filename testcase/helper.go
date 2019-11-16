@@ -60,5 +60,6 @@ func removeField(keys []string, data map[string]interface{}) map[string]interfac
 		return data
 	}
 
-	return removeField(keys[1:], val.(map[string]interface{}))
+	data[keys[0]] = removeField(keys[1:], val.(map[string]interface{}))
+	return data
 }

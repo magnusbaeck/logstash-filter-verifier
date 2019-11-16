@@ -21,8 +21,8 @@ func TestNew(t *testing.T) {
 	}{
 		// Happy flow relying on the default codec.
 		{
-			`{"fields": {"type": "mytype"}}`,
-			TestCaseSet{
+			input: `{"fields": {"type": "mytype"}}`,
+			expected: TestCaseSet{
 				Codec: "line",
 				InputFields: logstash.FieldSet{
 					"type": "mytype",
@@ -32,8 +32,8 @@ func TestNew(t *testing.T) {
 		},
 		// Happy flow with a custom codec.
 		{
-			`{"fields": {"type": "mytype"}, "codec": "json_lines"}`,
-			TestCaseSet{
+			input: `{"fields": {"type": "mytype"}, "codec": "json_lines"}`,
+			expected: TestCaseSet{
 				Codec: "json_lines",
 				InputFields: logstash.FieldSet{
 					"type": "mytype",
@@ -43,11 +43,47 @@ func TestNew(t *testing.T) {
 		},
 		// Additional fields to ignore are appended to the default.
 		{
-			`{"ignore": ["foo"]}`,
-			TestCaseSet{
+			input: `{"ignore": ["foo"]}`,
+			expected: TestCaseSet{
 				Codec:         "line",
 				InputFields:   logstash.FieldSet{},
 				IgnoredFields: []string{"@version", "foo"},
+			},
+		},
+		// Fields with dot notation
+		{
+			input: `{"fields": {"type": "mytype", "log.file.path": "/tmp/file.log"}}`,
+			expected: TestCaseSet{
+				Codec: "line",
+				InputFields: logstash.FieldSet{
+					"type": "mytype",
+					"log": map[string]interface{}{
+						"file": map[string]interface{}{
+							"path": "/tmp/file.log",
+						},
+					},
+				},
+				IgnoredFields: []string{"@version"},
+			},
+		},
+		// No handle input with dot notation when codec is line
+		{
+			input: `{"input": ["{\"test.path\": \"test\"}"]}`,
+			expected: TestCaseSet{
+				Codec:         "line",
+				InputLines:    []string{"{\"test.path\": \"test\"}"},
+				IgnoredFields: []string{"@version"},
+				InputFields:   logstash.FieldSet{},
+			},
+		},
+		// handle input with dot notation when codec is json_lines
+		{
+			input: `{"input": ["{\"test.path\": \"test\"}"], "codec": "json_lines"}`,
+			expected: TestCaseSet{
+				Codec:         "json_lines",
+				InputLines:    []string{"{\"test\":{\"path\":\"test\"}}"},
+				IgnoredFields: []string{"@version"},
+				InputFields:   logstash.FieldSet{},
 			},
 		},
 	}
@@ -82,12 +118,28 @@ func TestNewFromFile(t *testing.T) {
 		t.Fatalf(err.Error())
 	}
 
+	// Test with JSON file
 	fullTestCasePath := filepath.Join(tempdir, "test.json")
 	if err = ioutil.WriteFile(fullTestCasePath, []byte(`{"type": "test"}`), 0644); err != nil {
 		t.Fatalf(err.Error())
 	}
 
 	tcs, err := NewFromFile("test.json")
+	if err != nil {
+		t.Fatalf("NewFromFile() unexpectedly returned an error: %s", err)
+	}
+
+	if tcs.File != fullTestCasePath {
+		t.Fatalf("Expected test case path to be %q, got %q instead.", fullTestCasePath, tcs.File)
+	}
+
+	// Test with YAML file
+	fullTestCasePath = filepath.Join(tempdir, "test.yaml")
+	if err = ioutil.WriteFile(fullTestCasePath, []byte(`{"type": "test"}`), 0644); err != nil {
+		t.Fatalf(err.Error())
+	}
+
+	tcs, err = NewFromFile("test.yaml")
 	if err != nil {
 		t.Fatalf("NewFromFile() unexpectedly returned an error: %s", err)
 	}
@@ -280,6 +332,41 @@ func TestCompare(t *testing.T) {
 			[]logstash.Event{
 				{
 					"ignored":     "ignoreme",
+					"not_ignored": "value",
+				},
+			},
+			[]string{"diff"},
+			nil,
+		},
+		// Ignorded filed with dot notation are ignored
+		{
+			&TestCaseSet{
+				File: "/path/to/filename.json",
+				InputFields: logstash.FieldSet{
+					"type": "test",
+				},
+				Codec:         "line",
+				IgnoredFields: []string{"file.log.path"},
+				InputLines:    []string{},
+				ExpectedEvents: []logstash.Event{
+					{
+						"not_ignored": "value",
+						"file": map[string]interface{}{
+							"log": map[string]interface{}{
+								"line": "value",
+							},
+						},
+					},
+				},
+			},
+			[]logstash.Event{
+				{
+					"file": map[string]interface{}{
+						"log": map[string]interface{}{
+							"line": "value",
+							"path": "ignore_me",
+						},
+					},
 					"not_ignored": "value",
 				},
 			},

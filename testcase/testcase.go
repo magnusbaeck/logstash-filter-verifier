@@ -194,6 +194,8 @@ func New(reader io.Reader, configType string) (*TestCaseSet, error) {
 		return nil, err
 	}
 
+	log.Debugf("%+v", tcs)
+
 	return &tcs, nil
 }
 
