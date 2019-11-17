@@ -88,10 +88,11 @@ log. They also highlight how to deal with different features in logs.
 Logstash is often used to parse syslog messages, so let's use that as
 a first example.
 
-Test case files are in JSON format and contain a single object with
+Test case files are in JSON or YAML format and contain a single object with
 about a handful of supported properties.
 
-```javascript
+Sample with JSON format:
+```json
 {
   "fields": {
     "type": "syslog"
@@ -110,6 +111,21 @@ about a handful of supported properties.
     }
   ]
 }
+```
+
+Sample with YAML format:
+```yaml
+fields:
+  type: "syslog"
+input:
+  - "Oct  6 20:55:29 myhost myprogram[31993]: This is a test message"
+expected:
+  - @timestamp: "2015-10-06T20:55:29.000Z"
+    host: "myhost"
+    message: "This is a test message"
+    pid: 31993
+    program: "myprogram"
+    type: "syslog"
 ```
 
 In this example, `type` is set to "syslog" which means that the input
@@ -147,7 +163,7 @@ I always prefer to configure application to emit JSON objects
 whenever possible so that I don't have to write complex and/or
 ambiguous grok expressions. Here's an example:
 
-```javascript
+```json
 {"message": "This is a test message", "client": "127.0.0.1", "host": "myhost", "time": "2015-10-06T20:55:29Z"}
 ```
 
@@ -156,7 +172,8 @@ input used will have its codec set to "json_lines". This is something we
 should mimic on the Logstash Filter Verifier side too. Use `codec` for
 that:
 
-```javascript
+Sample with JSON format:
+```json
 {
   "fields": {
     "type": "app"
@@ -178,9 +195,27 @@ that:
 }
 ```
 
+Sample with YAML format:
+```yaml
+fields:
+  type: "app"
+codec: "json_lines"
+ignore:
+  - "host"
+input:
+  - >
+    {"message": "This is a test message", "client": "127.0.0.1", "time": "2015-10-06T20:55:29Z"}
+expected:
+  - @timestamp: "2015-10-06T20:55:29.000Z"
+    client: "localhost"
+    clientip: "127.0.0.1"
+    message: "This is a test message"
+    type: "app"
+```
+
 There are a few points to be made here:
 
-* The double quotes inside the string must be escaped.
+* The double quotes inside the string must be escaped when use JSON format.
 * The filters being tested here use Logstash's [dns
   filter](https://www.elastic.co/guide/en/logstash/current/plugins-filters-dns.html)
   to transform the IP address in the "client" field into a hostname
@@ -209,15 +244,18 @@ may have the following properties:
   numbers, and booleans) are supported, as are objects (containing
   scalars, arrays and nested objects), arrays of scalars and nested arrays.
   The only combination which is not allowed are objects within arrays.
+  You can use the "dot" notation field to write test in easy way. It mean that
+  `fields: {"log.file.path": "/tmp/test.log"}` is equivalent to
+  `fields: {"log": {"file": {"path": "/tmp/test.log"}}}`.
 * `ignore`: An array with the names of the fields that should be
   removed from the events that Logstash emit. This is for example
   useful for dynamically generated fields whose contents can't be
-  predicted and hardwired into the test case file. Currently only
-  top-level fields can be ignored, i.e. subfields can't be ignored.
-  This is a known limitation that's tracked in
-  [issue 47](https://github.com/magnusbaeck/logstash-filter-verifier/issues/47).
+  predicted and hardwired into the test case file. If you need to exclude sub fields, you need to use
+  dot notation. It mean that `log.file.path` will eclude field `{"log": {"file": {"path": "somethink"}}}`.
 * `input`: An array with the lines of input (each line being a string)
-  that should be fed to the Logstash process.
+  that should be fed to the Logstash process. If you use `json_lines` codec, you can use dot notation for fields.
+  It seems that `{"message": "my message", "log.file.path": "/tmp/test.log"}` is equivalent to
+  `{"message": "my message", "log": {"file": {"path": "/tmp/test.log"}}}`
 * `testcases`: An array of test case hashes, consisting of a field `input`
   and a field `expected`, which work the same as the above mentioned
   `input` and `expected`, but allow to have the input and the expected
@@ -292,10 +330,6 @@ version of Logstash it should expect. Example:
 * Some log formats don't include all timestamp components. For
   example, most syslog formats don't include the year. This should be
   dealt with somehow.
-* JSON files are tedious to write for a human with brackets, braces,
-  double quotes, and escaped double quotes everywhere and no native
-  support for comments. We should support YAML in addition to JSON to
-  make it more pleasant to write test case files.
 
 ## License
 
