@@ -373,6 +373,35 @@ func TestCompare(t *testing.T) {
 			[]string{"diff"},
 			nil,
 		},
+		// Ignorded filed with dot notation are ignored (when empty hash)
+		{
+			&TestCaseSet{
+				File: "/path/to/filename.json",
+				InputFields: logstash.FieldSet{
+					"type": "test",
+				},
+				Codec:         "line",
+				IgnoredFields: []string{"file.log.path"},
+				InputLines:    []string{},
+				ExpectedEvents: []logstash.Event{
+					{
+						"not_ignored": "value",
+					},
+				},
+			},
+			[]logstash.Event{
+				{
+					"file": map[string]interface{}{
+						"log": map[string]interface{}{
+							"path": "ignore_me",
+						},
+					},
+					"not_ignored": "value",
+				},
+			},
+			[]string{"diff"},
+			nil,
+		},
 		// Diff command execution errors are propagated correctly.
 		{
 			&TestCaseSet{

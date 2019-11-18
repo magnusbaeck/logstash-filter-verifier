@@ -60,6 +60,12 @@ func removeField(keys []string, data map[string]interface{}) map[string]interfac
 		return data
 	}
 
-	data[keys[0]] = removeField(keys[1:], val.(map[string]interface{}))
+	cleanData := removeField(keys[1:], val.(map[string]interface{}))
+	if len(cleanData) > 0 {
+		data[keys[0]] = cleanData
+	} else {
+		delete(data, keys[0])
+	}
+
 	return data
 }
