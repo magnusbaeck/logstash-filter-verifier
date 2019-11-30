@@ -37,7 +37,7 @@ func parseLogstashVersionOutput(processOutput string) (*semver.Version, error) {
 			if err == nil {
 				return v, nil
 			}
-			log.Warning("Found potential version number %q in line %q in the Logstash version "+
+			log.Warningf("Found potential version number %q in line %q in the Logstash version "+
 				"output, but the string couldn't be parsed as version number (%s).",
 				m[1], line, err)
 		}

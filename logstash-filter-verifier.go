@@ -94,14 +94,14 @@ func findExecutable(paths []string) (string, error) {
 	for _, p := range paths {
 		stat, err := os.Stat(p)
 		if err != nil {
-			log.Debug("Logstash path candidate rejected: %s", err)
+			log.Debugf("Logstash path candidate rejected: %s", err)
 			continue
 		}
 		if !stat.Mode().IsRegular() || stat.Mode().Perm()&0111 != 0111 {
-			log.Debug("Logstash path candidate not an executable regular file: %s", p)
+			log.Debugf("Logstash path candidate not an executable regular file: %s", p)
 			continue
 		}
-		log.Debug("Logstash path candidate accepted: %s", p)
+		log.Debugf("Logstash path candidate accepted: %s", p)
 		return p, nil
 	}
 	return "", fmt.Errorf("no existing executable found among candidates: %s", strings.Join(paths, ", "))

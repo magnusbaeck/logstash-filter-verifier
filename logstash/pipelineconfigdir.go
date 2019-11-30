@@ -49,7 +49,7 @@ func getPipelineConfigDir(dir string, configs []string) error {
 	if err != nil {
 		return fmt.Errorf("Error listing configuration files: %s", err)
 	}
-	log.Debug("Preparing configuration file directory %s with these files: %v", dir, allFiles)
+	log.Debugf("Preparing configuration file directory %s with these files: %v", dir, allFiles)
 	for _, f := range allFiles {
 		dest := filepath.Join(dir, filepath.Base(f))
 		_, err := os.Stat(dest)
