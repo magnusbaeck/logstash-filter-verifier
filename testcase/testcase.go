@@ -270,11 +270,9 @@ func (tcs *TestCaseSet) Compare(events []logstash.Event, quiet bool, diffCommand
 			fmt.Printf("Comparing message %d of %d from %s%s...\n", i+1, len(events), filepath.Base(tcs.File), description)
 		}
 
+		// Ignored fields can be in a sub object
 		for _, ignored := range tcs.IgnoredFields {
-			// Ignored fields can be in a sub object
-			fieldTree := strings.Split(ignored, ".")
-			actualEvent = removeFields(fieldTree, actualEvent)
-
+			removeFields(ignored, actualEvent)
 		}
 
 		// Create a directory structure for the JSON file being

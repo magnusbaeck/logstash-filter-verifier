@@ -12,6 +12,7 @@ import (
 	"testing"
 
 	"github.com/magnusbaeck/logstash-filter-verifier/logstash"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestNew(t *testing.T) {
@@ -507,4 +508,66 @@ func marshalTestCaseSet(t *testing.T, tcs *TestCaseSet) string {
 		return ""
 	}
 	return string(resultBuf)
+}
+
+// TestConvertDotFields test that fields contain on fields, exclude and input
+// test cases are converted on sub structure if contain dot or bracket notation.
+func TestConvertDotFields(t *testing.T) {
+	testCase := &TestCaseSet{
+		File: "/path/to/filename.json",
+		InputFields: logstash.FieldSet{
+			"type":                "test",
+			"log.file.path":       "/tmp/file.log",
+			"[log][origin][file]": "test.java",
+		},
+		Codec: "json_lines",
+
+		InputLines: []string{
+			`{"message": "test", "agent.hostname": "localhost", "[log][level]": "info"}`,
+		},
+		ExpectedEvents: []logstash.Event{
+			{
+				"type":                "test",
+				"log.file.path":       "/tmp/file.log",
+				"[log][origin][file]": "test.java",
+			},
+		},
+	}
+
+	expected := &TestCaseSet{
+		File: "/path/to/filename.json",
+		InputFields: logstash.FieldSet{
+			"type": "test",
+			"log": map[string]interface{}{
+				"file": map[string]interface{}{
+					"path": "/tmp/file.log",
+				},
+				"origin": map[string]interface{}{
+					"file": "test.java",
+				},
+			},
+		},
+		Codec: "json_lines",
+
+		InputLines: []string{
+			`{"agent":{"hostname":"localhost"},"log":{"level":"info"},"message":"test"}`,
+		},
+		ExpectedEvents: []logstash.Event{
+			{
+				"type": "test",
+				"log": map[string]interface{}{
+					"file": map[string]interface{}{
+						"path": "/tmp/file.log",
+					},
+					"origin": map[string]interface{}{
+						"file": "test.java",
+					},
+				},
+			},
+		},
+	}
+
+	err := testCase.convertDotFields()
+	assert.NoError(t, err)
+	assert.Equal(t, expected, testCase)
 }
