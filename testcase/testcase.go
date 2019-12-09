@@ -113,7 +113,9 @@ var (
 	defaultIgnoredFields = []string{"@version"}
 )
 
-func (t *TestCaseSet) convertDotFileds() error {
+// convertDotFields permit to replace keys that contains dot with sub structure.
+// For example, the key `log.file.path` will be convert by `"log": {"file": {"path": "VALUE"}}`
+func (t *TestCaseSet) convertDotFields() error {
 
 	// Convert fields in input fields
 	t.InputFields = parseAllDotProperties(t.InputFields)
@@ -190,7 +192,7 @@ func New(reader io.Reader, configType string) (*TestCaseSet, error) {
 	}
 
 	// Convert dot fields
-	if err := tcs.convertDotFileds(); err != nil {
+	if err := tcs.convertDotFields(); err != nil {
 		return nil, err
 	}
 
