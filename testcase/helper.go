@@ -12,9 +12,9 @@ func parseAllDotProperties(data map[string]interface{}) map[string]interface{} {
 	for k, v := range data {
 		rv := reflect.ValueOf(v)
 		if rv.Kind() == reflect.Map {
-			parseDotPropertie(k, parseAllDotProperties(v.(map[string]interface{})), result)
+			parseDotProperty(k, parseAllDotProperties(v.(map[string]interface{})), result)
 		} else {
-			parseDotPropertie(k, v, result)
+			parseDotProperty(k, v, result)
 		}
 	}
 
@@ -22,18 +22,17 @@ func parseAllDotProperties(data map[string]interface{}) map[string]interface{} {
 }
 
 // parseDotPropertie handle the recursivity to transform attribute that contain dot in sub structure
-func parseDotPropertie(key string, value interface{}, result map[string]interface{}) {
+func parseDotProperty(key string, value interface{}, result map[string]interface{}) {
 	if strings.Contains(key, ".") {
 		listKey := strings.Split(key, ".")
 		if _, ok := result[listKey[0]]; !ok {
 			result[listKey[0]] = make(map[string]interface{})
 		}
-		parseDotPropertie(strings.Join(listKey[1:], "."), value, result[listKey[0]].(map[string]interface{}))
+		parseDotProperty(strings.Join(listKey[1:], "."), value, result[listKey[0]].(map[string]interface{}))
 	} else {
 		result[key] = value
 	}
 }
-
 
 // removeFields handle the supression of needed key before compare result and expected data
 func removeFields(keys []string, data map[string]interface{}) map[string]interface{} {
