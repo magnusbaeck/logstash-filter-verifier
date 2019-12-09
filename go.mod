@@ -13,6 +13,7 @@ require (
 	github.com/go-playground/overalls v0.0.0-20180201144345-22ec1a223b7c
 	github.com/google/btree v1.0.0 // indirect
 	github.com/hashicorp/packer v1.4.4
+	github.com/imkira/go-observer v1.0.3
 	github.com/matm/gocov-html v0.0.0-20191111163307-9ee104d84c82
 	github.com/mattn/go-shellwords v1.0.6
 	github.com/mikefarah/yaml/v2 v2.4.0

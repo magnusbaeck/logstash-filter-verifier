@@ -11,6 +11,7 @@ import (
 	"reflect"
 	"testing"
 
+	"github.com/imkira/go-observer"
 	"github.com/magnusbaeck/logstash-filter-verifier/logstash"
 )
 
@@ -157,6 +158,8 @@ func TestCompare(t *testing.T) {
 		t.Fatalf(err.Error())
 	}
 	defer os.RemoveAll(tempdir)
+
+	liveObserver := observer.NewProperty(nil)
 
 	cases := []struct {
 		testcase     *TestCaseSet
@@ -428,7 +431,7 @@ func TestCompare(t *testing.T) {
 	}
 
 	for i, c := range cases {
-		actualResult := c.testcase.Compare(c.actualEvents, true, c.diffCommand)
+		actualResult := c.testcase.Compare(c.actualEvents, c.diffCommand, liveObserver)
 		if actualResult == nil && c.result != nil {
 			t.Errorf("Test %d: Expected failure, got success.", i)
 		} else if actualResult != nil && c.result == nil {
