@@ -150,11 +150,11 @@ func (t *TestCaseSet) convertDotFields() error {
 // TestCase. Defaults to a "line" codec and ignoring the @version
 // field. If the configuration being read lists additional fields to
 // ignore those will be ignored in addition to @version.
-// configType must be json or yaml.
+// configType must be json or yaml or yml.
 func New(reader io.Reader, configType string) (*TestCaseSet, error) {
 
-	if configType != "json" && configType != "yaml" {
-		return nil, errors.New("Config type must be json or yaml")
+	if configType != "json" && configType != "yaml" && configType != "yml" {
+		return nil, errors.New("Config type must be json or yaml or yml")
 	}
 
 	tcs := TestCaseSet{

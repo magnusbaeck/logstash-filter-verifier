@@ -147,6 +147,21 @@ func TestNewFromFile(t *testing.T) {
 	if tcs.File != fullTestCasePath {
 		t.Fatalf("Expected test case path to be %q, got %q instead.", fullTestCasePath, tcs.File)
 	}
+
+	// Test with YML file
+	fullTestCasePath = filepath.Join(tempdir, "test.yml")
+	if err = ioutil.WriteFile(fullTestCasePath, []byte(`{"type": "test"}`), 0644); err != nil {
+		t.Fatalf(err.Error())
+	}
+
+	tcs, err = NewFromFile("test.yml")
+	if err != nil {
+		t.Fatalf("NewFromFile() unexpectedly returned an error: %s", err)
+	}
+
+	if tcs.File != fullTestCasePath {
+		t.Fatalf("Expected test case path to be %q, got %q instead.", fullTestCasePath, tcs.File)
+	}
 }
 
 func TestCompare(t *testing.T) {

@@ -35,14 +35,14 @@ func TestDiscoverTests_Directory(t *testing.T) {
 			expected: []string{},
 		},
 		{
-			files:    []string{"test1.json", "test2.json", "test1.yaml", "test2.yaml"},
+			files:    []string{"test1.json", "test2.json", "test1.yaml", "test2.yaml", "test1.yml", "test2.yml"},
 			dirs:     []string{},
-			expected: []string{"test1.json", "test2.json", "test1.yaml", "test2.yaml"},
+			expected: []string{"test1.json", "test2.json", "test1.yaml", "test2.yaml", "test1.yml", "test2.yml"},
 		},
 		{
-			files:    []string{"otherfile.txt", "test1.json", "test2.json", "test1.yaml", "test2.yaml"},
+			files:    []string{"otherfile.txt", "test1.json", "test2.json", "test1.yaml", "test2.yaml", "test1.yml", "test2.yml"},
 			dirs:     []string{},
-			expected: []string{"test1.json", "test2.json", "test1.yaml", "test2.yaml"},
+			expected: []string{"test1.json", "test2.json", "test1.yaml", "test2.yaml", "test1.yml", "test2.yml"},
 		},
 	}
 	for cnum, c := range cases {
@@ -134,6 +134,32 @@ func TestDiscoverTests_File(t *testing.T) {
 
 	// With YAML file
 	tempfile, err = ioutil.TempFile("", "*.yaml")
+	if err != nil {
+		t.Fatalf(err.Error())
+	}
+	defer func() {
+		tempfile.Close()
+		os.Remove(tempfile.Name())
+	}()
+	if err = ioutil.WriteFile(tempfile.Name(), []byte(`{"type": "test"}`), 0644); err != nil {
+		t.Fatalf(err.Error())
+	}
+
+	testcases, err = DiscoverTests(tempfile.Name())
+	if err != nil {
+		t.Fatalf("DiscoverTests() unexpectedly returned an error: %s", err)
+	}
+
+	if len(testcases) != 1 {
+		t.Fatalf("DiscoverTests() unexpectedly returned %d test cases: %+v", len(testcases), testcases)
+	}
+
+	if testcases[0].File != tempfile.Name() {
+		t.Fatalf("DiscoverTests() unexpectedly returned %d test cases: %+v", len(testcases), testcases)
+	}
+
+	// With YML file
+	tempfile, err = ioutil.TempFile("", "*.yml")
 	if err != nil {
 		t.Fatalf(err.Error())
 	}

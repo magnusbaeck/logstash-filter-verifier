@@ -14,7 +14,7 @@ import (
 
 // DiscoverTests reads a test case JSON file or YAML file and returns a slice of
 // TestCase structs or, if the input path is a directory, reads all
-// .json or .yaml files in that directorory and returns them as TestCase
+// .json or .yaml or .yml files in that directorory and returns them as TestCase
 // structs.
 func DiscoverTests(path string) ([]TestCaseSet, error) {
 	pathinfo, err := os.Stat(path)
@@ -39,7 +39,7 @@ func discoverTestDirectory(path string) ([]TestCaseSet, error) {
 			log.Debugf("Read file: %s", f.Name())
 		}
 
-		if f.IsDir() || (!strings.HasSuffix(f.Name(), ".json") && !strings.HasSuffix(f.Name(), ".yaml")) {
+		if f.IsDir() || (!strings.HasSuffix(f.Name(), ".json") && !strings.HasSuffix(f.Name(), ".yaml") && !strings.HasSuffix(f.Name(), ".yml")) {
 			continue
 		}
 		fullpath := filepath.Join(path, f.Name())
