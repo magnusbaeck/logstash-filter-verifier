@@ -19,6 +19,7 @@ import (
 	"github.com/magnusbaeck/logstash-filter-verifier/logging"
 	"github.com/magnusbaeck/logstash-filter-verifier/logstash"
 	"github.com/mikefarah/yaml/v2"
+	oplogging "github.com/op/go-logging"
 	"github.com/pkg/errors"
 )
 
@@ -196,7 +197,9 @@ func New(reader io.Reader, configType string) (*TestCaseSet, error) {
 		return nil, err
 	}
 
-	log.Debugf("%+v", tcs)
+	if log.IsEnabledFor(oplogging.DEBUG) {
+		log.Debugf("%+v", tcs)
+	}
 
 	return &tcs, nil
 }
@@ -208,9 +211,12 @@ func NewFromFile(path string) (*TestCaseSet, error) {
 		return nil, err
 	}
 	ext := strings.TrimPrefix(filepath.Ext(abspath), ".")
-	log.Debugf("File extension: %s", ext)
 
-	log.Debug("Reading test case file: %s (%s)", path, abspath)
+	if log.IsEnabledFor(oplogging.DEBUG) {
+		log.Debugf("File extension: %s", ext)
+		log.Debug("Reading test case file: %s (%s)", path, abspath)
+	}
+
 	f, err := os.Open(path)
 	if err != nil {
 		return nil, err

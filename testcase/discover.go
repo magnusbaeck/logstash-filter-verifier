@@ -8,6 +8,8 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+
+	oplogging "github.com/op/go-logging"
 )
 
 // DiscoverTests reads a test case JSON file or YAML file and returns a slice of
@@ -33,12 +35,18 @@ func discoverTestDirectory(path string) ([]TestCaseSet, error) {
 	}
 	var result []TestCaseSet
 	for _, f := range files {
-		log.Debugf("Read file: %s", f.Name())
+		if log.IsEnabledFor(oplogging.DEBUG) {
+			log.Debugf("Read file: %s", f.Name())
+		}
+
 		if f.IsDir() || (!strings.HasSuffix(f.Name(), ".json") && !strings.HasSuffix(f.Name(), ".yaml")) {
 			continue
 		}
 		fullpath := filepath.Join(path, f.Name())
-		log.Debugf("Read file fullpath: %s", fullpath)
+
+		if log.IsEnabledFor(oplogging.DEBUG) {
+			log.Debugf("Read file fullpath: %s", fullpath)
+		}
 		tcs, err := NewFromFile(fullpath)
 		if err != nil {
 			return nil, err
