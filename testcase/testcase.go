@@ -198,7 +198,7 @@ func New(reader io.Reader, configType string) (*TestCaseSet, error) {
 	}
 
 	if log.IsEnabledFor(oplogging.DEBUG) {
-		log.Debugf("%+v", tcs)
+		log.Debugf("Current TestCaseSet after convert fiedls: %+v", tcs)
 	}
 
 	return &tcs, nil
