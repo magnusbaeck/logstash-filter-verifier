@@ -244,18 +244,18 @@ may have the following properties:
   numbers, and booleans) are supported, as are objects (containing
   scalars, arrays and nested objects), arrays of scalars and nested arrays.
   The only combination which is not allowed are objects within arrays.
-  You can use the "dot" notation field to write test in easy way. It mean that
+  You can use the "dot" or bracket notation field to write test in easy way. It mean that
   `fields: {"log.file.path": "/tmp/test.log"}` is equivalent to
-  `fields: {"log": {"file": {"path": "/tmp/test.log"}}}`.
+  `fields: {"log": {"file": {"path": "/tmp/test.log"}}}`. You can also write `fields: {"[log][file][path]": "/tmp/test.log"}` to do the same think.
 * `ignore`: An array with the names of the fields that should be
   removed from the events that Logstash emit. This is for example
   useful for dynamically generated fields whose contents can't be
   predicted and hardwired into the test case file. If you need to exclude sub fields, you need to use
-  dot notation. It mean that `log.file.path` will eclude field `{"log": {"file": {"path": "somethink"}}}`.
+  dot or bracket notation. It mean that `log.file.path` or `[log][file][path]` will eclude field `{"log": {"file": {"path": "somethink"}}}`.
 * `input`: An array with the lines of input (each line being a string)
-  that should be fed to the Logstash process. If you use `json_lines` codec, you can use dot notation for fields.
+  that should be fed to the Logstash process. If you use `json_lines` codec, you can use dot or bracket notation for fields.
   It seems that `{"message": "my message", "log.file.path": "/tmp/test.log"}` is equivalent to
-  `{"message": "my message", "log": {"file": {"path": "/tmp/test.log"}}}`
+  `{"message": "my message", "log": {"file": {"path": "/tmp/test.log"}}}`. You can also write `{"message": "my message", "[log][file][path]": "/tmp/test.log"}` to do the same think.
 * `testcases`: An array of test case hashes, consisting of a field `input`
   and a field `expected`, which work the same as the above mentioned
   `input` and `expected`, but allow to have the input and the expected

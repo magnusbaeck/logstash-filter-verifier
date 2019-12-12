@@ -5,7 +5,6 @@ package logstash
 import (
 	"fmt"
 	"io/ioutil"
-	"math/rand"
 	"os"
 	"path/filepath"
 	"sort"
@@ -49,7 +48,7 @@ func getPipelineConfigDir(dir string, configs []string) error {
 	if err != nil {
 		return fmt.Errorf("Error listing configuration files: %s", err)
 	}
-	log.Debug("Preparing configuration file directory %s with these files: %v", dir, allFiles)
+	log.Debugf("Preparing configuration file directory %s with these files: %v", dir, allFiles)
 	for _, f := range allFiles {
 		dest := filepath.Join(dir, filepath.Base(f))
 		_, err := os.Stat(dest)
@@ -98,31 +97,6 @@ func getFilesInDir(dir string, includeDir bool) ([]string, error) {
 	}
 	sort.Strings(filenames)
 	return filenames, nil
-}
-
-// getTempFileWithSuffix creates a new temporary file with a unique
-// name in the supplied directory and with the supplied suffix. It
-// basically does what tempfile.TempFile does except it allows the
-// caller to set the prefix (required for Logstash 6+ to read a
-// configuration file). The directory may be empty, in which case
-// os.TempDir is used.
-func getTempFileWithSuffix(dir string, suffix string) (string, error) {
-	if dir == "" {
-		dir = os.TempDir()
-	}
-	maxAttempts := 1000
-	for i := 0; i < maxAttempts; i++ {
-		filename := filepath.Join(dir, fmt.Sprintf("%x%s", rand.Uint32(), suffix))
-		f, err := os.OpenFile(filename, os.O_RDWR|os.O_CREATE|os.O_EXCL, 0600)
-		if os.IsExist(err) {
-			continue
-		} else if err != nil {
-			return "", err
-		}
-		defer f.Close()
-		return filename, nil
-	}
-	return "", fmt.Errorf("unable to generate a temporary filename despite %d attempts", maxAttempts)
 }
 
 // removeInputOutput removes the input and output sections in the

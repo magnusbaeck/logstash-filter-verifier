@@ -36,7 +36,7 @@ func (f *deletedTempFile) Close() error {
 		return closeErr
 	}
 	if removeErr != nil {
-		log.Error("Problem deleting temporary file: %s", removeErr.Error())
+		log.Errorf("Problem deleting temporary file: %s", removeErr.Error())
 	}
 	return nil
 }

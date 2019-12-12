@@ -19,11 +19,11 @@ import (
 type Invocation struct {
 	LogstashPath string
 
-	args     []string
-	ioConfig string
-	logDir   string
-	logFile  io.ReadCloser
-	tempDir  string
+	args         []string
+	ioConfigFile *os.File
+	logDir       string
+	logFile      io.ReadCloser
+	tempDir      string
 }
 
 // NewInvocation creates a new Invocation struct that contains all
@@ -66,7 +66,7 @@ func NewInvocation(logstashPath string, logstashArgs []string, logstashVersion *
 	// -f options so the invocation-specific input and output
 	// configurations need to go in a file in the pipeline
 	// directory. Generate a unique file for that purpose.
-	ioConfigFile, err := getTempFileWithSuffix(pipelineDir, ".conf")
+	ioConfigFile, err := ioutil.TempFile(pipelineDir, "ioconfig.*.conf")
 	if err != nil {
 		_ = logFile.Close()
 		_ = os.RemoveAll(tempDir)
@@ -127,7 +127,7 @@ func NewInvocation(logstashPath string, logstashArgs []string, logstashVersion *
 	return &Invocation{
 		LogstashPath: logstashPath,
 		args:         args,
-		ioConfig:     ioConfigFile,
+		ioConfigFile: ioConfigFile,
 		logDir:       logDir,
 		logFile:      logFile,
 		tempDir:      tempDir,
@@ -137,8 +137,13 @@ func NewInvocation(logstashPath string, logstashArgs []string, logstashVersion *
 // Args returns a complete slice of Logstash command arguments for the
 // given input and output plugin configuration strings.
 func (inv *Invocation) Args(inputs string, outputs string) ([]string, error) {
-	ioConfig := fmt.Sprintf("%s\n%s", inputs, outputs)
-	if err := ioutil.WriteFile(inv.ioConfig, []byte(ioConfig), 0600); err != nil {
+	// We don't explicitly disallow multiple calls to Args(),
+	// so make sure to overwrite any existing file contents every time.
+	ioConfig := []byte(fmt.Sprintf("%s\n%s", inputs, outputs))
+	if _, err := inv.ioConfigFile.WriteAt(ioConfig, 0); err != nil {
+		return nil, err
+	}
+	if err := inv.ioConfigFile.Truncate(int64(len(ioConfig))); err != nil {
 		return nil, err
 	}
 	return inv.args, nil
@@ -146,6 +151,7 @@ func (inv *Invocation) Args(inputs string, outputs string) ([]string, error) {
 
 // Release releases any resources allocated by the struct.
 func (inv *Invocation) Release() {
+	inv.ioConfigFile.Close()
 	inv.logFile.Close()
 	_ = os.RemoveAll(inv.tempDir)
 }

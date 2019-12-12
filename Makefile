@@ -118,5 +118,5 @@ dist/$(PROGRAM)_$(VERSION)_%.tar.gz: $(GOVVV)
 
 .PHONY: test
 test: $(GOCOV) $(GOCOV_HTML) $(OVERALLS) $(PROGRAM)$(EXEC_SUFFIX)
-	$(OVERALLS) -project=$$(go list .) -covermode=count -debug
+	$(OVERALLS) -project=$$(go list .) -covermode=count
 	$(GOCOV) convert overalls.coverprofile | $(GOCOV_HTML) > coverage.html

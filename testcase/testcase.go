@@ -214,7 +214,7 @@ func NewFromFile(path string) (*TestCaseSet, error) {
 
 	if log.IsEnabledFor(oplogging.DEBUG) {
 		log.Debugf("File extension: %s", ext)
-		log.Debug("Reading test case file: %s (%s)", path, abspath)
+		log.Debugf("Reading test case file: %s (%s)", path, abspath)
 	}
 
 	f, err := os.Open(path)
@@ -257,7 +257,7 @@ func (tcs *TestCaseSet) Compare(events []logstash.Event, quiet bool, diffCommand
 	}
 	defer func() {
 		if err := os.RemoveAll(tempdir); err != nil {
-			log.Error("Problem deleting temporary directory: %s", err)
+			log.Errorf("Problem deleting temporary directory: %s", err)
 		}
 	}()
 
@@ -331,12 +331,12 @@ func runDiffCommand(command []string, file1, file2 string, quiet bool) (bool, er
 		c.Stdout = os.Stdout
 		c.Stderr = os.Stderr
 	}
-	log.Info("Starting %q with args %q.", c.Path, c.Args[1:])
+	log.Infof("Starting %q with args %q.", c.Path, c.Args[1:])
 	if err := c.Start(); err != nil {
 		return false, err
 	}
 	if err := c.Wait(); err != nil {
-		log.Info("Child with pid %d failed: %s", c.Process.Pid, err)
+		log.Infof("Child with pid %d failed: %s", c.Process.Pid, err)
 		return false, nil
 	}
 	return true, nil

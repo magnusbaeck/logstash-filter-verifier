@@ -65,7 +65,7 @@ func TestArgs(t *testing.T) {
 		}
 
 		// Input/Output configuration file.
-		if file == filepath.Base(tinv.Inv.ioConfig) {
+		if file == filepath.Base(tinv.Inv.ioConfigFile.Name()) {
 			expectedIoConfig := "input\noutput"
 			if fileContents != expectedIoConfig {
 				t.Errorf("Input/output configuration file didn't contain the expected data.\nExpected: %q\nGot: %q",

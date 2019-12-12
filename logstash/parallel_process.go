@@ -228,7 +228,7 @@ func newParallelProcessWithArgs(command string, args []string, env []string) (*P
 // Start starts a Logstash child process with the previously supplied
 // configuration.
 func (p *ParallelProcess) Start() error {
-	log.Info("Starting %q with args %q.", p.child.Path, p.child.Args[1:])
+	log.Infof("Starting %q with args %q.", p.child.Path, p.child.Args[1:])
 	return p.child.Start()
 }
 
@@ -238,7 +238,7 @@ func (p *ParallelProcess) Wait() (*ParallelResult, error) {
 	if p.child.Process == nil {
 		return nil, errors.New("can't wait on an unborn process")
 	}
-	log.Debug("Waiting for child with pid %d to terminate.", p.child.Process.Pid)
+	log.Debugf("Waiting for child with pid %d to terminate.", p.child.Process.Pid)
 
 	waiterr := p.child.Wait()
 
@@ -250,7 +250,7 @@ func (p *ParallelProcess) Wait() (*ParallelResult, error) {
 		// fail the function. We don't care about the log
 		// contents unless Logstash fails, in which we'll
 		// report that problem anyway.
-		log.Error("Error reading the Logstash logfile: %s", logerr)
+		log.Errorf("Error reading the Logstash logfile: %s", logerr)
 	}
 	outbuf, _ := ioutil.ReadAll(p.stdio)
 
