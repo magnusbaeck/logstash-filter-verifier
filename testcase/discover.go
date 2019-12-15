@@ -8,11 +8,13 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+
+	oplogging "github.com/op/go-logging"
 )
 
-// DiscoverTests reads a test case JSON file and returns a slice of
+// DiscoverTests reads a test case JSON file or YAML file and returns a slice of
 // TestCase structs or, if the input path is a directory, reads all
-// .json files in that directorory and returns them as TestCase
+// .json or .yaml or .yml files in that directorory and returns them as TestCase
 // structs.
 func DiscoverTests(path string) ([]TestCaseSet, error) {
 	pathinfo, err := os.Stat(path)
@@ -33,10 +35,18 @@ func discoverTestDirectory(path string) ([]TestCaseSet, error) {
 	}
 	var result []TestCaseSet
 	for _, f := range files {
-		if f.IsDir() || !strings.HasSuffix(f.Name(), ".json") {
+		if log.IsEnabledFor(oplogging.DEBUG) {
+			log.Debugf("Read file: %s", f.Name())
+		}
+
+		if f.IsDir() || (!strings.HasSuffix(f.Name(), ".json") && !strings.HasSuffix(f.Name(), ".yaml") && !strings.HasSuffix(f.Name(), ".yml")) {
 			continue
 		}
 		fullpath := filepath.Join(path, f.Name())
+
+		if log.IsEnabledFor(oplogging.DEBUG) {
+			log.Debugf("Read file fullpath: %s", fullpath)
+		}
 		tcs, err := NewFromFile(fullpath)
 		if err != nil {
 			return nil, err
