@@ -1,13 +1,13 @@
 package testcase
 
 import (
-	"github.com/stretchr/testify/assert"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 // TestParseDotProperty test keys that contain dot or bracket notation are converted to sub structure
 func TestParseDotProperty(t *testing.T) {
-
 	var (
 		key      string
 		value    string
@@ -43,7 +43,7 @@ func TestParseDotProperty(t *testing.T) {
 	parseDotProperty(key, value, result)
 	assert.Equal(t, expected, result)
 
-	// Do nothin when no brancket and not dot
+	// Do nothing when no bracket and not dot
 	key = "message"
 	value = "/tmp/test.log"
 	result = make(map[string]interface{})
@@ -54,9 +54,9 @@ func TestParseDotProperty(t *testing.T) {
 	assert.Equal(t, expected, result)
 }
 
-// TestParseAllDotProperties test that all keys on map that contain dot or bracket notation are converted on sub structure
+// TestParseAllDotProperties tests that all keys on map that contain dot
+// or bracket notation are converted on sub structure.
 func TestParseAllDotProperties(t *testing.T) {
-
 	data := map[string]interface{}{
 		"message":             "my message",
 		"log.file.path":       "/tmp/test.log",
@@ -76,13 +76,11 @@ func TestParseAllDotProperties(t *testing.T) {
 
 	result := parseAllDotProperties(data)
 	assert.Equal(t, expected, result)
-
 }
 
-// TestRemoveField test that ignore fields are removed from actual events
-// It support dot and bracket notation
+// TestRemoveField tests that ignored fields are removed from actual events.
+// It supports dot and bracket notation.
 func TestRemoveField(t *testing.T) {
-
 	var (
 		keys     []string
 		data     map[string]interface{}
@@ -135,7 +133,7 @@ func TestRemoveField(t *testing.T) {
 	removeField(keys, data)
 	assert.Equal(t, expected, data)
 
-	// Test when keys is sub item and is stay brother fields
+	// Test when keys is sub item with sibling fields
 	data = map[string]interface{}{
 		"message": "my message",
 		"log": map[string]interface{}{
@@ -162,13 +160,11 @@ func TestRemoveField(t *testing.T) {
 	}
 	removeField(keys, data)
 	assert.Equal(t, expected, data)
-
 }
 
-// TestRemoveFields test that ignore field are removed from actual events
-// It support dot and bracket notation
+// TestRemoveFields tests that ignored field are removed from actual events
+// It supports dot and bracket notation.
 func TestRemoveFields(t *testing.T) {
-
 	var (
 		key      string
 		data     map[string]interface{}
@@ -197,7 +193,7 @@ func TestRemoveFields(t *testing.T) {
 	removeFields(key, data)
 	assert.Equal(t, expected, data)
 
-	// Test when keys with dot notation
+	// Test when keys uses dot notation
 	data = map[string]interface{}{
 		"message": "my message",
 		"log": map[string]interface{}{
@@ -215,7 +211,7 @@ func TestRemoveFields(t *testing.T) {
 	removeFields(key, data)
 	assert.Equal(t, expected, data)
 
-	// Test when keys with bracket notation
+	// Test when keys uses bracket notation
 	data = map[string]interface{}{
 		"message": "my message",
 		"log": map[string]interface{}{
@@ -232,5 +228,4 @@ func TestRemoveFields(t *testing.T) {
 	}
 	removeFields(key, data)
 	assert.Equal(t, expected, data)
-
 }

@@ -3,5 +3,3 @@
 /dist/
 /logstash-filter-verifier
 *.coverprofile
-
-/tests/

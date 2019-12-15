@@ -177,7 +177,7 @@ Sample with JSON format:
 {
   "fields": {
     "type": "app"
-  }
+  },
   "codec": "json_lines",
   "ignore": ["host"],
   "input": [
@@ -203,8 +203,7 @@ codec: "json_lines"
 ignore:
   - "host"
 input:
-  - >
-    {"message": "This is a test message", "client": "127.0.0.1", "time": "2015-10-06T20:55:29Z"}
+  - '{"message": "This is a test message", "client": "127.0.0.1", "time": "2015-10-06T20:55:29Z"}'
 expected:
   - @timestamp: "2015-10-06T20:55:29.000Z"
     client: "localhost"
@@ -215,11 +214,13 @@ expected:
 
 There are a few points to be made here:
 
-* The double quotes inside the string must be escaped when use JSON format.
+* The double quotes inside the string must be escaped when using JSON format.
+  YAML files sometimes require quoting too; for example if the value starts
+  with `[` or `{` or if a numeric value should be forced to be parsed as a string.
 * The filters being tested here use Logstash's [dns
   filter](https://www.elastic.co/guide/en/logstash/current/plugins-filters-dns.html)
-  to transform the IP address in the "client" field into a hostname
-  and copy the original IP address into the "clientip" field. To avoid
+  to transform the IP address in the `client` field into a hostname
+  and copy the original IP address into the `clientip` field. To avoid
   future problems and flaky tests, pick a hostname or IP address for
   the test case that will always resolve to the same thing. As in this
   example, localhost and 127.0.0.1 should be safe picks.
@@ -244,18 +245,23 @@ may have the following properties:
   numbers, and booleans) are supported, as are objects (containing
   scalars, arrays and nested objects), arrays of scalars and nested arrays.
   The only combination which is not allowed are objects within arrays.
-  You can use the "dot" or bracket notation field to write test in easy way. It mean that
-  `fields: {"log.file.path": "/tmp/test.log"}` is equivalent to
-  `fields: {"log": {"file": {"path": "/tmp/test.log"}}}`. You can also write `fields: {"[log][file][path]": "/tmp/test.log"}` to do the same think.
+  You can use the "dot" or bracket notation field to write test in easy way.
+  It means that `fields: {"log.file.path": "/tmp/test.log"}` is equivalent to
+  `fields: {"log": {"file": {"path": "/tmp/test.log"}}}`. You can also write
+  `fields: {"[log][file][path]": "/tmp/test.log"}` to do the same thing.
 * `ignore`: An array with the names of the fields that should be
   removed from the events that Logstash emit. This is for example
   useful for dynamically generated fields whose contents can't be
-  predicted and hardwired into the test case file. If you need to exclude sub fields, you need to use
-  dot or bracket notation. It mean that `log.file.path` or `[log][file][path]` will eclude field `{"log": {"file": {"path": "somethink"}}}`.
+  predicted and hardwired into the test case file. If you need to exclude
+  sub fields, you need to use dot or bracket notation, i.e. `log.file.path`
+  or `[log][file][path]` will exclude field
+  `{"log": {"file": {"path": "something"}}}`.
 * `input`: An array with the lines of input (each line being a string)
-  that should be fed to the Logstash process. If you use `json_lines` codec, you can use dot or bracket notation for fields.
-  It seems that `{"message": "my message", "log.file.path": "/tmp/test.log"}` is equivalent to
-  `{"message": "my message", "log": {"file": {"path": "/tmp/test.log"}}}`. You can also write `{"message": "my message", "[log][file][path]": "/tmp/test.log"}` to do the same think.
+  that should be fed to the Logstash process. If you use `json_lines` codec
+  you can use dot or bracket notation for fields, making
+  `{"message": "my message", "log.file.path": "/tmp/test.log"}` and
+  `{"message": "my message", "[log][file][path]": "/tmp/test.log"}` equivalent
+  to `{"message": "my message", "log": {"file": {"path": "/tmp/test.log"}}}`.
 * `testcases`: An array of test case hashes, consisting of a field `input`
   and a field `expected`, which work the same as the above mentioned
   `input` and `expected`, but allow to have the input and the expected

@@ -4,13 +4,10 @@ import (
 	"reflect"
 	"regexp"
 	"strings"
-
-	oplogging "github.com/op/go-logging"
 )
 
-// parseAllDotProperties permit to convert attributes with dot in sub structure
+// parseAllDotProperties permit to convert attributes with dot in sub structure.
 func parseAllDotProperties(data map[string]interface{}) map[string]interface{} {
-
 	result := make(map[string]interface{})
 	for k, v := range data {
 		rv := reflect.ValueOf(v)
@@ -24,18 +21,12 @@ func parseAllDotProperties(data map[string]interface{}) map[string]interface{} {
 	return result
 }
 
-// parseDotPropertie handle the recursivity to transform attribute that contain dot in sub structure
+// parseDotProperty handles the recursivity to transform attributes that contain dot in sub structure.
 func parseDotProperty(key string, value interface{}, result map[string]interface{}) {
-
 	// Convert bracket notation to dot notation
 	if strings.HasPrefix(key, "[") {
 		r := regexp.MustCompile(`\[(\w+)\]`)
-
 		key = strings.TrimSuffix(r.ReplaceAllString(key, `$1.`), ".")
-
-		if log.IsEnabledFor(oplogging.DEBUG) {
-			log.Debugf("Key: %s", key)
-		}
 	}
 
 	if strings.Contains(key, ".") {
@@ -49,16 +40,15 @@ func parseDotProperty(key string, value interface{}, result map[string]interface
 	}
 }
 
-// removeField handle the supression of needed key before compare result and expected data
+// removeField handle the suppression of needed key before compare result and expected data.
 func removeField(keys []string, data map[string]interface{}) {
-
-	// last item
+	// Last item
 	if len(keys) == 1 {
 		delete(data, keys[0])
 		return
 	}
 
-	//Keys not exist
+	// Keys not exist
 	val, ok := data[keys[0]]
 	if !ok {
 		return
@@ -71,7 +61,7 @@ func removeField(keys []string, data map[string]interface{}) {
 		return
 	}
 
-	// Is the map, need recurse
+	// Recurse if it's a map
 	removeField(keys[1:], val.(map[string]interface{}))
 	if len(val.(map[string]interface{})) > 0 {
 		data[keys[0]] = val
@@ -82,21 +72,14 @@ func removeField(keys []string, data map[string]interface{}) {
 
 }
 
-// removeFields permit to remove key on map
-// Key can be with dot or bracket notation. In this case, the key is trasformed on sub structure
+// removeFields removes a key specified in either dot or bracket notation
+// from a (possibly nested) map.
 func removeFields(key string, data map[string]interface{}) {
 	// Convert bracket notation to dot notation
 	if strings.HasPrefix(key, "[") {
 		r := regexp.MustCompile(`\[(\w+)\]`)
-
 		key = strings.TrimSuffix(r.ReplaceAllString(key, `$1.`), ".")
-
-		if log.IsEnabledFor(oplogging.DEBUG) {
-			log.Debugf("Key: %s", key)
-		}
 	}
-
 	keys := strings.Split(key, ".")
-
 	removeField(keys, data)
 }

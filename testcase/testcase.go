@@ -4,6 +4,7 @@ package testcase
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -19,8 +20,6 @@ import (
 	"github.com/magnusbaeck/logstash-filter-verifier/logging"
 	"github.com/magnusbaeck/logstash-filter-verifier/logstash"
 	"github.com/mikefarah/yaml/v2"
-	oplogging "github.com/op/go-logging"
-	"github.com/pkg/errors"
 )
 
 // TestCaseSet contains the configuration of a Logstash filter test case.
@@ -116,19 +115,18 @@ var (
 
 // convertDotFields permit to replace keys that contains dot with sub structure.
 // For example, the key `log.file.path` will be convert by `"log": {"file": {"path": "VALUE"}}`
-func (t *TestCaseSet) convertDotFields() error {
-
+func (tcs *TestCaseSet) convertDotFields() error {
 	// Convert fields in input fields
-	t.InputFields = parseAllDotProperties(t.InputFields)
+	tcs.InputFields = parseAllDotProperties(tcs.InputFields)
 
 	// Convert fields in expected events
-	for i, expected := range t.ExpectedEvents {
-		t.ExpectedEvents[i] = parseAllDotProperties(expected)
+	for i, expected := range tcs.ExpectedEvents {
+		tcs.ExpectedEvents[i] = parseAllDotProperties(expected)
 	}
 
-	// Convert  fields in input json string
-	if t.Codec == "json_lines" {
-		for i, line := range t.InputLines {
+	// Convert fields in input json string
+	if tcs.Codec == "json_lines" {
+		for i, line := range tcs.InputLines {
 			var jsonObj map[string]interface{}
 			if err := json.Unmarshal([]byte(line), &jsonObj); err != nil {
 				return err
@@ -138,12 +136,11 @@ func (t *TestCaseSet) convertDotFields() error {
 			if err != nil {
 				return err
 			}
-			t.InputLines[i] = string(data)
+			tcs.InputLines[i] = string(data)
 		}
 	}
 
 	return nil
-
 }
 
 // New reads a test case configuration from a reader and returns a
@@ -152,7 +149,6 @@ func (t *TestCaseSet) convertDotFields() error {
 // ignore those will be ignored in addition to @version.
 // configType must be json or yaml or yml.
 func New(reader io.Reader, configType string) (*TestCaseSet, error) {
-
 	if configType != "json" && configType != "yaml" && configType != "yml" {
 		return nil, errors.New("Config type must be json or yaml or yml")
 	}
@@ -197,10 +193,7 @@ func New(reader io.Reader, configType string) (*TestCaseSet, error) {
 		return nil, err
 	}
 
-	if log.IsEnabledFor(oplogging.DEBUG) {
-		log.Debugf("Current TestCaseSet after convert fiedls: %+v", tcs)
-	}
-
+	log.Debugf("Current TestCaseSet after converting fields: %+v", tcs)
 	return &tcs, nil
 }
 
@@ -212,11 +205,7 @@ func NewFromFile(path string) (*TestCaseSet, error) {
 	}
 	ext := strings.TrimPrefix(filepath.Ext(abspath), ".")
 
-	if log.IsEnabledFor(oplogging.DEBUG) {
-		log.Debugf("File extension: %s", ext)
-		log.Debugf("Reading test case file: %s (%s)", path, abspath)
-	}
-
+	log.Debugf("Reading test case file: %s (%s)", path, abspath)
 	f, err := os.Open(path)
 	if err != nil {
 		return nil, err

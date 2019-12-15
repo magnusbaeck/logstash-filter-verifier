@@ -354,7 +354,7 @@ func TestCompare(t *testing.T) {
 			[]string{"diff"},
 			nil,
 		},
-		// Ignorded filed with dot notation are ignored
+		// Ignored fields with dot notation are ignored
 		{
 			&TestCaseSet{
 				File: "/path/to/filename.json",
@@ -389,7 +389,7 @@ func TestCompare(t *testing.T) {
 			[]string{"diff"},
 			nil,
 		},
-		// Ignorded filed with dot notation are ignored (when empty hash)
+		// Ignored fields with dot notation are ignored (when empty hash)
 		{
 			&TestCaseSet{
 				File: "/path/to/filename.json",
@@ -510,7 +510,7 @@ func marshalTestCaseSet(t *testing.T, tcs *TestCaseSet) string {
 	return string(resultBuf)
 }
 
-// TestConvertDotFields test that fields contain on fields, exclude and input
+// TestConvertDotFields tests that fields contain on fields, exclude and input
 // test cases are converted on sub structure if contain dot or bracket notation.
 func TestConvertDotFields(t *testing.T) {
 	testCase := &TestCaseSet{
@@ -521,7 +521,6 @@ func TestConvertDotFields(t *testing.T) {
 			"[log][origin][file]": "test.java",
 		},
 		Codec: "json_lines",
-
 		InputLines: []string{
 			`{"message": "test", "agent.hostname": "localhost", "[log][level]": "info"}`,
 		},
@@ -548,7 +547,6 @@ func TestConvertDotFields(t *testing.T) {
 			},
 		},
 		Codec: "json_lines",
-
 		InputLines: []string{
 			`{"agent":{"hostname":"localhost"},"log":{"level":"info"},"message":"test"}`,
 		},
