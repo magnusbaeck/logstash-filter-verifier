@@ -97,8 +97,12 @@ func findExecutable(paths []string) (string, error) {
 			log.Debugf("Logstash path candidate rejected: %s", err)
 			continue
 		}
-		if !stat.Mode().IsRegular() || stat.Mode().Perm()&0111 != 0111 {
-			log.Debugf("Logstash path candidate not an executable regular file: %s", p)
+		if !stat.Mode().IsRegular() {
+			log.Debugf("Logstash path candidate not a regular file: %s", p)
+			continue
+		}
+		if runtime.GOOS != "windows" && stat.Mode().Perm()&0111 != 0111 {
+			log.Debugf("Logstash path candidate not an executable file: %s", p)
 			continue
 		}
 		log.Debugf("Logstash path candidate accepted: %s", p)
