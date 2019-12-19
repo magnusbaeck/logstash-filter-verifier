@@ -113,15 +113,15 @@ var (
 	defaultIgnoredFields = []string{"@version"}
 )
 
-// convertDotFields permit to replace keys that contains dot with sub structure.
-// For example, the key `log.file.path` will be convert by `"log": {"file": {"path": "VALUE"}}`
-func (tcs *TestCaseSet) convertDotFields() error {
+// convertBracketFields permit to replace keys that contains bracket with sub structure.
+// For example, the key `[log][file][path]` will be convert by `"log": {"file": {"path": "VALUE"}}`
+func (tcs *TestCaseSet) convertBracketFields() error {
 	// Convert fields in input fields
-	tcs.InputFields = parseAllDotProperties(tcs.InputFields)
+	tcs.InputFields = parseAllBracketProperties(tcs.InputFields)
 
 	// Convert fields in expected events
 	for i, expected := range tcs.ExpectedEvents {
-		tcs.ExpectedEvents[i] = parseAllDotProperties(expected)
+		tcs.ExpectedEvents[i] = parseAllBracketProperties(expected)
 	}
 
 	// Convert fields in input json string
@@ -131,7 +131,7 @@ func (tcs *TestCaseSet) convertDotFields() error {
 			if err := json.Unmarshal([]byte(line), &jsonObj); err != nil {
 				return err
 			}
-			jsonObj = parseAllDotProperties(jsonObj)
+			jsonObj = parseAllBracketProperties(jsonObj)
 			data, err := json.Marshal(jsonObj)
 			if err != nil {
 				return err
@@ -188,8 +188,8 @@ func New(reader io.Reader, configType string) (*TestCaseSet, error) {
 		}
 	}
 
-	// Convert dot fields
-	if err := tcs.convertDotFields(); err != nil {
+	// Convert bracket fields
+	if err := tcs.convertBracketFields(); err != nil {
 		return nil, err
 	}
 
