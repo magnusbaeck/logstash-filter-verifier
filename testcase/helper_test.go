@@ -19,6 +19,7 @@ func TestExtractBracketFields(t *testing.T) {
 		"log",
 		"file",
 		"path",
+
 	}
 	result = extractBracketFields(key)
 	assert.Equal(t, expected, result)
@@ -36,12 +37,12 @@ func TestExtractBracketFields(t *testing.T) {
 	expected = []string{
 		"[log]badformat",
 	}
-	result = extractBracketFields(key)
-	assert.Equal(t, expected, result)
+
 }
 
 // TestParseBracketProperty test keys that contain bracket notation are converted to sub structure
 func TestParseBracketProperty(t *testing.T) {
+
 	var (
 		key      []string
 		value    string
