@@ -37,6 +37,8 @@ func TestExtractBracketFields(t *testing.T) {
 	expected = []string{
 		"[log]badformat",
 	}
+	result = extractBracketFields(key)
+	assert.Equal(t, expected, result)
 
 }
 
