@@ -339,5 +339,4 @@ func (e ComparisonError) Error() string {
 		return fmt.Sprintf("%d message(s) did not match the expectations.", len(e.Mismatches))
 	}
 	return "No error"
-
 }

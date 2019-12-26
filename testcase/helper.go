@@ -40,12 +40,10 @@ func extractBracketFields(key string) []string {
 	}
 
 	return listKeys
-
 }
 
 // parseBracketProperty handles the recursivity to transform attributes that contain bracket in sub structure.
 func parseBracketProperty(listKeys []string, value interface{}, result map[string]interface{}) {
-
 	// Last key
 	if len(listKeys) == 1 {
 		result[listKeys[0]] = value
@@ -57,7 +55,6 @@ func parseBracketProperty(listKeys []string, value interface{}, result map[strin
 		result[listKeys[0]] = make(map[string]interface{})
 	}
 	parseBracketProperty(listKeys[1:], value, result[listKeys[0]].(map[string]interface{}))
-
 }
 
 // removeField handle the suppression of needed key before compare result and expected data.
@@ -89,7 +86,6 @@ func removeField(keys []string, data map[string]interface{}) {
 		// Empty struct, we remove parents
 		delete(data, keys[0])
 	}
-
 }
 
 // removeFields removes a key specified in either bracket notation

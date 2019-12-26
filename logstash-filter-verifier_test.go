@@ -139,5 +139,4 @@ func TestFindExecutable(t *testing.T) {
 			t.Errorf("Test %d:\nExpected:\n%s\nGot:\n%s", i, absExpected, result)
 		}
 	}
-
 }

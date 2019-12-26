@@ -183,7 +183,6 @@ func TestGetSocketInOutPlugins(t *testing.T) {
 			t.Errorf("Test %d: Expected success, got this error instead: %#v", i, err)
 		} else if err != nil && c.err != nil && err.Error() != c.err.Error() {
 			t.Errorf("Test %d: Didn't get the expected error.\nExpected:\n%s\nGot:\n%s", i, c.err, err)
-
 		} else {
 			if !reflect.DeepEqual(c.expectedInputs, inputs) {
 				t.Errorf("Test %d:\nExpected:\n%#v\nGot:\n%#v", i, c.expectedInputs, inputs)

@@ -105,7 +105,6 @@ func TestDiscoverTests_Directory(t *testing.T) {
 // TestDiscoverTests_File tests passing the path to a single file to
 // DiscoverTests.
 func TestDiscoverTests_File(t *testing.T) {
-
 	// With JSON file
 	tempfile, err := ioutil.TempFile("", "*.json")
 	if err != nil {

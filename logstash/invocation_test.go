@@ -167,7 +167,6 @@ func TestNewInvocation(t *testing.T) {
 			t.Errorf("Test %d: Command option test failed for %v: %s", i, args, err)
 		}
 	}
-
 }
 
 type testInvocation struct {

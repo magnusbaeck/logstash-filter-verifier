@@ -44,7 +44,6 @@ func TestIsValid(t *testing.T) {
 			t.Errorf("Test %d:\nExpected:\n%s\nGot:\n%s", i, c.err, err)
 		}
 	}
-
 }
 
 func TestLogstashHash(t *testing.T) {

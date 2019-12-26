@@ -73,5 +73,4 @@ func TestParseLogstashVersionOutput(t *testing.T) {
 			t.Errorf("Test %d:\nExpected:\n%s\nGot:\n%s", i, expectedVersion, version)
 		}
 	}
-
 }
