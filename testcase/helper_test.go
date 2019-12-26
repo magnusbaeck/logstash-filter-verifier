@@ -6,31 +6,57 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-// TestParseDotProperty test keys that contain dot or bracket notation are converted to sub structure
-func TestParseDotProperty(t *testing.T) {
+func TestExtractBracketFields(t *testing.T) {
 	var (
 		key      string
+		result   []string
+		expected []string
+	)
+
+	// When bracket
+	key = "[log][file][path]"
+	expected = []string{
+		"log",
+		"file",
+		"path",
+	}
+	result = extractBracketFields(key)
+	assert.Equal(t, expected, result)
+
+	// When no bracket
+	key = "message"
+	expected = []string{
+		"message",
+	}
+	result = extractBracketFields(key)
+	assert.Equal(t, expected, result)
+
+	// When bad bracket
+	key = "[log]badformat"
+	expected = []string{
+		"[log]badformat",
+	}
+	result = extractBracketFields(key)
+	assert.Equal(t, expected, result)
+
+}
+
+// TestParseBracketProperty test keys that contain bracket notation are converted to sub structure
+func TestParseBracketProperty(t *testing.T) {
+
+	var (
+		key      []string
 		value    string
 		result   map[string]interface{}
 		expected map[string]interface{}
 	)
 
-	// Create sub structure with dot notation
-	key = "log.file.path"
-	value = "/tmp/test.log"
-	result = make(map[string]interface{})
-	expected = map[string]interface{}{
-		"log": map[string]interface{}{
-			"file": map[string]interface{}{
-				"path": "/tmp/test.log",
-			},
-		},
-	}
-	parseDotProperty(key, value, result)
-	assert.Equal(t, expected, result)
-
 	// Create sub structure with bracket notation
-	key = "[log][file][path]"
+	key = []string{
+		"log",
+		"file",
+		"path",
+	}
 	value = "/tmp/test.log"
 	result = make(map[string]interface{})
 	expected = map[string]interface{}{
@@ -40,17 +66,17 @@ func TestParseDotProperty(t *testing.T) {
 			},
 		},
 	}
-	parseDotProperty(key, value, result)
+	parseBracketProperty(key, value, result)
 	assert.Equal(t, expected, result)
 
 	// Do nothing when no bracket and not dot
-	key = "message"
+	key = []string{"message"}
 	value = "/tmp/test.log"
 	result = make(map[string]interface{})
 	expected = map[string]interface{}{
 		"message": "/tmp/test.log",
 	}
-	parseDotProperty(key, value, result)
+	parseBracketProperty(key, value, result)
 	assert.Equal(t, expected, result)
 }
 
@@ -59,7 +85,7 @@ func TestParseDotProperty(t *testing.T) {
 func TestParseAllDotProperties(t *testing.T) {
 	data := map[string]interface{}{
 		"message":             "my message",
-		"log.file.path":       "/tmp/test.log",
+		"[log][file][path]":   "/tmp/test.log",
 		"[log][origin][line]": 2,
 	}
 	expected := map[string]interface{}{
@@ -74,12 +100,12 @@ func TestParseAllDotProperties(t *testing.T) {
 		},
 	}
 
-	result := parseAllDotProperties(data)
+	result := parseAllBracketProperties(data)
 	assert.Equal(t, expected, result)
 }
 
 // TestRemoveField tests that ignored fields are removed from actual events.
-// It supports dot and bracket notation.
+// It supports bracket notation.
 func TestRemoveField(t *testing.T) {
 	var (
 		keys     []string
@@ -163,7 +189,7 @@ func TestRemoveField(t *testing.T) {
 }
 
 // TestRemoveFields tests that ignored field are removed from actual events
-// It supports dot and bracket notation.
+// It supports bracket notation.
 func TestRemoveFields(t *testing.T) {
 	var (
 		key      string
@@ -189,24 +215,6 @@ func TestRemoveFields(t *testing.T) {
 			},
 		},
 		"source": "test",
-	}
-	removeFields(key, data)
-	assert.Equal(t, expected, data)
-
-	// Test when keys uses dot notation
-	data = map[string]interface{}{
-		"message": "my message",
-		"log": map[string]interface{}{
-			"file": map[string]interface{}{
-				"path": "/tmp/file.log",
-			},
-		},
-		"source": "test",
-	}
-	key = "log.file.path"
-	expected = map[string]interface{}{
-		"message": "my message",
-		"source":  "test",
 	}
 	removeFields(key, data)
 	assert.Equal(t, expected, data)

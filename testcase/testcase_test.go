@@ -51,9 +51,9 @@ func TestNew(t *testing.T) {
 				IgnoredFields: []string{"@version", "foo"},
 			},
 		},
-		// Fields with dot notation
+		// Fields with bracket notation
 		{
-			input: `{"fields": {"type": "mytype", "log.file.path": "/tmp/file.log"}}`,
+			input: `{"fields": {"type": "mytype", "[log][file][path]": "/tmp/file.log"}}`,
 			expected: TestCaseSet{
 				Codec: "line",
 				InputFields: logstash.FieldSet{
@@ -67,19 +67,19 @@ func TestNew(t *testing.T) {
 				IgnoredFields: []string{"@version"},
 			},
 		},
-		// No handle input with dot notation when codec is line
+		// No handle input with bracket notation when codec is line
 		{
-			input: `{"input": ["{\"test.path\": \"test\"}"]}`,
+			input: `{"input": ["{\"[test][path]\": \"test\"}"]}`,
 			expected: TestCaseSet{
 				Codec:         "line",
-				InputLines:    []string{"{\"test.path\": \"test\"}"},
+				InputLines:    []string{"{\"[test][path]\": \"test\"}"},
 				IgnoredFields: []string{"@version"},
 				InputFields:   logstash.FieldSet{},
 			},
 		},
-		// handle input with dot notation when codec is json_lines
+		// handle input with bracket notation when codec is json_lines
 		{
-			input: `{"input": ["{\"test.path\": \"test\"}"], "codec": "json_lines"}`,
+			input: `{"input": ["{\"[test][path]\": \"test\"}"], "codec": "json_lines"}`,
 			expected: TestCaseSet{
 				Codec:         "json_lines",
 				InputLines:    []string{"{\"test\":{\"path\":\"test\"}}"},
@@ -354,7 +354,7 @@ func TestCompare(t *testing.T) {
 			[]string{"diff"},
 			nil,
 		},
-		// Ignored fields with dot notation are ignored
+		// Ignored fields with bracket notation are ignored
 		{
 			&TestCaseSet{
 				File: "/path/to/filename.json",
@@ -362,7 +362,7 @@ func TestCompare(t *testing.T) {
 					"type": "test",
 				},
 				Codec:         "line",
-				IgnoredFields: []string{"file.log.path"},
+				IgnoredFields: []string{"[file][log][path]"},
 				InputLines:    []string{},
 				ExpectedEvents: []logstash.Event{
 					{
@@ -389,7 +389,7 @@ func TestCompare(t *testing.T) {
 			[]string{"diff"},
 			nil,
 		},
-		// Ignored fields with dot notation are ignored (when empty hash)
+		// Ignored fields with bracket notation are ignored (when empty hash)
 		{
 			&TestCaseSet{
 				File: "/path/to/filename.json",
@@ -397,7 +397,7 @@ func TestCompare(t *testing.T) {
 					"type": "test",
 				},
 				Codec:         "line",
-				IgnoredFields: []string{"file.log.path"},
+				IgnoredFields: []string{"[file][log][path]"},
 				InputLines:    []string{},
 				ExpectedEvents: []logstash.Event{
 					{
@@ -510,24 +510,24 @@ func marshalTestCaseSet(t *testing.T, tcs *TestCaseSet) string {
 	return string(resultBuf)
 }
 
-// TestConvertDotFields tests that fields contain on fields, exclude and input
-// test cases are converted on sub structure if contain dot or bracket notation.
-func TestConvertDotFields(t *testing.T) {
+// TestConvertBracketFields tests that fields contain on fields, exclude and input
+// test cases are converted on sub structure if contain bracket notation.
+func TestConvertBracketFields(t *testing.T) {
 	testCase := &TestCaseSet{
 		File: "/path/to/filename.json",
 		InputFields: logstash.FieldSet{
 			"type":                "test",
-			"log.file.path":       "/tmp/file.log",
+			"[log][file][path]":   "/tmp/file.log",
 			"[log][origin][file]": "test.java",
 		},
 		Codec: "json_lines",
 		InputLines: []string{
-			`{"message": "test", "agent.hostname": "localhost", "[log][level]": "info"}`,
+			`{"message": "test", "[agent][hostname]": "localhost", "[log][level]": "info"}`,
 		},
 		ExpectedEvents: []logstash.Event{
 			{
 				"type":                "test",
-				"log.file.path":       "/tmp/file.log",
+				"[log][file][path]":   "/tmp/file.log",
 				"[log][origin][file]": "test.java",
 			},
 		},
@@ -565,7 +565,7 @@ func TestConvertDotFields(t *testing.T) {
 		},
 	}
 
-	err := testCase.convertDotFields()
+	err := testCase.convertBracketFields()
 	assert.NoError(t, err)
 	assert.Equal(t, expected, testCase)
 }

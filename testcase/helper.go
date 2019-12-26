@@ -3,41 +3,61 @@ package testcase
 import (
 	"reflect"
 	"regexp"
-	"strings"
 )
 
-// parseAllDotProperties permit to convert attributes with dot in sub structure.
-func parseAllDotProperties(data map[string]interface{}) map[string]interface{} {
+// parseAllBracketProperties permit to convert attributes with bracket in sub structure.
+func parseAllBracketProperties(data map[string]interface{}) map[string]interface{} {
 	result := make(map[string]interface{})
+
 	for k, v := range data {
+		listKeys := extractBracketFields(k)
 		rv := reflect.ValueOf(v)
 		if rv.Kind() == reflect.Map {
-			parseDotProperty(k, parseAllDotProperties(v.(map[string]interface{})), result)
+			// Contain sub map
+			parseBracketProperty(listKeys, parseAllBracketProperties(v.(map[string]interface{})), result)
 		} else {
-			parseDotProperty(k, v, result)
+			// Contain value
+			parseBracketProperty(listKeys, v, result)
 		}
 	}
 
 	return result
 }
 
-// parseDotProperty handles the recursivity to transform attributes that contain dot in sub structure.
-func parseDotProperty(key string, value interface{}, result map[string]interface{}) {
-	// Convert bracket notation to dot notation
-	if strings.HasPrefix(key, "[") {
-		r := regexp.MustCompile(`\[(\w+)\]`)
-		key = strings.TrimSuffix(r.ReplaceAllString(key, `$1.`), ".")
+// extractBracketFields convert bracket notation to slice of key
+func extractBracketFields(key string) []string {
+	rValidator := regexp.MustCompile(`^(\[\w+\])+$`)
+	rExtractField := regexp.MustCompile(`\[(\w+)\]`)
+	listKeys := make([]string, 0, 1)
+
+	if rValidator.MatchString(key) {
+		resultsExtractedKeys := rExtractField.FindAllStringSubmatch(key, -1)
+		for _, extractedKeys := range resultsExtractedKeys {
+			listKeys = append(listKeys, extractedKeys[1])
+		}
+	} else {
+		listKeys = append(listKeys, key)
 	}
 
-	if strings.Contains(key, ".") {
-		listKey := strings.Split(key, ".")
-		if _, ok := result[listKey[0]]; !ok {
-			result[listKey[0]] = make(map[string]interface{})
-		}
-		parseDotProperty(strings.Join(listKey[1:], "."), value, result[listKey[0]].(map[string]interface{}))
-	} else {
-		result[key] = value
+	return listKeys
+
+}
+
+// parseBracketProperty handles the recursivity to transform attributes that contain bracket in sub structure.
+func parseBracketProperty(listKeys []string, value interface{}, result map[string]interface{}) {
+
+	// Last key
+	if len(listKeys) == 1 {
+		result[listKeys[0]] = value
+		return
 	}
+
+	// Check if substruct already exist and call recursivity
+	if _, ok := result[listKeys[0]]; !ok {
+		result[listKeys[0]] = make(map[string]interface{})
+	}
+	parseBracketProperty(listKeys[1:], value, result[listKeys[0]].(map[string]interface{}))
+
 }
 
 // removeField handle the suppression of needed key before compare result and expected data.
@@ -72,14 +92,10 @@ func removeField(keys []string, data map[string]interface{}) {
 
 }
 
-// removeFields removes a key specified in either dot or bracket notation
+// removeFields removes a key specified in either bracket notation
 // from a (possibly nested) map.
 func removeFields(key string, data map[string]interface{}) {
-	// Convert bracket notation to dot notation
-	if strings.HasPrefix(key, "[") {
-		r := regexp.MustCompile(`\[(\w+)\]`)
-		key = strings.TrimSuffix(r.ReplaceAllString(key, `$1.`), ".")
-	}
-	keys := strings.Split(key, ".")
-	removeField(keys, data)
+	// Convert bracket notation
+	listKeys := extractBracketFields(key)
+	removeField(listKeys, data)
 }

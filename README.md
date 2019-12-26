@@ -245,21 +245,18 @@ may have the following properties:
   numbers, and booleans) are supported, as are objects (containing
   scalars, arrays and nested objects), arrays of scalars and nested arrays.
   The only combination which is not allowed are objects within arrays.
-  You can use the "dot" or bracket notation field to write test in easy way.
-  It means that `fields: {"log.file.path": "/tmp/test.log"}` is equivalent to
-  `fields: {"log": {"file": {"path": "/tmp/test.log"}}}`. You can also write
-  `fields: {"[log][file][path]": "/tmp/test.log"}` to do the same thing.
+  You can use the bracket notation field to write test in easy way.
+  It means that `fields: {"[log][file][path]": "/tmp/test.log"}` is equivalent to
+  `fields: {"log": {"file": {"path": "/tmp/test.log"}}}`.
 * `ignore`: An array with the names of the fields that should be
   removed from the events that Logstash emit. This is for example
   useful for dynamically generated fields whose contents can't be
   predicted and hardwired into the test case file. If you need to exclude
-  sub fields, you need to use dot or bracket notation, i.e. `log.file.path`
-  or `[log][file][path]` will exclude field
+  sub fields, you need to use bracket notation, i.e. `[log][file][path]` will exclude field
   `{"log": {"file": {"path": "something"}}}`.
 * `input`: An array with the lines of input (each line being a string)
   that should be fed to the Logstash process. If you use `json_lines` codec
-  you can use dot or bracket notation for fields, making
-  `{"message": "my message", "log.file.path": "/tmp/test.log"}` and
+  you can use bracket notation for fields, making
   `{"message": "my message", "[log][file][path]": "/tmp/test.log"}` equivalent
   to `{"message": "my message", "log": {"file": {"path": "/tmp/test.log"}}}`.
 * `testcases`: An array of test case hashes, consisting of a field `input`
