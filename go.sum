@@ -80,9 +80,8 @@ github.com/fsnotify/fsnotify v1.4.7/go.mod h1:jwhsz4b93w/PPRr/qN1Yymfu8t87LnFCMo
 github.com/ghodss/yaml v1.0.0/go.mod h1:4dBDuWmgqj2HViK6kFavaiC9ZROes6MMH2rRYeMEF04=
 github.com/go-ini/ini v1.25.4/go.mod h1:ByCAeIL28uOIIG0E3PJtZPDL8WnHpFKFOtgjp+3Ies8=
 github.com/go-ole/go-ole v1.2.4/go.mod h1:XCwSNxSkXRo4vlyPy93sltvi/qJq0jqQhjqQNIwKuxM=
+github.com/go-playground/overalls v0.0.0-20180201144345-22ec1a223b7c h1:3bjbKXoj7jBYdHpQFbKL2546c4dtltTHzjo+5i4CHBU=
 github.com/go-playground/overalls v0.0.0-20180201144345-22ec1a223b7c/go.mod h1:UqxAgEOt89sCiXlrc/ycnx00LVvUO/eS8tMUkWX4R7w=
-github.com/go-playground/overalls v0.0.0-20191218162659-7df9f728c018 h1:mKMuZuxwRig082824nGPyH0xVjaKDPjf41kI9W2aTk0=
-github.com/go-playground/overalls v0.0.0-20191218162659-7df9f728c018/go.mod h1:UqxAgEOt89sCiXlrc/ycnx00LVvUO/eS8tMUkWX4R7w=
 github.com/gobwas/glob v0.2.3/go.mod h1:d3Ez4x06l9bZtSvzIay5+Yzi0fmZzPgnTbPcKjJAkT8=
 github.com/gocolly/colly v1.2.0/go.mod h1:Hof5T3ZswNVsOHYmba1u03W65HDWgpV5HifSuueE0EA=
 github.com/gofrs/flock v0.7.1/go.mod h1:F1TvTiK9OcQqauNUHlbJvyl9Qa1QvF/gOUDKA14jxHU=
@@ -149,6 +148,8 @@ github.com/hashicorp/yamux v0.0.0-20181012175058-2f1d1f20f75d/go.mod h1:+NfK9FKe
 github.com/hetznercloud/hcloud-go v1.15.1/go.mod h1:8lR3yHBHZWy2uGcUi9Ibt4UOoop2wrVdERJgCtxsF3Q=
 github.com/hpcloud/tail v1.0.0/go.mod h1:ab1qPbhIpdTxEkNHXyeSf5vhxWSCs/tWer42PpOxQnU=
 github.com/hyperonecom/h1-client-go v0.0.0-20190122232013-cf38e8387775/go.mod h1:R9rU87RxxmcD3DkspW9JqGBXiJyg5MA+WNCtJrBtnXs=
+github.com/imkira/go-observer v1.0.3 h1:l45TYAEeAB4L2xF6PR2gRLn2NE5tYhudh33MLmC7B80=
+github.com/imkira/go-observer v1.0.3/go.mod h1:zLzElv2cGTHufQG17IEILJMPDg32TD85fFgKyFv00wU=
 github.com/jdcloud-api/jdcloud-sdk-go v1.9.1-0.20190605102154-3d81a50ca961/go.mod h1:UrKjuULIWLjHFlG6aSPunArE5QX57LftMmStAZJBEX8=
 github.com/jmespath/go-jmespath v0.0.0-20160202185014-0b12d6b521d8/go.mod h1:Nht3zPeWKUH0NzdCt2Blrr5ys8VGpn0CEB0cQHVjt7k=
 github.com/jmespath/go-jmespath v0.0.0-20180206201540-c2b33e8439af/go.mod h1:Nht3zPeWKUH0NzdCt2Blrr5ys8VGpn0CEB0cQHVjt7k=

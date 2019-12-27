@@ -3,6 +3,7 @@
 package testcase
 
 import (
+	"bytes"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -17,8 +18,10 @@ import (
 	"strings"
 
 	unjson "github.com/hashicorp/packer/common/json"
+	"github.com/imkira/go-observer"
 	"github.com/magnusbaeck/logstash-filter-verifier/logging"
 	"github.com/magnusbaeck/logstash-filter-verifier/logstash"
+	logstash_observer "github.com/magnusbaeck/logstash-filter-verifier/observer"
 	"github.com/mikefarah/yaml/v2"
 )
 
@@ -88,23 +91,6 @@ type TestCase struct {
 	// Description contains an optional description of the test case
 	// which will be printed while the tests are executed.
 	Description string `json:"description" yaml:"description"`
-}
-
-// ComparisonError indicates that there was a mismatch when the
-// results of a test case was compared against the test case
-// definition.
-type ComparisonError struct {
-	ActualCount   int
-	ExpectedCount int
-	Mismatches    []MismatchedEvent
-}
-
-// MismatchedEvent holds a single tuple of actual and expected events
-// for a particular index in the list of events for a test case.
-type MismatchedEvent struct {
-	Actual   logstash.Event
-	Expected logstash.Event
-	Index    int
 }
 
 var (
@@ -227,22 +213,41 @@ func NewFromFile(path string) (*TestCaseSet, error) {
 // file and the two files are passed to "diff -u". If quiet is true,
 // the progress messages normally written to stderr will be emitted
 // and the output of the diff program will be discarded.
-func (tcs *TestCaseSet) Compare(events []logstash.Event, quiet bool, diffCommand []string) error {
-	result := ComparisonError{
-		ActualCount:   len(events),
-		ExpectedCount: len(tcs.ExpectedEvents),
-		Mismatches:    []MismatchedEvent{},
-	}
+func (tcs *TestCaseSet) Compare(events []logstash.Event, diffCommand []string, liveProducer observer.Property) (bool, error) {
+	status := true
 
 	// Don't even attempt to do a deep comparison of the event
 	// lists unless their lengths are equal.
-	if result.ActualCount != result.ExpectedCount {
-		return result
+	if len(tcs.ExpectedEvents) != len(events) {
+		comparisonResult := &logstash_observer.ComparisonResult{
+			Status:     false,
+			Name:       "Compare actual event with expected event",
+			Explain:    fmt.Sprintf("Expected %d event(s), got %d instead.", len(tcs.ExpectedEvents), len(events)),
+			Path:       filepath.Base(tcs.File),
+			EventIndex: 0,
+		}
+		dataObserver := logstash_observer.NewDataObserver(comparisonResult, false, false)
+		liveProducer.Update(dataObserver)
+		return false, nil
+	}
+
+	// Check if test consit to validate that all event are dropped and so not failed before
+	if len(events) == 0 {
+		comparisonResult := &logstash_observer.ComparisonResult{
+			Status:     true,
+			Name:       "Compare actual event with expected event",
+			Explain:    "Drop all events",
+			Path:       filepath.Base(tcs.File),
+			EventIndex: 0,
+		}
+		dataObserver := logstash_observer.NewDataObserver(comparisonResult, false, false)
+		liveProducer.Update(dataObserver)
+		return true, nil
 	}
 
 	tempdir, err := ioutil.TempDir("", "")
 	if err != nil {
-		return nil
+		return false, err
 	}
 	defer func() {
 		if err := os.RemoveAll(tempdir); err != nil {
@@ -251,12 +256,15 @@ func (tcs *TestCaseSet) Compare(events []logstash.Event, quiet bool, diffCommand
 	}()
 
 	for i, actualEvent := range events {
-		if !quiet {
-			var description string
-			if len(tcs.descriptions[i]) > 0 {
-				description = fmt.Sprintf(" (%s)", tcs.descriptions[i])
-			}
-			fmt.Printf("Comparing message %d of %d from %s%s...\n", i+1, len(events), filepath.Base(tcs.File), description)
+		comparisonResult := &logstash_observer.ComparisonResult{
+			Path:       filepath.Base(tcs.File),
+			EventIndex: i,
+			Status:     true,
+		}
+		if len(tcs.descriptions) > i {
+			comparisonResult.Name = fmt.Sprintf("Comparing message %d of %d (%s)", i+1, len(events), tcs.descriptions[i])
+		} else {
+			comparisonResult.Name = fmt.Sprintf("Comparing message %d of %d", i+1, len(events))
 		}
 
 		// Ignored fields can be in a sub object
@@ -271,25 +279,27 @@ func (tcs *TestCaseSet) Compare(events []logstash.Event, quiet bool, diffCommand
 		resultDir := filepath.Join(tempdir, filepath.Base(tcs.File), strconv.Itoa(i+1))
 		actualFilePath := filepath.Join(resultDir, "actual")
 		if err = marshalToFile(actualEvent, actualFilePath); err != nil {
-			return err
+			return false, err
 		}
 		expectedFilePath := filepath.Join(resultDir, "expected")
 		if err = marshalToFile(tcs.ExpectedEvents[i], expectedFilePath); err != nil {
-			return err
+			return false, err
 		}
 
-		equal, err := runDiffCommand(diffCommand, expectedFilePath, actualFilePath, quiet)
+		comparisonResult.Status, comparisonResult.Explain, err = runDiffCommand(diffCommand, expectedFilePath, actualFilePath)
 		if err != nil {
-			return err
+			return false, err
 		}
-		if !equal {
-			result.Mismatches = append(result.Mismatches, MismatchedEvent{actualEvent, tcs.ExpectedEvents[i], i})
+		if !comparisonResult.Status {
+			comparisonResult.Status = false
+			status = false
 		}
+
+		dataObserver := logstash_observer.NewDataObserver(comparisonResult, false, false)
+		liveProducer.Update(dataObserver)
 	}
-	if len(result.Mismatches) == 0 {
-		return nil
-	}
-	return result
+
+	return status, nil
 }
 
 // marshalToFile pretty-prints a logstash.Event and writes it to a
@@ -312,31 +322,22 @@ func marshalToFile(event logstash.Event, filename string) error {
 // running the command. If quiet is true, the output of the diff
 // command will be discarded. Otherwise the child process will inherit
 // stdout and stderr from the parent.
-func runDiffCommand(command []string, file1, file2 string, quiet bool) (bool, error) {
+func runDiffCommand(command []string, file1, file2 string) (bool, string, error) {
 	fullCommand := append(command, file1)
 	fullCommand = append(fullCommand, file2)
 	c := exec.Command(fullCommand[0], fullCommand[1:]...)
-	if !quiet {
-		c.Stdout = os.Stdout
-		c.Stderr = os.Stderr
-	}
-	log.Infof("Starting %q with args %q.", c.Path, c.Args[1:])
+	var b bytes.Buffer
+	c.Stdout = &b
+	c.Stderr = &b
+
+	log.Info("Starting %q with args %q.", c.Path, c.Args[1:])
 	if err := c.Start(); err != nil {
-		return false, err
+		return false, "", err
 	}
 	if err := c.Wait(); err != nil {
-		log.Infof("Child with pid %d failed: %s", c.Process.Pid, err)
-		return false, nil
+		log.Info("Child with pid %d failed: %s", c.Process.Pid, err)
+		return false, b.String(), nil
 	}
-	return true, nil
-}
 
-func (e ComparisonError) Error() string {
-	if e.ActualCount != e.ExpectedCount {
-		return fmt.Sprintf("Expected %d event(s), got %d instead.", e.ExpectedCount, e.ActualCount)
-	}
-	if len(e.Mismatches) > 0 {
-		return fmt.Sprintf("%d message(s) did not match the expectations.", len(e.Mismatches))
-	}
-	return "No error"
+	return true, b.String(), nil
 }
