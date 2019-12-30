@@ -276,11 +276,16 @@ could be used (run this command in the directory containing the test case
 files):
 
 ```
-for f in `ls -1 *.json`; do jq '{ codec, fields, ignore, testcases:[[.input[]], [.expected[]]] | transpose | map({input: [.[0]], expected: [.[1]]})}' $f > $f.migrated && mv $f.migrated $f; done
+for f in *.json ; do
+    jq '{ codec, fields, ignore, testcases:[[.input[]], [.expected[]]] | transpose | map({input: [.[0]], expected: [.[1]]})} | with_entries(select(.value != null))' $f > $f.migrated && mv $f.migrated $f
+done
 ```
 
-This command only works for test case files, where for every line in
-`input` an element in `expected` exists.
+This command only works for test case files where there's a one-to-one
+mapping between the elements of the `input` array and the elements of
+the `expected` array. If you e.g. have drop and/or split filters in
+your Logstash configuration you'll have to patch the converted test
+case file by hand afterwards.
 
 ## Notes about the flag --sockets
 
