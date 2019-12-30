@@ -7,75 +7,64 @@ import (
 )
 
 func TestExtractBracketFields(t *testing.T) {
-	var (
+	cases := []struct {
 		key      string
-		result   []string
 		expected []string
-	)
-
-	// When bracket
-	key = "[log][file][path]"
-	expected = []string{
-		"log",
-		"file",
-		"path",
+	}{
+		// Correct nested field notation.
+		{
+			"[log][file][path]",
+			[]string{"log", "file", "path"},
+		},
+		// Plain non-nested field notation.
+		{
+			"message",
+			[]string{"message"},
+		},
+		// Bad syntax for nested fields.
+		{
+			"[log]badformat",
+			[]string{"[log]badformat"},
+		},
 	}
-	result = extractBracketFields(key)
-	assert.Equal(t, expected, result)
-
-	// When no bracket
-	key = "message"
-	expected = []string{
-		"message",
+	for _, c := range cases {
+		assert.Equal(t, c.expected, extractBracketFields(c.key))
 	}
-	result = extractBracketFields(key)
-	assert.Equal(t, expected, result)
-
-	// When bad bracket
-	key = "[log]badformat"
-	expected = []string{
-		"[log]badformat",
-	}
-	result = extractBracketFields(key)
-	assert.Equal(t, expected, result)
 }
 
 // TestParseBracketProperty test keys that contain bracket notation are converted to sub structure
 func TestParseBracketProperty(t *testing.T) {
-	var (
+	cases := []struct {
 		key      []string
 		value    string
-		result   map[string]interface{}
 		expected map[string]interface{}
-	)
-
-	// Create sub structure with bracket notation
-	key = []string{
-		"log",
-		"file",
-		"path",
-	}
-	value = "/tmp/test.log"
-	result = make(map[string]interface{})
-	expected = map[string]interface{}{
-		"log": map[string]interface{}{
-			"file": map[string]interface{}{
-				"path": "/tmp/test.log",
+	}{
+		// Created nested fields when input key is nested.
+		{
+			key:   []string{"log", "file", "path"},
+			value: "/tmp/test.log",
+			expected: map[string]interface{}{
+				"log": map[string]interface{}{
+					"file": map[string]interface{}{
+						"path": "/tmp/test.log",
+					},
+				},
+			},
+		},
+		// Do nothing when the input key isn't nested.
+		{
+			key:   []string{"message"},
+			value: "/tmp/test.log",
+			expected: map[string]interface{}{
+				"message": "/tmp/test.log",
 			},
 		},
 	}
-	parseBracketProperty(key, value, result)
-	assert.Equal(t, expected, result)
-
-	// Do nothing when no bracket and not dot
-	key = []string{"message"}
-	value = "/tmp/test.log"
-	result = make(map[string]interface{})
-	expected = map[string]interface{}{
-		"message": "/tmp/test.log",
+	for _, c := range cases {
+		result := make(map[string]interface{})
+		parseBracketProperty(c.key, c.value, result)
+		assert.Equal(t, c.expected, result)
 	}
-	parseBracketProperty(key, value, result)
-	assert.Equal(t, expected, result)
 }
 
 // TestParseAllDotProperties tests that all keys on map that contain dot
@@ -105,133 +94,128 @@ func TestParseAllDotProperties(t *testing.T) {
 // TestRemoveField tests that ignored fields are removed from actual events.
 // It supports bracket notation.
 func TestRemoveField(t *testing.T) {
-	var (
+	cases := []struct {
 		keys     []string
 		data     map[string]interface{}
 		expected map[string]interface{}
-	)
-
-	// Test without specific notation
-	keys = []string{
-		"message",
-	}
-	data = map[string]interface{}{
-		"message": "my message",
-		"log": map[string]interface{}{
-			"file": map[string]interface{}{
-				"path": "/tmp/file.log",
+	}{
+		// Non-nested fields removed.
+		{
+			keys: []string{"message"},
+			data: map[string]interface{}{
+				"message": "my message",
+				"log": map[string]interface{}{
+					"file": map[string]interface{}{
+						"path": "/tmp/file.log",
+					},
+				},
+				"source": "test",
+			},
+			expected: map[string]interface{}{
+				"log": map[string]interface{}{
+					"file": map[string]interface{}{
+						"path": "/tmp/file.log",
+					},
+				},
+				"source": "test",
 			},
 		},
-		"source": "test",
-	}
-	expected = map[string]interface{}{
-		"log": map[string]interface{}{
-			"file": map[string]interface{}{
-				"path": "/tmp/file.log",
+		// Nested fields removed and the removed field is the last remaining field.
+		{
+			keys: []string{"log", "file", "path"},
+			data: map[string]interface{}{
+				"message": "my message",
+				"log": map[string]interface{}{
+					"file": map[string]interface{}{
+						"path": "/tmp/file.log",
+					},
+				},
+				"source": "test",
+			},
+			expected: map[string]interface{}{
+				"message": "my message",
+				"source":  "test",
 			},
 		},
-		"source": "test",
-	}
-	removeField(keys, data)
-	assert.Equal(t, expected, data)
-
-	// Test when keys is sub item and is the last item
-	data = map[string]interface{}{
-		"message": "my message",
-		"log": map[string]interface{}{
-			"file": map[string]interface{}{
-				"path": "/tmp/file.log",
+		// Nested fields and the removed field has siblings.
+		{
+			keys: []string{"log", "file", "path"},
+			data: map[string]interface{}{
+				"message": "my message",
+				"log": map[string]interface{}{
+					"file": map[string]interface{}{
+						"path": "/tmp/file.log",
+						"size": "test",
+					},
+				},
+				"source": "test",
+			},
+			expected: map[string]interface{}{
+				"message": "my message",
+				"log": map[string]interface{}{
+					"file": map[string]interface{}{
+						"size": "test",
+					},
+				},
+				"source": "test",
 			},
 		},
-		"source": "test",
 	}
-	keys = []string{
-		"log",
-		"file",
-		"path",
+	for _, c := range cases {
+		removeField(c.keys, c.data)
+		assert.Equal(t, c.expected, c.data)
 	}
-	expected = map[string]interface{}{
-		"message": "my message",
-		"source":  "test",
-	}
-	removeField(keys, data)
-	assert.Equal(t, expected, data)
-
-	// Test when keys is sub item with sibling fields
-	data = map[string]interface{}{
-		"message": "my message",
-		"log": map[string]interface{}{
-			"file": map[string]interface{}{
-				"path": "/tmp/file.log",
-				"size": "test",
-			},
-		},
-		"source": "test",
-	}
-	keys = []string{
-		"log",
-		"file",
-		"path",
-	}
-	expected = map[string]interface{}{
-		"message": "my message",
-		"log": map[string]interface{}{
-			"file": map[string]interface{}{
-				"size": "test",
-			},
-		},
-		"source": "test",
-	}
-	removeField(keys, data)
-	assert.Equal(t, expected, data)
 }
 
 // TestRemoveFields tests that ignored field are removed from actual events
 // It supports bracket notation.
 func TestRemoveFields(t *testing.T) {
-	var (
+	cases := []struct {
 		key      string
 		data     map[string]interface{}
 		expected map[string]interface{}
-	)
-
-	// Test without specific notation
-	key = "message"
-	data = map[string]interface{}{
-		"message": "my message",
-		"log": map[string]interface{}{
-			"file": map[string]interface{}{
-				"path": "/tmp/file.log",
+	}{
+		// Non-nested fields removed.
+		{
+			key: "message",
+			data: map[string]interface{}{
+				"message": "my message",
+				"log": map[string]interface{}{
+					"file": map[string]interface{}{
+						"path": "/tmp/file.log",
+					},
+				},
+				"source": "test",
+			},
+			expected: map[string]interface{}{
+				"log": map[string]interface{}{
+					"file": map[string]interface{}{
+						"path": "/tmp/file.log",
+					},
+				},
+				"source": "test",
 			},
 		},
-		"source": "test",
-	}
-	expected = map[string]interface{}{
-		"log": map[string]interface{}{
-			"file": map[string]interface{}{
-				"path": "/tmp/file.log",
+		// Nested fields removed.
+		{
+			key: "[log][file][path]",
+			data: map[string]interface{}{
+				"message": "my message",
+				"log": map[string]interface{}{
+					"file": map[string]interface{}{
+						"path": "/tmp/file.log",
+					},
+				},
+				"source": "test",
+			},
+			expected: map[string]interface{}{
+				"message": "my message",
+				"source":  "test",
 			},
 		},
-		"source": "test",
 	}
-	removeFields(key, data)
-	assert.Equal(t, expected, data)
-
-	// Test when keys uses bracket notation
-	data = map[string]interface{}{
-		"message": "my message",
-		"log": map[string]interface{}{
-			"file": map[string]interface{}{
-				"path": "/tmp/file.log",
-			},
-		},
-		"source": "test",
+	for _, c := range cases {
+		removeFields(c.key, c.data)
+		assert.Equal(t, c.expected, c.data)
 	}
-	key = "[log][file][path]"
-	expected = map[string]interface{}{
-		"message": "my message",
-		"source":  "test",
-	}
-	removeFields(key, data)
-	assert.Equal(t, expected, data)
 }
