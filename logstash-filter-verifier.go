@@ -219,7 +219,7 @@ func runParallelTests(inv *logstash.Invocation, tests []testcase.TestCaseSet, di
 	ok := true
 	for i, t := range tests {
 		if err = t.Compare(result.Events[i], false, diffCommand); err != nil {
-			userError("Testcase failed, continuing with the rest: %s", err)
+			userError("Testcase %s failed, continuing with the rest: %s", filepath.Base(t.File), err)
 			ok = false
 		}
 	}
