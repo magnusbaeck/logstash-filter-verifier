@@ -8,6 +8,7 @@ linters:
     - gosec
     - gosimple
     - ineffassign
+    - misspell
     - staticcheck
     - structcheck
     - typecheck
@@ -15,3 +16,7 @@ linters:
     - unused
     - varcheck
     - whitespace
+
+linters-settings:
+  misspell:
+    locale: US

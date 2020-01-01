@@ -465,7 +465,7 @@ func TestMarshalToFile(t *testing.T) {
 		t.Fatalf(err.Error())
 	}
 
-	// We won't verify the actual contents that was marshalled,
+	// We won't verify the actual contents that was marshaled,
 	// we'll just check that it can be unmarshalled again and that
 	// the file ends with a newline.
 	buf, err := ioutil.ReadFile(fullpath)
