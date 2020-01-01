@@ -315,7 +315,7 @@ func marshalToFile(event logstash.Event, filename string) error {
 func runDiffCommand(command []string, file1, file2 string, quiet bool) (bool, error) {
 	fullCommand := append(command, file1)
 	fullCommand = append(fullCommand, file2)
-	c := exec.Command(fullCommand[0], fullCommand[1:]...)
+	c := exec.Command(fullCommand[0], fullCommand[1:]...) // nolint:gosec
 	if !quiet {
 		c.Stdout = os.Stdout
 		c.Stderr = os.Stderr
