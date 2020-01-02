@@ -162,7 +162,7 @@ func runTests(inv *logstash.Invocation, tests []testcase.TestCaseSet, diffComman
 // the actual events against the expected set. Returns an error if
 // at least one test case fails or if there's a problem running the tests.
 func runParallelTests(inv *logstash.Invocation, tests []testcase.TestCaseSet, diffCommand []string, keptEnvVars []string) error {
-	var testStreams []*logstash.TestStream
+	testStreams := make([]*logstash.TestStream, 0, len(tests))
 
 	badCodecs := map[string]string{
 		"json":  "json_lines",

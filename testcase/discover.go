@@ -31,7 +31,7 @@ func discoverTestDirectory(path string) ([]TestCaseSet, error) {
 	if err != nil {
 		return nil, fmt.Errorf("Error discovering test case files: %s", err)
 	}
-	var result []TestCaseSet
+	result := make([]TestCaseSet, 0, len(files))
 	for _, f := range files {
 		if f.IsDir() || (!strings.HasSuffix(f.Name(), ".json") && !strings.HasSuffix(f.Name(), ".yaml") && !strings.HasSuffix(f.Name(), ".yml")) {
 			continue

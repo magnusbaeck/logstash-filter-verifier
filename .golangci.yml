@@ -9,6 +9,7 @@ linters:
     - gosimple
     - ineffassign
     - misspell
+    - prealloc
     - staticcheck
     - structcheck
     - typecheck
