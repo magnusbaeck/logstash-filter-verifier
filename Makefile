@@ -106,7 +106,7 @@ dist/$(PROGRAM)_$(VERSION)_%.tar.gz: $(GOVVV)
 	    DISTDIR=dist/$${GOOS}_$${GOARCH} && \
 	    if [ $$GOOS = "windows" ] ; then EXEC_SUFFIX=".exe" ; fi && \
 	    mkdir -p $$DISTDIR && \
-	    cp README.md LICENSE $$DISTDIR && \
+	    cp CHANGELOG.md LICENSE README.md $$DISTDIR && \
 	    docker run --rm -v $$(pwd):$$(pwd) -w $$(pwd) \
 	        -e GOOS=$$GOOS -e GOARCH=$$GOARCH \
 	        $(GOLANG_DOCKER_IMAGE) \
