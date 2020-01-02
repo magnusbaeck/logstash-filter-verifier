@@ -1,4 +1,4 @@
-# Copyright (c) 2015-2019 Magnus Bäck <magnus@noun.se>
+# Copyright (c) 2015-2020 Magnus Bäck <magnus@noun.se>
 
 export GOBIN := $(shell pwd)/bin
 export PATH := $(GOBIN):$(PATH)
@@ -107,12 +107,10 @@ dist/$(PROGRAM)_$(VERSION)_%.tar.gz: $(GOVVV)
 	    if [ $$GOOS = "windows" ] ; then EXEC_SUFFIX=".exe" ; fi && \
 	    mkdir -p $$DISTDIR && \
 	    cp README.md LICENSE $$DISTDIR && \
-	    BINDMOUNTS=$$(echo $$GOPATH | \
-	        awk -F: '{ for (i = 1; i<= NF; i++) { printf " -v %s:%s\n", $$i, $$i } }') && \
-	    docker run -it --rm $$BINDMOUNTS -w $$(pwd) \
+	    docker run --rm -v $$(pwd):$$(pwd) -w $$(pwd) \
 	        -e GOOS=$$GOOS -e GOARCH=$$GOARCH \
 	        $(GOLANG_DOCKER_IMAGE) \
-	        govvv build -o $$DISTDIR/$(PROGRAM)$$EXEC_SUFFIX && \
+	        bin/govvv build -o $$DISTDIR/$(PROGRAM)$$EXEC_SUFFIX && \
 	    tar -C $$DISTDIR -zcpf $@ . && \
 	    rm -rf $$DISTDIR
 
