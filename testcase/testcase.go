@@ -21,7 +21,7 @@ import (
 	"github.com/imkira/go-observer"
 	"github.com/magnusbaeck/logstash-filter-verifier/logging"
 	"github.com/magnusbaeck/logstash-filter-verifier/logstash"
-	logstash_observer "github.com/magnusbaeck/logstash-filter-verifier/observer"
+	lfvobserver "github.com/magnusbaeck/logstash-filter-verifier/observer"
 	"github.com/mikefarah/yaml/v2"
 )
 
@@ -211,7 +211,7 @@ func NewFromFile(path string) (*TestCaseSet, error) {
 // Compare compares a slice of events against the expected events of
 // this test case. Each event is written pretty-printed to a temporary
 // file and the two files are passed to "diff -u". The resulting of diff command
-// is sended to observer throught logstash_observer.ComparisonResult struct.
+// is sended to observer throught lfvobserver.ComparisonResult struct.
 // It return true if the current test case pass, else it return false.
 func (tcs *TestCaseSet) Compare(events []logstash.Event, diffCommand []string, liveProducer observer.Property) (bool, error) {
 	status := true
@@ -219,29 +219,27 @@ func (tcs *TestCaseSet) Compare(events []logstash.Event, diffCommand []string, l
 	// Don't even attempt to do a deep comparison of the event
 	// lists unless their lengths are equal.
 	if len(tcs.ExpectedEvents) != len(events) {
-		comparisonResult := &logstash_observer.ComparisonResult{
+		comparisonResult := lfvobserver.ComparisonResult{
 			Status:     false,
 			Name:       "Compare actual event with expected event",
 			Explain:    fmt.Sprintf("Expected %d event(s), got %d instead.", len(tcs.ExpectedEvents), len(events)),
 			Path:       filepath.Base(tcs.File),
 			EventIndex: 0,
 		}
-		dataObserver := logstash_observer.NewDataObserver(comparisonResult, false, false)
-		liveProducer.Update(dataObserver)
+		liveProducer.Update(comparisonResult)
 		return false, nil
 	}
 
 	// Check if test consit to validate that all event are dropped and so not failed before
 	if len(events) == 0 {
-		comparisonResult := &logstash_observer.ComparisonResult{
+		comparisonResult := lfvobserver.ComparisonResult{
 			Status:     true,
 			Name:       "Compare actual event with expected event",
 			Explain:    "Drop all events",
 			Path:       filepath.Base(tcs.File),
 			EventIndex: 0,
 		}
-		dataObserver := logstash_observer.NewDataObserver(comparisonResult, false, false)
-		liveProducer.Update(dataObserver)
+		liveProducer.Update(comparisonResult)
 		return true, nil
 	}
 
@@ -256,7 +254,7 @@ func (tcs *TestCaseSet) Compare(events []logstash.Event, diffCommand []string, l
 	}()
 
 	for i, actualEvent := range events {
-		comparisonResult := &logstash_observer.ComparisonResult{
+		comparisonResult := lfvobserver.ComparisonResult{
 			Path:       filepath.Base(tcs.File),
 			EventIndex: i,
 			Status:     true,
@@ -294,8 +292,7 @@ func (tcs *TestCaseSet) Compare(events []logstash.Event, diffCommand []string, l
 			status = false
 		}
 
-		dataObserver := logstash_observer.NewDataObserver(comparisonResult, false, false)
-		liveProducer.Update(dataObserver)
+		liveProducer.Update(comparisonResult)
 	}
 
 	return status, nil

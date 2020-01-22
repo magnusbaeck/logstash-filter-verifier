@@ -2,9 +2,11 @@ package observer
 
 import (
 	"fmt"
+	"reflect"
 	"sort"
 
 	"github.com/imkira/go-observer"
+	"github.com/magnusbaeck/logstash-filter-verifier/logging"
 )
 
 // Summary describe the summary of global test case.
@@ -15,31 +17,49 @@ type Summary struct {
 	NumberNotOk int
 }
 
-var (
-	results       map[string]Summary
-	globalSummary Summary
-)
+var log = logging.MustGetLogger()
 
 // RunSummaryObserver lauch consummer witch is in responsible to
 // print summary at the end of all tests cases.
 func RunSummaryObserver(prop observer.Property) {
+	var (
+		results       map[string]Summary
+		globalSummary Summary
+	)
+
 	stream := prop.Observe()
 
 	for {
-		data := stream.Value().(*DataObserver)
+		data := stream.Value()
 
+		switch dataType := reflect.TypeOf(data); dataType {
 		// Init struct to store result test
-		if data.IsStart() {
+		case reflect.TypeOf((*TestExecutionStart)(nil)).Elem():
 			results = make(map[string]Summary)
 			globalSummary = Summary{
 				NumberOk:    0,
 				NumberNotOk: 0,
 			}
-		}
+		// Display result on stdout
+		case reflect.TypeOf((*TestExecutionEnd)(nil)).Elem():
+			fmt.Printf("\nSummary: %s All tests : %d/%d\n", getIconStatus(globalSummary.NumberNotOk), globalSummary.NumberOk, globalSummary.NumberOk+globalSummary.NumberNotOk)
 
+			// Ordering by keys name
+			keys := make([]string, len(results))
+			i := 0
+			for key := range results {
+				keys[i] = key
+				i++
+			}
+			sort.Strings(keys)
+			for _, key := range keys {
+				summary := results[key]
+
+				fmt.Printf("\t%s %s : %d/%d\n", getIconStatus(summary.NumberNotOk), key, summary.NumberOk, summary.NumberOk+summary.NumberNotOk)
+			}
 		// Store result test
-		if data.TestResult() != nil {
-			val := data.TestResult()
+		case reflect.TypeOf((*ComparisonResult)(nil)).Elem():
+			val := data.(ComparisonResult)
 
 			// Compute summary to display at the end and siplay current test status
 			summary, ok := results[val.Path]
@@ -59,37 +79,8 @@ func RunSummaryObserver(prop observer.Property) {
 				fmt.Printf("\u2610 %s from %s:\n%s\n", val.Name, val.Path, val.Explain)
 			}
 			results[val.Path] = summary
-		}
-
-		// Display result on stdout
-		if data.IsEnd() {
-			var status string
-			if globalSummary.NumberNotOk == 0 {
-				status = "\u2611"
-			} else {
-				status = "\u2610"
-			}
-
-			fmt.Printf("\nSummary: %s All tests : %d/%d\n", status, globalSummary.NumberOk, globalSummary.NumberOk+globalSummary.NumberNotOk)
-
-			// Ordering by keys name
-			keys := make([]string, len(results))
-			i := 0
-			for key := range results {
-				keys[i] = key
-				i++
-			}
-			sort.Strings(keys)
-			for _, key := range keys {
-				summary := results[key]
-				if summary.NumberNotOk == 0 {
-					status = "\u2611"
-				} else {
-					status = "\u2610"
-				}
-
-				fmt.Printf("\t%s %s : %d/%d\n", status, key, summary.NumberOk, summary.NumberOk+summary.NumberNotOk)
-			}
+		default:
+			log.Debugf("Receive data that we doesn't say how to manage it %+v", data)
 		}
 
 		// wait change
@@ -97,4 +88,12 @@ func RunSummaryObserver(prop observer.Property) {
 		// advance to next value
 		stream.Next()
 	}
+}
+
+func getIconStatus(numberNotOk int) string {
+	if numberNotOk == 0 {
+		return "\u2611"
+	}
+
+	return "\u2610"
 }

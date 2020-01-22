@@ -14,7 +14,7 @@ import (
 	"github.com/imkira/go-observer"
 	"github.com/magnusbaeck/logstash-filter-verifier/logging"
 	"github.com/magnusbaeck/logstash-filter-verifier/logstash"
-	logstashObserver "github.com/magnusbaeck/logstash-filter-verifier/observer"
+	lfvobserver "github.com/magnusbaeck/logstash-filter-verifier/observer"
 	"github.com/magnusbaeck/logstash-filter-verifier/testcase"
 	"github.com/mattn/go-shellwords"
 	oplogging "github.com/op/go-logging"
@@ -281,11 +281,10 @@ func mainEntrypoint() int {
 	var status bool
 
 	// Create and lauch observer
-	dataObserver := logstashObserver.NewDataObserver(nil, true, false)
-	liveObserver := observer.NewProperty(dataObserver)
+	liveObserver := observer.NewProperty(lfvobserver.TestExecutionStart{})
 
 	if !*quiet {
-		go logstashObserver.RunSummaryObserver(liveObserver)
+		go lfvobserver.RunSummaryObserver(liveObserver)
 	}
 
 	level, err := oplogging.LogLevel(*loglevel)
@@ -353,8 +352,7 @@ func mainEntrypoint() int {
 		}
 	}
 
-	dataObserver = logstashObserver.NewDataObserver(nil, false, true)
-	liveObserver.Update(dataObserver)
+	liveObserver.Update(lfvobserver.TestExecutionEnd{})
 
 	if status {
 		return 0
