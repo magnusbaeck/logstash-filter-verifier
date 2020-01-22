@@ -1,6 +1,6 @@
 package observer
 
-// DataObserver permit to share data beetween producer and consumer
+// DataObserver describes data shared between producer and consumer.
 type DataObserver struct {
 	start      bool
 	end        bool

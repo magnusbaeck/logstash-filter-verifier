@@ -7,9 +7,12 @@ import (
 	"github.com/imkira/go-observer"
 )
 
+// Summary describe the summary of global test case.
+// It count the number of success test and opposite
+// the number of failed test.
 type Summary struct {
-	NBOk int
-	NBKo int
+	NumberOk    int
+	NumberNotOk int
 }
 
 var (
@@ -17,6 +20,8 @@ var (
 	globalSummary Summary
 )
 
+// RunSummaryObserver lauch consummer witch is in responsible to
+// print summary at the end of all tests cases.
 func RunSummaryObserver(prop observer.Property) {
 	stream := prop.Observe()
 
@@ -27,8 +32,8 @@ func RunSummaryObserver(prop observer.Property) {
 		if data.IsStart() {
 			results = make(map[string]Summary)
 			globalSummary = Summary{
-				NBOk: 0,
-				NBKo: 0,
+				NumberOk:    0,
+				NumberNotOk: 0,
 			}
 		}
 
@@ -40,17 +45,17 @@ func RunSummaryObserver(prop observer.Property) {
 			summary, ok := results[val.Path]
 			if !ok {
 				summary = Summary{
-					NBOk: 0,
-					NBKo: 0,
+					NumberOk:    0,
+					NumberNotOk: 0,
 				}
 			}
 			if val.Status {
-				summary.NBOk++
-				globalSummary.NBOk++
+				summary.NumberOk++
+				globalSummary.NumberOk++
 				fmt.Printf("\u2611 %s from %s\n", val.Name, val.Path)
 			} else {
-				summary.NBKo++
-				globalSummary.NBKo++
+				summary.NumberNotOk++
+				globalSummary.NumberNotOk++
 				fmt.Printf("\u2610 %s from %s:\n%s\n", val.Name, val.Path, val.Explain)
 			}
 			results[val.Path] = summary
@@ -59,13 +64,13 @@ func RunSummaryObserver(prop observer.Property) {
 		// Display result on stdout
 		if data.IsEnd() {
 			var status string
-			if globalSummary.NBKo == 0 {
+			if globalSummary.NumberNotOk == 0 {
 				status = "\u2611"
 			} else {
 				status = "\u2610"
 			}
 
-			fmt.Printf("\nSummary: %s All tests : %d/%d\n", status, globalSummary.NBOk, globalSummary.NBOk+globalSummary.NBKo)
+			fmt.Printf("\nSummary: %s All tests : %d/%d\n", status, globalSummary.NumberOk, globalSummary.NumberOk+globalSummary.NumberNotOk)
 
 			// Ordering by keys name
 			keys := make([]string, len(results))
@@ -77,13 +82,13 @@ func RunSummaryObserver(prop observer.Property) {
 			sort.Strings(keys)
 			for _, key := range keys {
 				summary := results[key]
-				if summary.NBKo == 0 {
+				if summary.NumberNotOk == 0 {
 					status = "\u2611"
 				} else {
 					status = "\u2610"
 				}
 
-				fmt.Printf("\t%s %s : %d/%d\n", status, key, summary.NBOk, summary.NBOk+summary.NBKo)
+				fmt.Printf("\t%s %s : %d/%d\n", status, key, summary.NumberOk, summary.NumberOk+summary.NumberNotOk)
 			}
 		}
 

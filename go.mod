@@ -11,6 +11,7 @@ require (
 	github.com/axw/gocov v1.0.0
 	github.com/breml/logstash-config v0.1.0
 	github.com/go-playground/overalls v0.0.0-20191218162659-7df9f728c018
+	github.com/google/btree v1.0.0 // indirect
 	github.com/hashicorp/packer v1.4.4
 	github.com/imkira/go-observer v1.0.3
 	github.com/matm/gocov-html v0.0.0-20191111163307-9ee104d84c82

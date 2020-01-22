@@ -164,7 +164,8 @@ func runTests(inv *logstash.Invocation, tests []testcase.TestCaseSet, diffComman
 // runParallelTests runs multiple set of configuration in a single
 // instance of Logstash against a slice of test cases and compares
 // the actual events against the expected set. Returns an error if
-// at least one test case fails or if there's a problem running the tests.
+// there's a problem running the tests. Returns false if at least
+// one test case fails, or true if all test case pass without error.
 func runParallelTests(inv *logstash.Invocation, tests []testcase.TestCaseSet, diffCommand []string, keptEnvVars []string, liveProducer observer.Property) (bool, error) {
 	var testStreams []*logstash.TestStream
 
@@ -289,7 +290,7 @@ func mainEntrypoint() int {
 
 	level, err := oplogging.LogLevel(*loglevel)
 	if err != nil {
-		prefixedUserError("Bad loglevel &results,: %s", *loglevel)
+		prefixedUserError("Bad loglevel: %s", *loglevel)
 		return 1
 	}
 	logging.SetLevel(level)

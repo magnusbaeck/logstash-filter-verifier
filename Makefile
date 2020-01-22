@@ -1,6 +1,5 @@
 # Copyright (c) 2015-2019 Magnus Bäck <magnus@noun.se>
 
-PROJECT := github.com/magnusbaeck/logstash-filter-verifier
 
 export GOBIN := $(shell pwd)/bin
 export PATH := $(GOBIN):$(PATH)
@@ -120,5 +119,5 @@ dist/$(PROGRAM)_$(VERSION)_%.tar.gz: $(GOVVV)
 
 .PHONY: test
 test: $(GOCOV) $(GOCOV_HTML) $(OVERALLS) $(PROGRAM)$(EXEC_SUFFIX)
-	$(OVERALLS) -project=$(PROJECT) -covermode=count
+	$(OVERALLS) -project=$$(pwd) -covermode=count
 	$(GOCOV) convert overalls.coverprofile | $(GOCOV_HTML) > coverage.html
