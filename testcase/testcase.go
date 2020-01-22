@@ -291,7 +291,6 @@ func (tcs *TestCaseSet) Compare(events []logstash.Event, diffCommand []string, l
 			return false, err
 		}
 		if !comparisonResult.Status {
-			comparisonResult.Status = false
 			status = false
 		}
 
@@ -319,9 +318,8 @@ func marshalToFile(event logstash.Event, filename string) error {
 // path and optional arguments) and returns whether the files were
 // equal, i.e. whether the diff command returned a zero exit
 // status. The returned error value will be set if there was a problem
-// running the command. If quiet is true, the output of the diff
-// command will be discarded. Otherwise the child process will inherit
-// stdout and stderr from the parent.
+// running the command. The output of the diff command will is returned
+// as string.
 func runDiffCommand(command []string, file1, file2 string) (bool, string, error) {
 	fullCommand := append(command, file1)
 	fullCommand = append(fullCommand, file2)
@@ -330,12 +328,12 @@ func runDiffCommand(command []string, file1, file2 string) (bool, string, error)
 	c.Stdout = &b
 	c.Stderr = &b
 
-	log.Info("Starting %q with args %q.", c.Path, c.Args[1:])
+	log.Infof("Starting %q with args %q.", c.Path, c.Args[1:])
 	if err := c.Start(); err != nil {
 		return false, "", err
 	}
 	if err := c.Wait(); err != nil {
-		log.Info("Child with pid %d failed: %s", c.Process.Pid, err)
+		log.Infof("Child with pid %d failed: %s", c.Process.Pid, err)
 		return false, b.String(), nil
 	}
 
