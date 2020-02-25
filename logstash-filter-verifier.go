@@ -152,9 +152,12 @@ func runTests(inv *logstash.Invocation, tests []testcase.TestCaseSet, diffComman
 			userError("%s", message)
 		}
 
-		ok, err = t.Compare(result.Events, diffCommand, liveObserver)
+		currentOk, err := t.Compare(result.Events, diffCommand, liveObserver)
 		if err != nil {
 			return false, err
+		}
+		if !currentOk {
+			ok = false
 		}
 	}
 
@@ -223,9 +226,12 @@ func runParallelTests(inv *logstash.Invocation, tests []testcase.TestCaseSet, di
 	}
 	ok := true
 	for i, t := range tests {
-		ok, err = t.Compare(result.Events[i], diffCommand, liveProducer)
+		currentOk, err := t.Compare(result.Events[i], diffCommand, liveProducer)
 		if err != nil {
 			return false, err
+		}
+		if !currentOk {
+			ok = false
 		}
 	}
 

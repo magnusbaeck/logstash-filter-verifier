@@ -422,7 +422,7 @@ func TestCompare(t *testing.T) {
 	for i, c := range cases {
 		actualResult, err := c.testcase.Compare(c.actualEvents, c.diffCommand, liveObserver)
 		if err != nil && c.err == nil {
-			t.Errorf("Test %d: Expected no error, got error.", i)
+			t.Errorf("Test %d: Expected no error, got error: %s", i, err)
 		} else if c.err != nil && err == nil {
 			t.Errorf("Test %d: Expected error, got no error.", i)
 		} else if actualResult != c.result {

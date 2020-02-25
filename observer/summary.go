@@ -2,7 +2,6 @@ package observer
 
 import (
 	"fmt"
-	"reflect"
 	"sort"
 
 	"github.com/imkira/go-observer"
@@ -32,16 +31,16 @@ func RunSummaryObserver(prop observer.Property) {
 	for {
 		data := stream.Value()
 
-		switch dataType := reflect.TypeOf(data); dataType {
+		switch event := data.(type) {
 		// Init struct to store result test
-		case reflect.TypeOf((*TestExecutionStart)(nil)).Elem():
+		case TestExecutionStart:
 			results = make(map[string]Summary)
 			globalSummary = Summary{
 				NumberOk:    0,
 				NumberNotOk: 0,
 			}
 		// Display result on stdout
-		case reflect.TypeOf((*TestExecutionEnd)(nil)).Elem():
+		case TestExecutionEnd:
 			fmt.Printf("\nSummary: %s All tests : %d/%d\n", getIconStatus(globalSummary.NumberNotOk), globalSummary.NumberOk, globalSummary.NumberOk+globalSummary.NumberNotOk)
 
 			// Ordering by keys name
@@ -55,30 +54,23 @@ func RunSummaryObserver(prop observer.Property) {
 			for _, key := range keys {
 				summary := results[key]
 
-				fmt.Printf("\t%s %s : %d/%d\n", getIconStatus(summary.NumberNotOk), key, summary.NumberOk, summary.NumberOk+summary.NumberNotOk)
+				fmt.Printf("\t %s %s: %d/%d\n", getIconStatus(summary.NumberNotOk), key, summary.NumberOk, summary.NumberOk+summary.NumberNotOk)
 			}
 		// Store result test
-		case reflect.TypeOf((*ComparisonResult)(nil)).Elem():
-			val := data.(ComparisonResult)
+		case ComparisonResult:
 
 			// Compute summary to display at the end and siplay current test status
-			summary, ok := results[val.Path]
-			if !ok {
-				summary = Summary{
-					NumberOk:    0,
-					NumberNotOk: 0,
-				}
-			}
-			if val.Status {
+			summary := results[event.Path]
+			if event.Status {
 				summary.NumberOk++
 				globalSummary.NumberOk++
-				fmt.Printf("\u2611 %s from %s\n", val.Name, val.Path)
+				fmt.Printf("\u2611 %s from %s\n", event.Name, event.Path)
 			} else {
 				summary.NumberNotOk++
 				globalSummary.NumberNotOk++
-				fmt.Printf("\u2610 %s from %s:\n%s\n", val.Name, val.Path, val.Explain)
+				fmt.Printf("\u2610 %s from %s:\n%s\n", event.Name, event.Path, event.Explain)
 			}
-			results[val.Path] = summary
+			results[event.Path] = summary
 		default:
 			log.Debugf("Receive data that we doesn't say how to manage it %+v", data)
 		}

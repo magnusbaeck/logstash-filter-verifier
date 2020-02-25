@@ -3,7 +3,6 @@
 package testcase
 
 import (
-	"bytes"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -321,18 +320,17 @@ func runDiffCommand(command []string, file1, file2 string) (bool, string, error)
 	fullCommand := append(command, file1)
 	fullCommand = append(fullCommand, file2)
 	c := exec.Command(fullCommand[0], fullCommand[1:]...)
-	var b bytes.Buffer
-	c.Stdout = &b
-	c.Stderr = &b
+	stdoutStderr, err := c.CombinedOutput()
 
-	log.Infof("Starting %q with args %q.", c.Path, c.Args[1:])
-	if err := c.Start(); err != nil {
+	// Doesn't return error if diff command return 1
+	// It's normal behavior
+	if exitError, ok := err.(*exec.ExitError); ok {
+		if exitError.ExitCode() == 1 {
+			return false, "", nil
+		}
+	}
+	if err != nil {
 		return false, "", err
 	}
-	if err := c.Wait(); err != nil {
-		log.Infof("Child with pid %d failed: %s", c.Process.Pid, err)
-		return false, b.String(), nil
-	}
-
-	return true, b.String(), nil
+	return true, string(stdoutStderr), nil
 }
