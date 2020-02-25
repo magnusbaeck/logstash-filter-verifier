@@ -105,81 +105,38 @@ func TestDiscoverTests_Directory(t *testing.T) {
 // TestDiscoverTests_File tests passing the path to a single file to
 // DiscoverTests.
 func TestDiscoverTests_File(t *testing.T) {
-	// With JSON file
-	tempfile, err := ioutil.TempFile("", "*.json")
-	if err != nil {
-		t.Fatalf(err.Error())
+	filenames := []string{
+		"filename.json",
+		"filename.yml",
+		"filename.yaml",
 	}
-	defer func() {
-		tempfile.Close()
-		os.Remove(tempfile.Name())
-	}()
-	if err = ioutil.WriteFile(tempfile.Name(), []byte(`{"type": "test"}`), 0644); err != nil {
-		t.Fatalf(err.Error())
-	}
+	for _, filename := range filenames {
+		tempdir, err := ioutil.TempDir("", "")
+		if err != nil {
+			t.Fatal(err.Error())
+		}
+		defer os.RemoveAll(tempdir)
 
-	testcases, err := DiscoverTests(tempfile.Name())
-	if err != nil {
-		t.Fatalf("DiscoverTests() unexpectedly returned an error: %s", err)
-	}
+		inputpath := filepath.Join(tempdir, filename)
 
-	if len(testcases) != 1 {
-		t.Fatalf("DiscoverTests() unexpectedly returned %d test cases: %+v", len(testcases), testcases)
-	}
+		// As it happens a valid JSON file is also a valid YAML file so
+		// the file we create can have the same contents regardless of
+		// the file format.
+		if err = ioutil.WriteFile(inputpath, []byte(`{"type": "test"}`), 0644); err != nil {
+			t.Fatal(err.Error())
+		}
 
-	if testcases[0].File != tempfile.Name() {
-		t.Fatalf("DiscoverTests() unexpectedly returned %d test cases: %+v", len(testcases), testcases)
-	}
+		testcases, err := DiscoverTests(inputpath)
+		if err != nil {
+			t.Fatalf("DiscoverTests() unexpectedly returned an error: %s", err)
+		}
 
-	// With YAML file
-	tempfile, err = ioutil.TempFile("", "*.yaml")
-	if err != nil {
-		t.Fatalf(err.Error())
-	}
-	defer func() {
-		tempfile.Close()
-		os.Remove(tempfile.Name())
-	}()
-	if err = ioutil.WriteFile(tempfile.Name(), []byte(`{"type": "test"}`), 0644); err != nil {
-		t.Fatalf(err.Error())
-	}
+		if len(testcases) != 1 {
+			t.Fatalf("DiscoverTests() unexpectedly returned %d test cases: %+v", len(testcases), testcases)
+		}
 
-	testcases, err = DiscoverTests(tempfile.Name())
-	if err != nil {
-		t.Fatalf("DiscoverTests() unexpectedly returned an error: %s", err)
-	}
-
-	if len(testcases) != 1 {
-		t.Fatalf("DiscoverTests() unexpectedly returned %d test cases: %+v", len(testcases), testcases)
-	}
-
-	if testcases[0].File != tempfile.Name() {
-		t.Fatalf("DiscoverTests() unexpectedly returned %d test cases: %+v", len(testcases), testcases)
-	}
-
-	// With YML file
-	tempfile, err = ioutil.TempFile("", "*.yml")
-	if err != nil {
-		t.Fatalf(err.Error())
-	}
-	defer func() {
-		tempfile.Close()
-		os.Remove(tempfile.Name())
-	}()
-	if err = ioutil.WriteFile(tempfile.Name(), []byte(`{"type": "test"}`), 0644); err != nil {
-		t.Fatalf(err.Error())
-	}
-
-	testcases, err = DiscoverTests(tempfile.Name())
-	if err != nil {
-		t.Fatalf("DiscoverTests() unexpectedly returned an error: %s", err)
-	}
-
-	if len(testcases) != 1 {
-		t.Fatalf("DiscoverTests() unexpectedly returned %d test cases: %+v", len(testcases), testcases)
-	}
-
-	if testcases[0].File != tempfile.Name() {
-		t.Fatalf("DiscoverTests() unexpectedly returned %d test cases: %+v", len(testcases), testcases)
+		if testcases[0].File != inputpath {
+			t.Fatalf("DiscoverTests() unexpectedly returned %d test cases: %+v", len(testcases), testcases)
+		}
 	}
 }

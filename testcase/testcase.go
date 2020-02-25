@@ -210,7 +210,7 @@ func NewFromFile(path string) (*TestCaseSet, error) {
 // Compare compares a slice of events against the expected events of
 // this test case. Each event is written pretty-printed to a temporary
 // file and the two files are passed to "diff -u". The resulting of diff command
-// is sended to observer throught lfvobserver.ComparisonResult struct.
+// is sended to observer throughout lfvobserver.ComparisonResult struct.
 // It return true if the current test case pass, else it return false.
 func (tcs *TestCaseSet) Compare(events []logstash.Event, diffCommand []string, liveProducer observer.Property) (bool, error) {
 	status := true

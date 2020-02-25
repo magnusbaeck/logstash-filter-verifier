@@ -167,10 +167,9 @@ func runTests(inv *logstash.Invocation, tests []testcase.TestCaseSet, diffComman
 // runParallelTests runs multiple set of configuration in a single
 // instance of Logstash against a slice of test cases and compares
 // the actual events against the expected set. Returns an error if
-// there's a problem running the tests. Returns false if at least
-// one test case fails, or true if all test case pass without error.
+// at least one test case fails or if there's a problem running the tests.
 func runParallelTests(inv *logstash.Invocation, tests []testcase.TestCaseSet, diffCommand []string, keptEnvVars []string, liveProducer observer.Property) (bool, error) {
-	var testStreams []*logstash.TestStream
+	testStreams := make([]*logstash.TestStream, 0, len(tests))
 
 	badCodecs := map[string]string{
 		"json":  "json_lines",
@@ -228,7 +227,7 @@ func runParallelTests(inv *logstash.Invocation, tests []testcase.TestCaseSet, di
 	for i, t := range tests {
 		currentOk, err := t.Compare(result.Events[i], diffCommand, liveProducer)
 		if err != nil {
-			return false, err
+			userError("Testcase %s failed, continuing with the rest: %s", filepath.Base(t.File), err)
 		}
 		if !currentOk {
 			ok = false

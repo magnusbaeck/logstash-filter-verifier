@@ -105,63 +105,43 @@ func TestNew(t *testing.T) {
 // TestNewFromFile smoketests NewFromFile and makes sure it returns
 // an absolute path even if a relative path was given as input.
 func TestNewFromFile(t *testing.T) {
-	tempdir, err := ioutil.TempDir("", "")
-	if err != nil {
-		t.Fatalf(err.Error())
+	filenames := []string{
+		"filename.json",
+		"filename.yml",
+		"filename.yaml",
 	}
-	defer os.RemoveAll(tempdir)
-	olddir, err := os.Getwd()
-	if err != nil {
-		t.Fatalf(err.Error())
-	}
-	defer os.Chdir(olddir)
-	if err = os.Chdir(tempdir); err != nil {
-		t.Fatalf(err.Error())
-	}
+	for _, filename := range filenames {
+		tempdir, err := ioutil.TempDir("", "")
+		if err != nil {
+			t.Fatalf(err.Error())
+		}
+		defer os.RemoveAll(tempdir)
+		olddir, err := os.Getwd()
+		if err != nil {
+			t.Fatalf(err.Error())
+		}
+		defer os.Chdir(olddir)
+		if err = os.Chdir(tempdir); err != nil {
+			t.Fatalf(err.Error())
+		}
 
-	// Test with JSON file
-	fullTestCasePath := filepath.Join(tempdir, "test.json")
-	if err = ioutil.WriteFile(fullTestCasePath, []byte(`{"type": "test"}`), 0644); err != nil {
-		t.Fatalf(err.Error())
-	}
+		fullTestCasePath := filepath.Join(tempdir, filename)
 
-	tcs, err := NewFromFile("test.json")
-	if err != nil {
-		t.Fatalf("NewFromFile() unexpectedly returned an error: %s", err)
-	}
+		// As it happens a valid JSON file is also a valid YAML file so
+		// the file we create can have the same contents regardless of
+		// the file format.
+		if err = ioutil.WriteFile(fullTestCasePath, []byte(`{"type": "test"}`), 0644); err != nil {
+			t.Fatal(err.Error())
+		}
 
-	if tcs.File != fullTestCasePath {
-		t.Fatalf("Expected test case path to be %q, got %q instead.", fullTestCasePath, tcs.File)
-	}
+		tcs, err := NewFromFile(filename)
+		if err != nil {
+			t.Fatalf("NewFromFile() unexpectedly returned an error: %s", err)
+		}
 
-	// Test with YAML file
-	fullTestCasePath = filepath.Join(tempdir, "test.yaml")
-	if err = ioutil.WriteFile(fullTestCasePath, []byte(`{"type": "test"}`), 0644); err != nil {
-		t.Fatalf(err.Error())
-	}
-
-	tcs, err = NewFromFile("test.yaml")
-	if err != nil {
-		t.Fatalf("NewFromFile() unexpectedly returned an error: %s", err)
-	}
-
-	if tcs.File != fullTestCasePath {
-		t.Fatalf("Expected test case path to be %q, got %q instead.", fullTestCasePath, tcs.File)
-	}
-
-	// Test with YML file
-	fullTestCasePath = filepath.Join(tempdir, "test.yml")
-	if err = ioutil.WriteFile(fullTestCasePath, []byte(`{"type": "test"}`), 0644); err != nil {
-		t.Fatalf(err.Error())
-	}
-
-	tcs, err = NewFromFile("test.yml")
-	if err != nil {
-		t.Fatalf("NewFromFile() unexpectedly returned an error: %s", err)
-	}
-
-	if tcs.File != fullTestCasePath {
-		t.Fatalf("Expected test case path to be %q, got %q instead.", fullTestCasePath, tcs.File)
+		if tcs.File != fullTestCasePath {
+			t.Fatalf("Expected test case path to be %q, got %q instead.", fullTestCasePath, tcs.File)
+		}
 	}
 }
 
@@ -445,7 +425,7 @@ func TestMarshalToFile(t *testing.T) {
 		t.Fatalf(err.Error())
 	}
 
-	// We won't verify the actual contents that was marshalled,
+	// We won't verify the actual contents that was marshaled,
 	// we'll just check that it can be unmarshalled again and that
 	// the file ends with a newline.
 	buf, err := ioutil.ReadFile(fullpath)

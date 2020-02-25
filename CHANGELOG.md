@@ -4,6 +4,18 @@ Logstash Filter Verifier Change Log
 All timestamps are in the Europe/Stockholm timezone.
 
 
+1.6.0 (2020-01-02)
+------------------
+
+  * Upgraded the Go compiler to 1.13 and transitioned to using Go
+    modules for dependency management.
+  * Dropped Debian packaging support.
+  * Allow test case file to be in YAML format instead of JSON.
+  * Support Logstash's field reference syntax (`[field][subfield]`)
+    in the `ignore` test case file option to ignore only certain
+    subfields.
+
+
 1.5.1 (2019-07-11)
 ------------------
 

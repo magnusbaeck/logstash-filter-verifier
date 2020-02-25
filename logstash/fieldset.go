@@ -10,7 +10,7 @@ import (
 )
 
 // FieldSet contains a set of fields for a Logstash event and can be
-// marshalled as a Logstash-compatible string that's acceptable to an
+// marshaled as a Logstash-compatible string that's acceptable to an
 // add_field option for an input or filter.
 type FieldSet map[string]interface{}
 
