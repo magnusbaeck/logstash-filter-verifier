@@ -258,7 +258,7 @@ func (tcs *TestCaseSet) Compare(events []logstash.Event, diffCommand []string, l
 			EventIndex: i,
 			Status:     true,
 		}
-		if len(tcs.descriptions) > i {
+		if (len(tcs.descriptions) > i) && (len(tcs.descriptions[i]) > 0) {
 			comparisonResult.Name = fmt.Sprintf("Comparing message %d of %d (%s)", i+1, len(events), tcs.descriptions[i])
 		} else {
 			comparisonResult.Name = fmt.Sprintf("Comparing message %d of %d", i+1, len(events))
