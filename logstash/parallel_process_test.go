@@ -97,7 +97,7 @@ func TestGetSocketInOutPlugins(t *testing.T) {
 				},
 			},
 			[]string{
-				"unix { mode => \"client\" path => \"/tmp/foo\" codec => \"any_codec\" " +
+				"unix { mode => \"client\" path => \"/tmp/foo\" codec => any_codec " +
 					"add_field => { \"[@metadata][__lfv_testcase]\" => \"0\" } }",
 			},
 			[]string{
@@ -122,9 +122,9 @@ func TestGetSocketInOutPlugins(t *testing.T) {
 				},
 			},
 			[]string{
-				"unix { mode => \"client\" path => \"/tmp/foo\" codec => \"any_codec\" " +
+				"unix { mode => \"client\" path => \"/tmp/foo\" codec => any_codec " +
 					"add_field => { \"[@metadata][__lfv_testcase]\" => \"0\" } }",
-				"unix { mode => \"client\" path => \"/tmp/bar\" codec => \"other_codec\" " +
+				"unix { mode => \"client\" path => \"/tmp/bar\" codec => other_codec " +
 					"add_field => { \"[@metadata][__lfv_testcase]\" => \"1\" } }",
 			},
 			[]string{
@@ -148,7 +148,7 @@ func TestGetSocketInOutPlugins(t *testing.T) {
 				},
 			},
 			[]string{
-				"unix { mode => \"client\" path => \"/tmp/foo\" codec => \"any_codec\" " +
+				"unix { mode => \"client\" path => \"/tmp/foo\" codec => any_codec " +
 					"add_field => { \"[@metadata][__lfv_testcase]\" => \"0\" \"[@metadata][foo]\" => \"bar\" } }",
 			},
 			[]string{
