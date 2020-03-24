@@ -51,7 +51,7 @@ func NewProcess(inv *Invocation, inputCodec string, fields FieldSet, keptEnvVars
 		_ = outputFile.Close()
 		return nil, err
 	}
-	inputs := fmt.Sprintf("input { stdin { codec => %q add_field => %s } }", inputCodec, fieldHash)
+	inputs := fmt.Sprintf("input { stdin { codec => %s add_field => %s } }", inputCodec, fieldHash)
 	outputs := fmt.Sprintf("output { file { path => %q codec => \"json_lines\" } }", outputFile.Name())
 
 	env := getLimitedEnvironment(os.Environ(), keptEnvVars)

@@ -168,7 +168,7 @@ func getSocketInOutPlugins(testStream []*TestStream) ([]string, []string, error)
 		if err != nil {
 			return nil, nil, err
 		}
-		logstashInput[i] = fmt.Sprintf("unix { mode => \"client\" path => %q codec => %q add_field => %s }",
+		logstashInput[i] = fmt.Sprintf("unix { mode => \"client\" path => %q codec => %s add_field => %s }",
 			sp.senderPath, sp.inputCodec, fieldHash)
 		logstashOutput[i] = fmt.Sprintf("if [@metadata][__lfv_testcase] == \"%s\" { file { path => %q codec => \"json_lines\" } }",
 			strconv.Itoa(i), sp.receiver.Name())
