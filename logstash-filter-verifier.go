@@ -5,6 +5,7 @@ package main
 import (
 	"errors"
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -76,6 +77,15 @@ var (
 				Flag("sockets-timeout", "Timeout (duration) for the communication with Logstash via Unix domain sockets. Has no effect unless --sockets is used.").
 				Default("60s").
 				Duration()
+        logfilePaths = kingpin.
+		       Flag("logfile", "Switches to log-run mode that submits given log files to Logstash and prints the results. If LOGFILE is a directory, it uses all files below that path that match logfile-extension.").
+		       PlaceHolder("LOGFILE").
+		       Strings()
+	logfileExtension = kingpin.
+                       Flag("logfile-extension", "Extension that identify logfiles to use. Has no effect unless --logfile is a directory. Default is `log`.").
+		       PlaceHolder("EXTENSION").
+		       Default("log").
+		       String()
 
 	// Arguments
 	testcasePath = kingpin.
@@ -88,7 +98,7 @@ var (
 			ExistingFilesOrDirs()
 )
 
-// findExecutable examines the passed file paths and returns the first
+// examines findExecutable the passed file paths and returns the first
 // one that is an existing executable file.
 func findExecutable(paths []string) (string, error) {
 	for _, p := range paths {
@@ -138,7 +148,7 @@ func runTests(inv *logstash.Invocation, tests []testcase.TestCaseSet, diffComman
 			return err
 		}
 
-		result, err := p.Wait()
+		result, err := p.WaitAndRead()
 		if err != nil || *logstashOutput {
 			message := getLogstashOutputMessage(result.Output, result.Log)
 			if err != nil {
@@ -153,6 +163,71 @@ func runTests(inv *logstash.Invocation, tests []testcase.TestCaseSet, diffComman
 	}
 	if !ok {
 		return errors.New("one or more testcases failed")
+	}
+	return nil
+}
+
+func visit(files *[]string, extension string) filepath.WalkFunc {
+	return func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			log.Fatal(err)
+		}
+		if info.IsDir() {
+			return nil
+		}
+		if filepath.Ext(path) != "." + extension {
+			return nil
+		}
+		*files = append(*files, path)
+		return nil
+	}
+}
+
+// runLogs runs Logstash with a set of configuration files against log files
+func runLogs(inv *logstash.Invocation, tests []testcase.TestCaseSet, logFilePaths []string, logFileExtension string, keptEnvVars []string) error {
+	for _, t := range tests {
+		fmt.Printf("Using test setup from %s...\n", filepath.Base(t.File))
+		p, err := logstash.NewProcess(inv, t.Codec, t.InputFields, keptEnvVars)
+		if err != nil {
+			return err
+		}
+		defer p.Release()
+		if err = p.Start(); err != nil {
+			return err
+		}
+		var file *os.File
+		var logFiles []string
+		var written int64
+		for _, logFilePath := range logFilePaths {
+			err = filepath.Walk(logFilePath, visit(&logFiles, logFileExtension))
+			if err != nil {
+				return err
+			}
+			for _, logFile := range logFiles {
+				fmt.Printf("Piping %s: ", logFile)
+				file, err = os.Open(logFile)
+				if err != nil {
+					return err
+				}
+				written, err = io.Copy(p.Input, file)
+				fmt.Printf("%d bytes\n", written)
+				if err != nil {
+					return err
+				}
+			}
+		}
+		if err = p.Input.Close(); err != nil {
+			return err
+		}
+
+		result, err := p.WaitAndPrint()
+		if err != nil || *logstashOutput {
+			message := getLogstashOutputMessage(result.Output, result.Log)
+			if err != nil {
+				return fmt.Errorf("Error running Logstash: %s.%s", err, message)
+			}
+			userError("%s", message)
+		}
 	}
 	return nil
 }
@@ -324,6 +399,16 @@ func mainEntrypoint() int {
 		return 1
 	}
 	defer inv.Release()
+
+        if len(*logfilePaths) > 0 {
+		if err = runLogs(inv, tests, *logfilePaths, *logfileExtension, allKeptEnvVars); err != nil {
+			userError(err.Error())
+			return 1
+		} else {
+			return 0
+		}
+	}
+
 	if *unixSockets {
 		if runtime.GOOS == "windows" {
 			userError("Use of Unix domain sockets for communication with Logstash is not supported on Windows.")
