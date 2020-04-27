@@ -323,15 +323,10 @@ func runDiffCommand(command []string, file1, file2 string) (bool, string, error)
 	c := exec.Command(fullCommand[0], fullCommand[1:]...)
 	stdoutStderr, err := c.CombinedOutput()
 
-	// Doesn't return error if diff command return 1
-	// It's normal behavior
-	if exitError, ok := err.(*exec.ExitError); ok {
-		if exitError.ExitCode() == 1 {
-			return false, "", nil
-		}
+	success := err == nil
+	if exitError, ok := err.(*exec.ExitError); ok && exitError.ExitCode() == 1 {
+		// Exit code 1 is expected when the files differ; just ignore it.
+		err = nil
 	}
-	if err != nil {
-		return false, "", err
-	}
-	return true, string(stdoutStderr), nil
+	return success, string(stdoutStderr), err
 }
