@@ -272,7 +272,7 @@ testcases:
           "time": "2015-10-06T20:55:29Z"
         }
     expected:
-      - @timestamp: "2015-10-06T20:55:29.000Z"
+      - "@timestamp": "2015-10-06T20:55:29.000Z"
         client: "localhost"
         clientip: "127.0.0.1"
         message: "This is a test message"
