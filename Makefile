@@ -1,5 +1,6 @@
 # Copyright (c) 2015-2020 Magnus Bäck <magnus@noun.se>
 
+
 export GOBIN := $(shell pwd)/bin
 export PATH := $(GOBIN):$(PATH)
 

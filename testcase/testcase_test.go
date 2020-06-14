@@ -8,9 +8,9 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
-	"reflect"
 	"testing"
 
+	"github.com/imkira/go-observer"
 	"github.com/magnusbaeck/logstash-filter-verifier/logstash"
 	"github.com/stretchr/testify/assert"
 )
@@ -154,11 +154,14 @@ func TestCompare(t *testing.T) {
 	}
 	defer os.RemoveAll(tempdir)
 
+	liveObserver := observer.NewProperty(nil)
+
 	cases := []struct {
 		testcase     *TestCaseSet
 		actualEvents []logstash.Event
 		diffCommand  []string
-		result       error
+		result       bool
+		err          error
 	}{
 		// Empty test case with no messages is okay.
 		{
@@ -173,6 +176,7 @@ func TestCompare(t *testing.T) {
 			},
 			[]logstash.Event{},
 			[]string{"diff"},
+			true,
 			nil,
 		},
 		// Too few messages received.
@@ -199,11 +203,8 @@ func TestCompare(t *testing.T) {
 				},
 			},
 			[]string{"diff"},
-			ComparisonError{
-				ActualCount:   1,
-				ExpectedCount: 2,
-				Mismatches:    []MismatchedEvent{},
-			},
+			false,
+			nil,
 		},
 		// Too many messages received.
 		{
@@ -229,11 +230,8 @@ func TestCompare(t *testing.T) {
 				},
 			},
 			[]string{"diff"},
-			ComparisonError{
-				ActualCount:   2,
-				ExpectedCount: 1,
-				Mismatches:    []MismatchedEvent{},
-			},
+			false,
+			nil,
 		},
 		// Different fields.
 		{
@@ -256,21 +254,8 @@ func TestCompare(t *testing.T) {
 				},
 			},
 			[]string{"diff"},
-			ComparisonError{
-				ActualCount:   1,
-				ExpectedCount: 1,
-				Mismatches: []MismatchedEvent{
-					{
-						Actual: logstash.Event{
-							"c": "d",
-						},
-						Expected: logstash.Event{
-							"a": "b",
-						},
-						Index: 0,
-					},
-				},
-			},
+			false,
+			nil,
 		},
 		// Same field with different values.
 		{
@@ -293,21 +278,8 @@ func TestCompare(t *testing.T) {
 				},
 			},
 			[]string{"diff"},
-			ComparisonError{
-				ActualCount:   1,
-				ExpectedCount: 1,
-				Mismatches: []MismatchedEvent{
-					{
-						Actual: logstash.Event{
-							"a": "B",
-						},
-						Expected: logstash.Event{
-							"a": "b",
-						},
-						Index: 0,
-					},
-				},
-			},
+			false,
+			nil,
 		},
 		// Ignored fields are ignored.
 		{
@@ -332,6 +304,7 @@ func TestCompare(t *testing.T) {
 				},
 			},
 			[]string{"diff"},
+			true,
 			nil,
 		},
 		// Ignored fields with bracket notation are ignored
@@ -367,6 +340,7 @@ func TestCompare(t *testing.T) {
 				},
 			},
 			[]string{"diff"},
+			true,
 			nil,
 		},
 		// Ignored fields with bracket notation are ignored (when empty hash)
@@ -396,6 +370,7 @@ func TestCompare(t *testing.T) {
 				},
 			},
 			[]string{"diff"},
+			true,
 			nil,
 		},
 		// Diff command execution errors are propagated correctly.
@@ -419,34 +394,19 @@ func TestCompare(t *testing.T) {
 				},
 			},
 			[]string{filepath.Join(tempdir, "does-not-exist")},
+			false,
 			&os.PathError{},
 		},
 	}
 
 	for i, c := range cases {
-		actualResult := c.testcase.Compare(c.actualEvents, true, c.diffCommand)
-		if actualResult == nil && c.result != nil {
-			t.Errorf("Test %d: Expected failure, got success.", i)
-		} else if actualResult != nil && c.result == nil {
-			t.Errorf("Test %d: Expected success, got this error instead: %#v", i, actualResult)
-		} else if actualResult != nil && c.result != nil {
-			// Check if we get the right kind of error.
-			actualType := reflect.TypeOf(actualResult)
-			expectedType := reflect.TypeOf(c.result)
-			if actualType == expectedType {
-				switch e := actualResult.(type) {
-				case ComparisonError:
-					if !reflect.DeepEqual(c.result, e) {
-						t.Errorf("Test %d:\nExpected:\n%#v\nGot:\n%#v", i, c.result, e)
-					}
-				default:
-					// Except in the explicitly
-					// handled cases above we just
-					// care that the types match.
-				}
-			} else {
-				t.Errorf("Test %d:\nExpected error:\n%s\nGot:\n%s (%s)", i, expectedType, actualType, actualResult)
-			}
+		actualResult, err := c.testcase.Compare(c.actualEvents, c.diffCommand, liveObserver)
+		if err != nil && c.err == nil {
+			t.Errorf("Test %d: Expected no error, got error: %s", i, err)
+		} else if c.err != nil && err == nil {
+			t.Errorf("Test %d: Expected error, got no error.", i)
+		} else if actualResult != c.result {
+			t.Errorf("Test %d: Expected %t, got %t.", i, c.result, actualResult)
 		}
 	}
 }

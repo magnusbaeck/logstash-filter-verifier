@@ -3,7 +3,6 @@
 package main
 
 import (
-	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -12,8 +11,10 @@ import (
 
 	semver "github.com/Masterminds/semver/v3"
 	"github.com/alecthomas/kingpin"
+	"github.com/imkira/go-observer"
 	"github.com/magnusbaeck/logstash-filter-verifier/logging"
 	"github.com/magnusbaeck/logstash-filter-verifier/logstash"
+	lfvobserver "github.com/magnusbaeck/logstash-filter-verifier/observer"
 	"github.com/magnusbaeck/logstash-filter-verifier/testcase"
 	"github.com/mattn/go-shellwords"
 	oplogging "github.com/op/go-logging"
@@ -76,6 +77,10 @@ var (
 				Flag("sockets-timeout", "Timeout (duration) for the communication with Logstash via Unix domain sockets. Has no effect unless --sockets is used.").
 				Default("60s").
 				Duration()
+	quiet = kingpin.
+		Flag("quiet", "Permit to disable extra messages").
+		Default("false").
+		Bool()
 
 	// Arguments
 	testcasePath = kingpin.
@@ -115,53 +120,55 @@ func findExecutable(paths []string) (string, error) {
 // slice of test cases and compares the actual events against the
 // expected set. Returns an error if at least one test case fails or
 // if there's a problem running the tests.
-func runTests(inv *logstash.Invocation, tests []testcase.TestCaseSet, diffCommand []string, keptEnvVars []string) error {
+func runTests(inv *logstash.Invocation, tests []testcase.TestCaseSet, diffCommand []string, keptEnvVars []string, liveObserver observer.Property) (bool, error) {
 	ok := true
 	for _, t := range tests {
 		fmt.Printf("Running tests in %s...\n", filepath.Base(t.File))
 		p, err := logstash.NewProcess(inv, t.Codec, t.InputFields, keptEnvVars)
 		if err != nil {
-			return err
+			return false, err
 		}
 		defer p.Release()
 		if err = p.Start(); err != nil {
-			return err
+			return false, err
 		}
 
 		for _, line := range t.InputLines {
 			_, err = p.Input.Write([]byte(line + "\n"))
 			if err != nil {
-				return err
+				return false, err
 			}
 		}
 		if err = p.Input.Close(); err != nil {
-			return err
+			return false, err
 		}
 
 		result, err := p.Wait()
 		if err != nil || *logstashOutput {
 			message := getLogstashOutputMessage(result.Output, result.Log)
 			if err != nil {
-				return fmt.Errorf("Error running Logstash: %s.%s", err, message)
+				return false, fmt.Errorf("Error running Logstash: %s.%s", err, message)
 			}
 			userError("%s", message)
 		}
-		if err = t.Compare(result.Events, false, diffCommand); err != nil {
-			userError("Testcase failed, continuing with the rest: %s", err)
+
+		currentOk, err := t.Compare(result.Events, diffCommand, liveObserver)
+		if err != nil {
+			return false, err
+		}
+		if !currentOk {
 			ok = false
 		}
 	}
-	if !ok {
-		return errors.New("one or more testcases failed")
-	}
-	return nil
+
+	return ok, nil
 }
 
 // runParallelTests runs multiple set of configuration in a single
 // instance of Logstash against a slice of test cases and compares
 // the actual events against the expected set. Returns an error if
 // at least one test case fails or if there's a problem running the tests.
-func runParallelTests(inv *logstash.Invocation, tests []testcase.TestCaseSet, diffCommand []string, keptEnvVars []string) error {
+func runParallelTests(inv *logstash.Invocation, tests []testcase.TestCaseSet, diffCommand []string, keptEnvVars []string, liveProducer observer.Property) (bool, error) {
 	testStreams := make([]*logstash.TestStream, 0, len(tests))
 
 	badCodecs := map[string]string{
@@ -181,30 +188,30 @@ func runParallelTests(inv *logstash.Invocation, tests []testcase.TestCaseSet, di
 		ts, err := logstash.NewTestStream(t.Codec, t.InputFields, *unixSocketCommTimeout)
 		if err != nil {
 			logstash.CleanupTestStreams(testStreams)
-			return err
+			return false, err
 		}
 		testStreams = append(testStreams, ts)
 	}
 
 	p, err := logstash.NewParallelProcess(inv, testStreams, keptEnvVars)
 	if err != nil {
-		return err
+		return false, err
 	}
 	defer p.Release()
 	if err = p.Start(); err != nil {
-		return err
+		return false, err
 	}
 
 	for i, t := range tests {
 		for _, line := range t.InputLines {
 			_, err = testStreams[i].Write([]byte(line + "\n"))
 			if err != nil {
-				return err
+				return false, err
 			}
 		}
 
 		if err = testStreams[i].Close(); err != nil {
-			return err
+			return false, err
 		}
 	}
 
@@ -212,22 +219,22 @@ func runParallelTests(inv *logstash.Invocation, tests []testcase.TestCaseSet, di
 	if err != nil || *logstashOutput {
 		message := getLogstashOutputMessage(result.Output, result.Log)
 		if err != nil {
-			return fmt.Errorf("Error running Logstash: %s.%s", err, message)
+			return false, fmt.Errorf("Error running Logstash: %s.%s", err, message)
 		}
 		userError("%s", message)
 	}
 	ok := true
 	for i, t := range tests {
-		if err = t.Compare(result.Events[i], false, diffCommand); err != nil {
+		currentOk, err := t.Compare(result.Events[i], diffCommand, liveProducer)
+		if err != nil {
 			userError("Testcase %s failed, continuing with the rest: %s", filepath.Base(t.File), err)
+		}
+		if !currentOk {
 			ok = false
 		}
 	}
 
-	if !ok {
-		return errors.New("one or more testcases failed")
-	}
-	return nil
+	return ok, nil
 }
 
 // getLogstashOutputMessage examines the test result and prepares a
@@ -275,6 +282,15 @@ func userError(format string, a ...interface{}) {
 func mainEntrypoint() int {
 	kingpin.Version(fmt.Sprintf("%s %s", kingpin.CommandLine.Name, GitSummary))
 	kingpin.Parse()
+
+	var status bool
+
+	// Create and lauch observer
+	liveObserver := observer.NewProperty(lfvobserver.TestExecutionStart{})
+
+	if !*quiet {
+		go lfvobserver.RunSummaryObserver(liveObserver)
+	}
 
 	level, err := oplogging.LogLevel(*loglevel)
 	if err != nil {
@@ -330,17 +346,23 @@ func mainEntrypoint() int {
 			return 1
 		}
 		fmt.Println("Use Unix domain sockets.")
-		if err = runParallelTests(inv, tests, diffCmd, allKeptEnvVars); err != nil {
+		if status, err = runParallelTests(inv, tests, diffCmd, allKeptEnvVars, liveObserver); err != nil {
 			userError(err.Error())
 			return 1
 		}
 	} else {
-		if err = runTests(inv, tests, diffCmd, allKeptEnvVars); err != nil {
+		if status, err = runTests(inv, tests, diffCmd, allKeptEnvVars, liveObserver); err != nil {
 			userError(err.Error())
 			return 1
 		}
 	}
-	return 0
+
+	liveObserver.Update(lfvobserver.TestExecutionEnd{})
+
+	if status {
+		return 0
+	}
+	return 1
 }
 
 func main() {
