@@ -3,4 +3,4 @@ language: go
 go:
   - "1.13.5"
 script:
-  - make check test
+  - make check checktidy test

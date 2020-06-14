@@ -76,6 +76,10 @@ $(PROGRAM)$(EXEC_SUFFIX): .FORCE $(GOVVV)
 check: $(GOLANGCI_LINT)
 	golangci-lint run
 
+.PHONY: checktidy
+checktidy:
+	go mod tidy && git diff --exit-code -- go.mod go.sum
+
 .PHONY: clean
 clean:
 	rm -f $(PROGRAM)$(EXEC_SUFFIX) $(GOCOV) $(GOCOV_HTML) $(GOLANGCI_LINT) $(GPM) $(OVERALLS)
