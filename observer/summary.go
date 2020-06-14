@@ -8,9 +8,7 @@ import (
 	"github.com/magnusbaeck/logstash-filter-verifier/logging"
 )
 
-// Summary describe the summary of global test case.
-// It count the number of success test and opposite
-// the number of failed test.
+// Summary summarizes the number of successful and failed test cases.
 type Summary struct {
 	NumberOk    int
 	NumberNotOk int
@@ -18,8 +16,8 @@ type Summary struct {
 
 var log = logging.MustGetLogger()
 
-// RunSummaryObserver lauch consummer witch is in responsible to
-// print summary at the end of all tests cases.
+// RunSummaryObserver launches a consumer responsible for printing a summary
+// at the end of the execution.
 func RunSummaryObserver(prop observer.Property) {
 	var (
 		results       map[string]Summary
@@ -59,7 +57,7 @@ func RunSummaryObserver(prop observer.Property) {
 		// Store result test
 		case ComparisonResult:
 
-			// Compute summary to display at the end and siplay current test status
+			// Compute summary to display at the end and display current test status
 			summary := results[event.Path]
 			if event.Status {
 				summary.NumberOk++
@@ -75,9 +73,7 @@ func RunSummaryObserver(prop observer.Property) {
 			log.Debugf("Receive data that we doesn't say how to manage it %+v", data)
 		}
 
-		// wait change
 		<-stream.Changes()
-		// advance to next value
 		stream.Next()
 	}
 }

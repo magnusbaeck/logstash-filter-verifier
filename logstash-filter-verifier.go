@@ -78,7 +78,7 @@ var (
 				Default("60s").
 				Duration()
 	quiet = kingpin.
-		Flag("quiet", "Permit to disable extra messages").
+		Flag("quiet", "Omit test progress messages and event diffs.").
 		Default("false").
 		Bool()
 
@@ -118,8 +118,8 @@ func findExecutable(paths []string) (string, error) {
 
 // runTests runs Logstash with a set of configuration files against a
 // slice of test cases and compares the actual events against the
-// expected set. Returns an error if at least one test case fails or
-// if there's a problem running the tests.
+// expected set. Returns a bool that indicates whether all tests pass
+// and an error that indicates a problem running the tests.
 func runTests(inv *logstash.Invocation, tests []testcase.TestCaseSet, diffCommand []string, keptEnvVars []string, liveObserver observer.Property) (bool, error) {
 	ok := true
 	for _, t := range tests {
@@ -166,8 +166,9 @@ func runTests(inv *logstash.Invocation, tests []testcase.TestCaseSet, diffComman
 
 // runParallelTests runs multiple set of configuration in a single
 // instance of Logstash against a slice of test cases and compares
-// the actual events against the expected set. Returns an error if
-// at least one test case fails or if there's a problem running the tests.
+// the actual events against the expected set. Returns a bool that
+// indicates whether all tests pass and an error that indicates a
+// problem running the tests.
 func runParallelTests(inv *logstash.Invocation, tests []testcase.TestCaseSet, diffCommand []string, keptEnvVars []string, liveProducer observer.Property) (bool, error) {
 	testStreams := make([]*logstash.TestStream, 0, len(tests))
 
@@ -285,9 +286,7 @@ func mainEntrypoint() int {
 
 	var status bool
 
-	// Create and lauch observer
 	liveObserver := observer.NewProperty(lfvobserver.TestExecutionStart{})
-
 	if !*quiet {
 		go lfvobserver.RunSummaryObserver(liveObserver)
 	}

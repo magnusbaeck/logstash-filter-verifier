@@ -209,9 +209,10 @@ func NewFromFile(path string) (*TestCaseSet, error) {
 
 // Compare compares a slice of events against the expected events of
 // this test case. Each event is written pretty-printed to a temporary
-// file and the two files are passed to "diff -u". The resulting of diff command
-// is sended to observer throughout lfvobserver.ComparisonResult struct.
-// It return true if the current test case pass, else it return false.
+// file and the two files are passed to the diff command. Its output is
+// is sent to the observer via an lfvobserver.ComparisonResult struct.
+// Returns true if the current test case passes, otherwise false. A non-nil
+// error value indicates a problem executing the test.
 func (tcs *TestCaseSet) Compare(events []logstash.Event, diffCommand []string, liveProducer observer.Property) (bool, error) {
 	status := true
 
@@ -229,7 +230,8 @@ func (tcs *TestCaseSet) Compare(events []logstash.Event, diffCommand []string, l
 		return false, nil
 	}
 
-	// Check if test consit to validate that all event are dropped and so not failed before
+	// Make sure we produce a result even if there are zero events (i.e. we
+	// won't enter the for loop below).
 	if len(events) == 0 {
 		comparisonResult := lfvobserver.ComparisonResult{
 			Status:     true,
@@ -312,10 +314,11 @@ func marshalToFile(event logstash.Event, filename string) error {
 
 // runDiffCommand passes two files to the supplied command (executable
 // path and optional arguments) and returns whether the files were
-// equal, i.e. whether the diff command returned a zero exit
-// status. The returned error value will be set if there was a problem
-// running the command. The output of the diff command will is returned
-// as string.
+// equal. The returned error value will be set if there was a problem
+// running the command or if it returned an exit status other than zero
+// or one. The latter is interpreted as "comparison performed successfully
+// but the files were different". The output of the diff command is
+// returned as a string.
 func runDiffCommand(command []string, file1, file2 string) (bool, string, error) {
 	fullCommand := append(command, file1)
 	fullCommand = append(fullCommand, file2)

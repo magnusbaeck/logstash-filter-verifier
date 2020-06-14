@@ -1,12 +1,12 @@
 package observer
 
-// TestExecutionStart is empty struct to inform consumer that test begin
+// TestExecutionStart is empty struct to inform consumer that test execution has begun.
 type TestExecutionStart struct{}
 
-// TestExecutionEnd is empty struct to inform consumer that test is finished
+// TestExecutionEnd is empty struct to inform consumer that test execution has finished.
 type TestExecutionEnd struct{}
 
-// ComparisonResult permit to follow the test execution
+// ComparisonResult describes the result of the execution of a single test case.
 type ComparisonResult struct {
 	Name       string
 	Status     bool
