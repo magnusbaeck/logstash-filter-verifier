@@ -116,5 +116,5 @@ func removeInputOutput(path string) error {
 	config.Input = nil
 	config.Output = nil
 
-	return ioutil.WriteFile(path, []byte(config.String()), 0644)
+	return ioutil.WriteFile(path, []byte(config.String()), 0600)
 }

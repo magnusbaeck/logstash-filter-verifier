@@ -39,8 +39,8 @@ func TestFlattenFilenames(t *testing.T) {
 		// Files only.
 		{
 			[]testhelpers.FileWithMode{
-				{"a", 0644, ""},
-				{"b", 0644, ""},
+				{"a", 0600, ""},
+				{"b", 0600, ""},
 			},
 			[]string{"a", "b"},
 			[]string{"a", "b"},
@@ -48,9 +48,9 @@ func TestFlattenFilenames(t *testing.T) {
 		// Files only, and only a subset of them.
 		{
 			[]testhelpers.FileWithMode{
-				{"a", 0644, ""},
-				{"b", 0644, ""},
-				{"c", 0644, ""},
+				{"a", 0600, ""},
+				{"b", 0600, ""},
+				{"c", 0600, ""},
 			},
 			[]string{"a", "b"},
 			[]string{"a", "b"},
@@ -58,9 +58,9 @@ func TestFlattenFilenames(t *testing.T) {
 		// Files and an empty subdirectory.
 		{
 			[]testhelpers.FileWithMode{
-				{"a", 0644, ""},
-				{"b", 0644, ""},
-				{"c", os.ModeDir | 0755, ""},
+				{"a", 0600, ""},
+				{"b", 0600, ""},
+				{"c", os.ModeDir | 0700, ""},
 			},
 			[]string{"a", "b", "c"},
 			[]string{"a", "b"},
@@ -68,10 +68,10 @@ func TestFlattenFilenames(t *testing.T) {
 		// Files and a file in a subdirectory.
 		{
 			[]testhelpers.FileWithMode{
-				{"a", 0644, ""},
-				{"b", 0644, ""},
-				{"c", os.ModeDir | 0755, ""},
-				{"c/d", 0644, ""},
+				{"a", 0600, ""},
+				{"b", 0600, ""},
+				{"c", os.ModeDir | 0700, ""},
+				{"c/d", 0600, ""},
 			},
 			[]string{"a", "b", "c"},
 			[]string{"a", "b", "c/d"},
@@ -79,12 +79,12 @@ func TestFlattenFilenames(t *testing.T) {
 		// Files and multiple levels of subdirectories.
 		{
 			[]testhelpers.FileWithMode{
-				{"a", 0644, ""},
-				{"b", 0644, ""},
-				{"c", os.ModeDir | 0755, ""},
-				{"c/d", os.ModeDir | 0755, ""},
-				{"c/d/e", 0644, ""},
-				{"c/f", 0644, ""},
+				{"a", 0600, ""},
+				{"b", 0600, ""},
+				{"c", os.ModeDir | 0700, ""},
+				{"c/d", os.ModeDir | 0700, ""},
+				{"c/d/e", 0600, ""},
+				{"c/f", 0600, ""},
 			},
 			[]string{"a", "b", "c"},
 			[]string{"a", "b", "c/f"},
@@ -92,8 +92,8 @@ func TestFlattenFilenames(t *testing.T) {
 		// Just as directory with files.
 		{
 			[]testhelpers.FileWithMode{
-				{"a", os.ModeDir | 0755, ""},
-				{"a/b", 0644, ""},
+				{"a", os.ModeDir | 0700, ""},
+				{"a/b", 0600, ""},
 			},
 			[]string{"a"},
 			[]string{"a/b"},
@@ -167,12 +167,12 @@ func TestGetPipelineConfigDir(t *testing.T) {
 
 		var configFiles []string
 		for _, f := range c.files {
-			err = os.MkdirAll(filepath.Join(tempdir, filepath.Dir(f)), 0755)
+			err = os.MkdirAll(filepath.Join(tempdir, filepath.Dir(f)), 0700)
 			if err != nil {
 				t.Fatalf("Test %d: Unexpected error when creating temp dir: %s", i, err)
 			}
 
-			err = ioutil.WriteFile(filepath.Join(tempdir, f), []byte(createLogstashConfigWithString(filepath.Base(f))), 0644)
+			err = ioutil.WriteFile(filepath.Join(tempdir, f), []byte(createLogstashConfigWithString(filepath.Base(f))), 0600)
 			if err != nil {
 				t.Fatalf("Test %d: Unexpected error when writing to temp file: %s", i, err)
 			}
@@ -264,7 +264,7 @@ func TestGetFilesInDir(t *testing.T) {
 			f.Close()
 		}
 		for _, filename := range c.dirs {
-			err := os.MkdirAll(filepath.Join(tempdir, filename), 0755)
+			err := os.MkdirAll(filepath.Join(tempdir, filename), 0700)
 			if err != nil {
 				t.Fatalf("Test %d: Unexpected error when creating temp dir: %s", i, err)
 			}
@@ -328,7 +328,7 @@ func TestRemoveInputOutput(t *testing.T) {
 		path := f.Name()
 		defer os.Remove(path)
 
-		err = ioutil.WriteFile(path, []byte(c.input), 0644)
+		err = ioutil.WriteFile(path, []byte(c.input), 0600)
 		if err != nil {
 			t.Fatalf("Test %d: Unexpected error when writing to temp file: %s", i, err)
 		}

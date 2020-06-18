@@ -197,7 +197,7 @@ func createTestInvocation(version semver.Version) (*testInvocation, error) {
 
 	configFile := filepath.Join(tempdir, "configfile.conf")
 	configContents := ""
-	if err = ioutil.WriteFile(configFile, []byte(configContents), 0644); err != nil {
+	if err = ioutil.WriteFile(configFile, []byte(configContents), 0600); err != nil {
 		return nil, fmt.Errorf("Unexpected error when creating dummy configuration file: %s", err)
 	}
 	logstashPath := filepath.Join(tempdir, "bin/logstash")

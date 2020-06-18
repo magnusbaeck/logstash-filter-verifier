@@ -110,7 +110,7 @@ func NewInvocation(logstashPath string, logstashArgs []string, logstashVersion *
 		// put there. The various path settings that we need
 		// to provide can just as well be passed as command
 		// arguments.
-		err := ioutil.WriteFile(filepath.Join(configDir, "logstash.yml"), []byte{}, 0644)
+		err := ioutil.WriteFile(filepath.Join(configDir, "logstash.yml"), []byte{}, 0600)
 		if err != nil {
 			_ = logFile.Close()
 			_ = os.RemoveAll(tempDir)

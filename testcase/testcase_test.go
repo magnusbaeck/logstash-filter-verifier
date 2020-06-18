@@ -130,7 +130,7 @@ func TestNewFromFile(t *testing.T) {
 		// As it happens a valid JSON file is also a valid YAML file so
 		// the file we create can have the same contents regardless of
 		// the file format.
-		if err = ioutil.WriteFile(fullTestCasePath, []byte(`{"type": "test"}`), 0644); err != nil {
+		if err = ioutil.WriteFile(fullTestCasePath, []byte(`{"type": "test"}`), 0600); err != nil {
 			t.Fatal(err.Error())
 		}
 
