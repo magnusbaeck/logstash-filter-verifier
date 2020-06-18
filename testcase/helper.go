@@ -24,7 +24,7 @@ func parseAllBracketProperties(data map[string]interface{}) map[string]interface
 	return result
 }
 
-// extractBracketFields convert bracket notation to slice of key
+// extractBracketFields convert bracket notation to slice of key.
 func extractBracketFields(key string) []string {
 	rValidator := regexp.MustCompile(`^(\[\w+\])+$`)
 	rExtractField := regexp.MustCompile(`\[(\w+)\]`)

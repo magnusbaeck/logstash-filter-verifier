@@ -99,7 +99,7 @@ var (
 )
 
 // convertBracketFields permit to replace keys that contains bracket with sub structure.
-// For example, the key `[log][file][path]` will be convert by `"log": {"file": {"path": "VALUE"}}`
+// For example, the key `[log][file][path]` will be convert by `"log": {"file": {"path": "VALUE"}}`.
 func (tcs *TestCaseSet) convertBracketFields() error {
 	// Convert fields in input fields
 	tcs.InputFields = parseAllBracketProperties(tcs.InputFields)

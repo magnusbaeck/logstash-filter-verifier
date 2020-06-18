@@ -4,6 +4,7 @@ linters:
   enable:
     - deadcode
     - gocyclo
+    - godot
     - gofmt
     - gosec
     - gosimple

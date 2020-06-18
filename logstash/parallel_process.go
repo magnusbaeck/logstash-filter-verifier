@@ -18,7 +18,7 @@ import (
 	"time"
 )
 
-// TestStream contains the input and output streams for one test case
+// TestStream contains the input and output streams for one test case.
 type TestStream struct {
 	sender         *net.UnixConn
 	senderListener *net.UnixListener
@@ -82,7 +82,7 @@ func NewTestStream(inputCodec string, fields FieldSet, timeout time.Duration) (*
 	return ts, nil
 }
 
-// Write writes to the sender of the TestStream
+// Write writes to the sender of the TestStream.
 func (ts *TestStream) Write(p []byte) (n int, err error) {
 	timer := time.NewTimer(ts.timeout)
 	select {
@@ -93,7 +93,7 @@ func (ts *TestStream) Write(p []byte) (n int, err error) {
 	return ts.sender.Write(p)
 }
 
-// Close closes the sender of the TestStream
+// Close closes the sender of the TestStream.
 func (ts *TestStream) Close() error {
 	if ts.sender != nil {
 		err := ts.sender.Close()
@@ -104,7 +104,7 @@ func (ts *TestStream) Close() error {
 }
 
 // Cleanup closes and removes all temporary resources
-// for a TestStream
+// for a TestStream.
 func (ts *TestStream) Cleanup() {
 	if ts.senderListener != nil {
 		ts.senderListener.Close()
@@ -120,7 +120,7 @@ func (ts *TestStream) Cleanup() {
 
 // CleanupTestStreams closes all sockets and streams as well
 // removes temporary file ressources for an array of
-// TestStreams
+// TestStreams.
 func CleanupTestStreams(ts []*TestStream) {
 	for i := range ts {
 		ts[i].Cleanup()

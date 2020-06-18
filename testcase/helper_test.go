@@ -32,7 +32,7 @@ func TestExtractBracketFields(t *testing.T) {
 	}
 }
 
-// TestParseBracketProperty test keys that contain bracket notation are converted to sub structure
+// TestParseBracketProperty test keys that contain bracket notation are converted to sub structure.
 func TestParseBracketProperty(t *testing.T) {
 	cases := []struct {
 		key      []string
