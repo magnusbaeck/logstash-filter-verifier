@@ -39,7 +39,7 @@ func RunSummaryObserver(prop observer.Property) {
 			}
 		// Display result on stdout
 		case TestExecutionEnd:
-			fmt.Printf("\nSummary: %s All tests : %d/%d\n", getIconStatus(globalSummary.NumberNotOk), globalSummary.NumberOk, globalSummary.NumberOk+globalSummary.NumberNotOk)
+			fmt.Printf("\nSummary: %s All tests: %d/%d\n", getIconStatus(globalSummary.NumberNotOk), globalSummary.NumberOk, globalSummary.NumberOk+globalSummary.NumberNotOk)
 
 			// Ordering by keys name
 			keys := make([]string, len(results))
