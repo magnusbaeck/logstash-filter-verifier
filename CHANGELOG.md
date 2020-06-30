@@ -4,6 +4,15 @@ Logstash Filter Verifier Change Log
 All timestamps are in the Europe/Stockholm timezone.
 
 
+1.6.1 (2020-06-30)
+------------------
+
+  * Slightly changed output format with a summary included at the end.
+  * The `codec` test case file option is inserted in the configuration file
+    verbatim rather than as a string literal, allowing the user to provide
+    additional codec options.
+
+
 1.6.0 (2020-01-02)
 ------------------
 
