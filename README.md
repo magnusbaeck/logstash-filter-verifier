@@ -306,8 +306,11 @@ There are a few points to be made here:
 Test case files are JSON files containing a single object. That object
 may have the following properties:
 
-* `codec`: A string value naming the Logstash codec that should be
-  used when events are read. This is normally "line" or "json_lines".
+* `codec`: A string with the codec configuration of the input plugin used
+  when executing the tests. This string will be included verbatim in the
+  Logstash configuration so it could either be just the name of the codec
+  plugin (normally `line` or `json_lines`) or include additional codec
+  options like e.g. `plain { charset => "ISO-8859-1" }`.
 * `fields`: An object containing the fields that all input messages
   should have. This is vital since filters typically are configured
   based on the event's type and/or tags. Scalar values (strings,
