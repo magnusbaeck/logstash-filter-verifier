@@ -213,6 +213,41 @@ reading the actual event. Hence we don't need to include it in the
 expected event either. Additional fields can be ignored with the
 `ignore` array property in the test case file (see details below).
 
+### Beats messages
+
+In [Beats](https://www.elastic.co/guide/en/beats/libbeat/current/beats-reference.html) 
+you can also specify fields to control the behavior of the Logstash pipeline.  
+An example in Beats config might look like this:
+```
+- input_type: log
+  paths: ["/var/log/work/*.log"]
+  fields:
+    type: openlog
+- input_type: log
+  paths: ["/var/log/trace/*.trc"]
+  fields:
+    type: trace
+```
+The Logstash configuration would then look like this to check the 
+given field:
+```
+if ([fields][type] == "openlog") {
+   Do something for type openlog
+```
+But, in order to test the behavior with LFV you have to give it like so:
+```
+{
+  "fields": {
+    "[fields][type]": "openlog"
+  },
+```
+The reason is, that Beats is inserting by default declared fields under a 
+root element `fields`, while the LVF is just considering it as a configuration 
+option.  
+Alternatively you can tell Beats to insert the configured fields on root:
+```
+fields_under_root: true
+```
 
 ### JSON messages
 
