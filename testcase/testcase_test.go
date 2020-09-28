@@ -233,6 +233,36 @@ func TestCompare(t *testing.T) {
 			false,
 			nil,
 		},
+		// Different ordering
+		{
+			&TestCaseSet{
+				File: "/path/to/filename.json",
+				InputFields: logstash.FieldSet{
+					"type": "test",
+				},
+				Codec:      "line",
+				InputLines: []string{},
+				ExpectedEvents: []logstash.Event{
+					{
+						"a": "b",
+					},
+					{
+						"c": "d",
+					},
+				},
+			},
+			[]logstash.Event{
+				{
+					"c": "d",
+				},
+				{
+					"a": "b",
+				},
+			},
+			[]string{"diff"},
+			true,
+			nil,
+		},
 		// Different fields.
 		{
 			&TestCaseSet{

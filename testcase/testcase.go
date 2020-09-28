@@ -254,6 +254,24 @@ func (tcs *TestCaseSet) Compare(events []logstash.Event, diffCommand []string, l
 		}
 	}()
 
+	// Sort the events and expected events so that they are both in the same order
+	// This is important as event ordering is not guaranteed under logstash config changes
+	sort.Slice(events, func(i,j int) bool {
+		var iText, jText string
+		iText, _ = marshalToText(events[i])
+		jText, _ = marshalToText(events[j])
+
+		return iText < jText
+	})
+
+	sort.Slice(tcs.ExpectedEvents, func(i,j int) bool {
+		var iText, jText string
+		iText, _ = marshalToText(events[i])
+		jText, _ = marshalToText(events[j])
+		return iText < jText
+	})
+
+
 	for i, actualEvent := range events {
 		comparisonResult := lfvobserver.ComparisonResult{
 			Path:       filepath.Base(tcs.File),
@@ -297,6 +315,12 @@ func (tcs *TestCaseSet) Compare(events []logstash.Event, diffCommand []string, l
 	}
 
 	return status, nil
+}
+
+// marshalToText pretty-prints a logstash.Event to a string
+func marshalToText(event logstash.Event) (string, error) {
+	buf, err := json.MarshalIndent(event, "", "  ")
+        return string(buf), err
 }
 
 // marshalToFile pretty-prints a logstash.Event and writes it to a
