@@ -14,3 +14,13 @@ type ComparisonResult struct {
 	Path       string
 	EventIndex int
 }
+
+// Interface defines the methods of an observer.
+type Interface interface {
+	// Start fires up the observer in a new goroutine.
+	Start() error
+
+	// Finalize waits for the observer to receive the final property value, process it,
+	// and shut itself down.
+	Finalize() error
+}

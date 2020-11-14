@@ -286,17 +286,25 @@ func mainEntrypoint() int {
 
 	var status bool
 
-	liveObserver := observer.NewProperty(lfvobserver.TestExecutionStart{})
-	if !*quiet {
-		go lfvobserver.RunSummaryObserver(liveObserver)
-	}
-
 	level, err := oplogging.LogLevel(*loglevel)
 	if err != nil {
 		prefixedUserError("Bad loglevel: %s", *loglevel)
 		return 1
 	}
 	logging.SetLevel(level)
+
+	// Set up observers
+	observers := make([]lfvobserver.Interface, 0)
+	liveObserver := observer.NewProperty(lfvobserver.TestExecutionStart{})
+	if !*quiet {
+		observers = append(observers, lfvobserver.NewSummaryObserver(liveObserver))
+	}
+	for _, obs := range observers {
+		if err := obs.Start(); err != nil {
+			userError("Initialization error: %s", err)
+			return 1
+		}
+	}
 
 	diffCmd, err := shellwords.NewParser().Parse(*diffCommand)
 	if err != nil {
@@ -357,6 +365,13 @@ func mainEntrypoint() int {
 	}
 
 	liveObserver.Update(lfvobserver.TestExecutionEnd{})
+
+	for _, obs := range observers {
+		if err := obs.Finalize(); err != nil {
+			userError(err.Error())
+			return 1
+		}
+	}
 
 	if status {
 		return 0
