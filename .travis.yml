@@ -1,6 +1,6 @@
 ---
 language: go
 go:
-  - "1.13.5"
+  - "1.15.5"
 script:
   - make check checktidy test
