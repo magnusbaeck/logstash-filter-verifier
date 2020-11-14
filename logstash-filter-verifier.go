@@ -39,7 +39,7 @@ var (
 		"/usr/share/logstash/bin/logstash",
 	}
 
-	// Flags
+	// Flags.
 	diffCommand = kingpin.
 			Flag("diff-command", "Set the command to run to compare two events. The command will receive the two files to compare as arguments.").
 			Default("diff -u").
@@ -82,7 +82,7 @@ var (
 		Default("false").
 		Bool()
 
-	// Arguments
+	// Arguments.
 	testcasePath = kingpin.
 			Arg("testcases", "Test case file or a directory containing one or more test case files.").
 			Required().
