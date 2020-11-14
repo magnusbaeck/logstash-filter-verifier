@@ -2,4 +2,6 @@
 /coverage.html
 /dist/
 /logstash-filter-verifier
+/.vscode/
 *.coverprofile
+*.swp
