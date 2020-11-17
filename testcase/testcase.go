@@ -262,7 +262,8 @@ func (tcs *TestCaseSet) Compare(events []logstash.Event, diffCommand []string, l
 		return string(iText) < string(jText)
 	})
 
-	sort.Slice(tcs.ExpectedEvents, func(i,j int) bool {
+	sortedEvents := tcs.ExpectedEvents
+	sort.Slice(sortedEvents, func(i,j int) bool {
 		iText, _ := json.Marshal(events[i])
 		jText, _ := json.Marshal(events[j])
 		return string(iText) < string(jText)
@@ -295,7 +296,7 @@ func (tcs *TestCaseSet) Compare(events []logstash.Event, diffCommand []string, l
 			return false, err
 		}
 		expectedFilePath := filepath.Join(resultDir, "expected")
-		if err = marshalToFile(tcs.ExpectedEvents[i], expectedFilePath); err != nil {
+		if err = marshalToFile(sortedEvents[i], expectedFilePath); err != nil {
 			return false, err
 		}
 
