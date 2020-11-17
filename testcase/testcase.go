@@ -256,14 +256,14 @@ func (tcs *TestCaseSet) Compare(events []logstash.Event, diffCommand []string, l
 
 	// Sort the events and expected events so that they are both in the same order
 	// This is important as event ordering is not guaranteed under logstash config changes
-	sort.Slice(events, func(i,j int) bool {
+	sort.Slice(events, func(i, j int) bool {
 		iText, _ := json.Marshal(events[i])
 		jText, _ := json.Marshal(events[j])
 		return string(iText) < string(jText)
 	})
 
 	sortedEvents := tcs.ExpectedEvents
-	sort.Slice(sortedEvents, func(i,j int) bool {
+	sort.Slice(sortedEvents, func(i, j int) bool {
 		iText, _ := json.Marshal(events[i])
 		jText, _ := json.Marshal(events[j])
 		return string(iText) < string(jText)
