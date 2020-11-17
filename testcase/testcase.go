@@ -262,11 +262,11 @@ func (tcs *TestCaseSet) Compare(events []logstash.Event, diffCommand []string, l
 		return string(iText) < string(jText)
 	})
 
-        sort.Slice(events, func(i,j int) bool {
-                iText, _ := json.Marshal(events[i])
-                jText, _ := json.Marshal(events[j])
-                return string(iText) < string(jText)
-        })
+	sort.Slice(tcs.ExpectedEvents, func(i,j int) bool {
+		iText, _ := json.Marshal(events[i])
+		jText, _ := json.Marshal(events[j])
+		return string(iText) < string(jText)
+	})
 
 	for i, actualEvent := range events {
 		comparisonResult := lfvobserver.ComparisonResult{
