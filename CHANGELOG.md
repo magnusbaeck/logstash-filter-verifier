@@ -4,6 +4,14 @@ Logstash Filter Verifier Change Log
 All timestamps are in the Europe/Stockholm timezone.
 
 
+1.6.2 (2020-11-21)
+------------------
+
+  * Fixed race condition bug that sometimes caused the summary to not
+    get shown at the end of the execution.
+  * Upgraded the Go compiler used for release binaries and CI to 1.15.2.
+
+
 1.6.1 (2020-06-30)
 ------------------
 
