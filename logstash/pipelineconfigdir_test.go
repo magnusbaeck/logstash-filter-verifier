@@ -13,7 +13,7 @@ import (
 	"testing"
 
 	"github.com/breml/logstash-config/ast"
-	"github.com/magnusbaeck/logstash-filter-verifier/testhelpers"
+	"github.com/magnusbaeck/logstash-filter-verifier/v2/testhelpers"
 )
 
 func createLogstashConfigWithString(s string) string {

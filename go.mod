@@ -1,4 +1,4 @@
-module github.com/magnusbaeck/logstash-filter-verifier
+module github.com/magnusbaeck/logstash-filter-verifier/v2
 
 go 1.13
 

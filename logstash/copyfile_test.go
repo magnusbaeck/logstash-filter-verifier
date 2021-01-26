@@ -9,7 +9,7 @@ import (
 	"strconv"
 	"testing"
 
-	"github.com/magnusbaeck/logstash-filter-verifier/testhelpers"
+	"github.com/magnusbaeck/logstash-filter-verifier/v2/testhelpers"
 )
 
 func TestAllFilesExist(t *testing.T) {

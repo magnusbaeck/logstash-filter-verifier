@@ -18,9 +18,9 @@ import (
 
 	unjson "github.com/hashicorp/packer/common/json"
 	"github.com/imkira/go-observer"
-	"github.com/magnusbaeck/logstash-filter-verifier/logging"
-	"github.com/magnusbaeck/logstash-filter-verifier/logstash"
-	lfvobserver "github.com/magnusbaeck/logstash-filter-verifier/observer"
+	"github.com/magnusbaeck/logstash-filter-verifier/v2/logging"
+	"github.com/magnusbaeck/logstash-filter-verifier/v2/logstash"
+	lfvobserver "github.com/magnusbaeck/logstash-filter-verifier/v2/observer"
 	"github.com/mikefarah/yaml/v2"
 )
 

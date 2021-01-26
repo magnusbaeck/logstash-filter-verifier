@@ -5,7 +5,7 @@ import (
 	"sort"
 
 	"github.com/imkira/go-observer"
-	"github.com/magnusbaeck/logstash-filter-verifier/logging"
+	"github.com/magnusbaeck/logstash-filter-verifier/v2/logging"
 )
 
 var log = logging.MustGetLogger()
