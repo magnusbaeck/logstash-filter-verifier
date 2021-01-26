@@ -11,7 +11,7 @@ import (
 	"testing"
 
 	"github.com/imkira/go-observer"
-	"github.com/magnusbaeck/logstash-filter-verifier/v2/logstash"
+	"github.com/magnusbaeck/logstash-filter-verifier/v2/internal/logstash"
 	"github.com/stretchr/testify/assert"
 )
 

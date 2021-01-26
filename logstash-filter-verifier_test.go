@@ -9,7 +9,7 @@ import (
 	"regexp"
 	"testing"
 
-	"github.com/magnusbaeck/logstash-filter-verifier/v2/testhelpers"
+	"github.com/magnusbaeck/logstash-filter-verifier/v2/internal/testhelpers"
 )
 
 func TestFindExecutable(t *testing.T) {

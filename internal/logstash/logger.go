@@ -3,7 +3,7 @@
 package logstash
 
 import (
-	"github.com/magnusbaeck/logstash-filter-verifier/v2/logging"
+	"github.com/magnusbaeck/logstash-filter-verifier/v2/internal/logging"
 )
 
 var (

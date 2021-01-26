@@ -11,7 +11,7 @@ import (
 	"testing"
 
 	semver "github.com/Masterminds/semver/v3"
-	"github.com/magnusbaeck/logstash-filter-verifier/v2/testhelpers"
+	"github.com/magnusbaeck/logstash-filter-verifier/v2/internal/testhelpers"
 )
 
 func TestArgs(t *testing.T) {
