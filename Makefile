@@ -81,7 +81,8 @@ checktidy:
 
 .PHONY: clean
 clean:
-	rm -f $(PROGRAM)$(EXEC_SUFFIX) $(GOCOV) $(GOCOV_HTML) $(GOLANGCI_LINT) $(GPM) $(OVERALLS)
+	rm -f $(PROGRAM)$(EXEC_SUFFIX)
+	rm -rf $(GOBIN)
 	rm -rf dist
 
 .PHONY: install

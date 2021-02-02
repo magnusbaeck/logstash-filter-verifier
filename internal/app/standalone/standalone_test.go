@@ -1,6 +1,6 @@
 // Copyright (c) 2017 Magnus Bäck <magnus@noun.se>
 
-package main
+package standalone
 
 import (
 	"io/ioutil"
@@ -128,7 +128,8 @@ func TestFindExecutable(t *testing.T) {
 			absInputs[i] = filepath.Join(tempdir, p)
 		}
 
-		result, err := findExecutable(absInputs)
+		standalone := New(false, "", "", nil, nil, "", nil, false, nil, false, 0, nilLogger{})
+		result, err := standalone.findExecutable(absInputs)
 		if err == nil && c.errorRegexp != nil {
 			t.Errorf("Test %d: Expected failure, got success.", i)
 		} else if err != nil && c.errorRegexp == nil {
@@ -140,3 +141,16 @@ func TestFindExecutable(t *testing.T) {
 		}
 	}
 }
+
+type nilLogger struct{}
+
+func (n nilLogger) Debug(args ...interface{})                   {}
+func (n nilLogger) Debugf(format string, args ...interface{})   {}
+func (n nilLogger) Error(args ...interface{})                   {}
+func (n nilLogger) Errorf(format string, args ...interface{})   {}
+func (n nilLogger) Fatal(args ...interface{})                   {}
+func (n nilLogger) Fatalf(format string, args ...interface{})   {}
+func (n nilLogger) Info(args ...interface{})                    {}
+func (n nilLogger) Infof(format string, args ...interface{})    {}
+func (n nilLogger) Warning(args ...interface{})                 {}
+func (n nilLogger) Warningf(format string, args ...interface{}) {}
