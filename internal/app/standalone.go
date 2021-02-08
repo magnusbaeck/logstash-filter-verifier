@@ -89,7 +89,7 @@ func validateArgs(cmd *cobra.Command, args []string) error {
 	for _, arg := range args {
 		_, err := os.Stat(arg)
 		if os.IsNotExist(err) {
-			return fmt.Errorf("path '%s' does not exist, try --help", arg)
+			return fmt.Errorf("path %q does not exist, try --help", arg)
 		}
 	}
 	return nil
