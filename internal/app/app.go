@@ -23,10 +23,10 @@ func Execute(version string, stdout, stderr io.Writer) int {
 	viper.Set("logger", log)
 
 	// Initialize config
-	viper.SetConfigName("logstash-filter-verifier")        // name of config file (without extension)
-	viper.AddConfigPath("/etc/logstash-filter-verifier/")  // path to look for the config file in
-	viper.AddConfigPath("$HOME/.logstash-filter-verifier") // call multiple times to add many search paths
-	viper.AddConfigPath(".")                               // optionally look for config in the working directory
+	viper.SetConfigName("logstash-filter-verifier") // name of config file (without extension)
+	viper.AddConfigPath(".")
+	viper.AddConfigPath("$HOME/.logstash-filter-verifier")
+	viper.AddConfigPath("/etc/logstash-filter-verifier/")
 
 	// Setup default values
 	viper.SetDefault("loglevel", "WARNING")
