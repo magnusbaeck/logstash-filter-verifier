@@ -48,7 +48,7 @@ func Execute(version string, stdout, stderr io.Writer) int {
 	rootCmd.SilenceUsage = true
 
 	if err := rootCmd.Execute(); err != nil {
-		prefixedUserError("error: %v", err)
+		prefixedUserError(stderr, "error: %v", err)
 		return exitCodeError
 	}
 
@@ -81,12 +81,12 @@ func makeRootCmd(version string) *cobra.Command {
 // prefixedUserError prints an error message to stderr and prefixes it
 // with the name of the program file (e.g. "logstash-filter-verifier:
 // something bad happened.").
-func prefixedUserError(format string, a ...interface{}) {
+func prefixedUserError(out io.Writer, format string, a ...interface{}) {
 	basename := filepath.Base(os.Args[0])
 	message := fmt.Sprintf(format, a...)
 	if strings.HasSuffix(message, "\n") {
-		fmt.Fprintf(os.Stderr, "%s: %s", basename, message)
+		fmt.Fprintf(out, "%s: %s", basename, message)
 	} else {
-		fmt.Fprintf(os.Stderr, "%s: %s\n", basename, message)
+		fmt.Fprintf(out, "%s: %s\n", basename, message)
 	}
 }
