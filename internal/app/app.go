@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"path"
 	"path/filepath"
 	"strings"
 
@@ -25,7 +26,10 @@ func Execute(version string, stdout, stderr io.Writer) int {
 	// Initialize config
 	viper.SetConfigName("logstash-filter-verifier") // name of config file (without extension)
 	viper.AddConfigPath(".")
-	viper.AddConfigPath("$HOME/.logstash-filter-verifier")
+	configDir, err := os.UserConfigDir()
+	if err == nil {
+		viper.AddConfigPath(path.Join(configDir, "logstash-filter-verifier"))
+	}
 	viper.AddConfigPath("/etc/logstash-filter-verifier/")
 
 	// Setup default values
