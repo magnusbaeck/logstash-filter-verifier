@@ -8,6 +8,8 @@ import (
 	oplogging "github.com/op/go-logging"
 )
 
+//go:generate moq -fmt goimports -pkg logging -out logger_mock.go . Logger
+
 type Logger interface {
 	Debug(args ...interface{})
 	Debugf(format string, args ...interface{})
@@ -19,6 +21,19 @@ type Logger interface {
 	Infof(format string, args ...interface{})
 	Warning(args ...interface{})
 	Warningf(format string, args ...interface{})
+}
+
+var NoopLogger = &LoggerMock{
+	DebugFunc:    func(args ...interface{}) {},
+	DebugfFunc:   func(format string, args ...interface{}) {},
+	ErrorFunc:    func(args ...interface{}) {},
+	ErrorfFunc:   func(format string, args ...interface{}) {},
+	FatalFunc:    func(args ...interface{}) {},
+	FatalfFunc:   func(format string, args ...interface{}) {},
+	InfoFunc:     func(args ...interface{}) {},
+	InfofFunc:    func(format string, args ...interface{}) {},
+	WarningFunc:  func(args ...interface{}) {},
+	WarningfFunc: func(format string, args ...interface{}) {},
 }
 
 const (

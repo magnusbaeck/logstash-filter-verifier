@@ -35,11 +35,14 @@ TARGETS := darwin_amd64 linux_386 linux_amd64 windows_386 windows_amd64
 
 VERSION := $(shell git describe --tags --always)
 
-GOCOV         := $(GOBIN)/gocov$(EXEC_SUFFIX)
-GOCOV_HTML    := $(GOBIN)/gocov-html$(EXEC_SUFFIX)
-GOLANGCI_LINT := $(GOBIN)/golangci-lint$(EXEC_SUFFIX)
-GOVVV         := $(GOBIN)/govvv$(EXEC_SUFFIX)
-OVERALLS      := $(GOBIN)/overalls$(EXEC_SUFFIX)
+GOCOV              := $(GOBIN)/gocov$(EXEC_SUFFIX)
+GOCOV_HTML         := $(GOBIN)/gocov-html$(EXEC_SUFFIX)
+GOLANGCI_LINT      := $(GOBIN)/golangci-lint$(EXEC_SUFFIX)
+GOVVV              := $(GOBIN)/govvv$(EXEC_SUFFIX)
+OVERALLS           := $(GOBIN)/overalls$(EXEC_SUFFIX)
+PROTOC_GEN_GO      := $(GOBIN)/protoc-gen-go$(EXEC_SUFFIX)
+PROTOC_GEN_GO_GRPC := $(GOBIN)/protoc-gen-go-grpc$(EXEC_SUFFIX)
+MOQ                := $(GOBIN)/moq$(EXEC_SUFFIX)
 
 GOLANGCI_LINT_VERSION := v1.32.2
 
@@ -66,10 +69,25 @@ $(GOVVV):
 $(OVERALLS):
 	go get github.com/go-playground/overalls
 
+# TODO: For protoc to find this dependency, I suppose, they must reside in the PATH
+$(PROTOC_GEN_GO):
+	go get google.golang.org/protobuf/cmd/protoc-gen-go
+
+# TODO: For protoc to find this dependency, I suppose, they must reside in the PATH
+$(PROTOC_GEN_GO_GRPC):
+	go get google.golang.org/grpc/cmd/protoc-gen-go-grpc
+
+$(MOQ):
+	go get github.com/matryer/moq
+
 # The Go compiler is fast and pretty good about figuring out what to
 # build so we don't try to to outsmart it.
-$(PROGRAM)$(EXEC_SUFFIX): .FORCE $(GOVVV)
+$(PROGRAM)$(EXEC_SUFFIX): gogenerate .FORCE $(GOVVV)
 	govvv build -o $@
+
+.PHONY: gogenerate
+generate: $(MOQ) # TODO: go generate also depends on protobuf-compiler, which needs to be installed as well.
+	go generate ./...
 
 .PHONY: check
 check: $(GOLANGCI_LINT)

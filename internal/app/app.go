@@ -78,6 +78,7 @@ func makeRootCmd(version string) *cobra.Command {
 	_ = viper.BindPFlag("loglevel", rootCmd.PersistentFlags().Lookup("loglevel"))
 
 	rootCmd.AddCommand(makeStandaloneCmd())
+	rootCmd.AddCommand(makeDaemonCmd())
 
 	return rootCmd
 }

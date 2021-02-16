@@ -1,0 +1,33 @@
+{
+  "fields": {
+  },
+  "ignore": [
+    "@timestamp"
+  ],
+  "testcases": [
+    {
+      "input": [
+        "stdout",
+        "file"
+      ],
+      "expected": [
+        {
+          "message": "stdout",
+          "tags": [
+            "__lfv_in_passed",
+            "conditional_output_filter",
+            "stdout_passed"
+          ]
+        },
+        {
+          "message": "file",
+          "tags": [
+            "__lfv_in_passed",
+            "conditional_output_filter",
+            "file_passed"
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,3 +1,4 @@
+/3rdparty
 /bin
 /coverage.html
 /dist/
@@ -5,3 +6,4 @@
 /.vscode/
 *.coverprofile
 *.swp
+logstash-filter-verifier.yml

@@ -1,0 +1,22 @@
+---
+
+loglevel: debug
+
+# Standalone mode
+#diff-command:
+#keep-env:
+#logstash-args:
+#logstash-output:
+#logstash-paths:
+#logstash-version:
+#sockets:
+#sockets-timeout:
+#quiet:
+
+# Daemon mode
+logstash:
+  path: ./3rdparty/logstash-7.10.0/bin/logstash
+pipeline: ./testdata/basic_pipeline.yml
+pipeline-base: ./testdata/basic_pipeline
+testcase-dir: ./testdata/testcases/basic_pipeline
+socket: /tmp/logstash-filter-verifier.sock

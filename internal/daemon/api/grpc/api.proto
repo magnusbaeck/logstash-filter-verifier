@@ -1,0 +1,45 @@
+syntax = "proto3";
+
+option go_package = "github.com/magnusbaeck/logstash-filter-verifier/v2/internal/daemon/daemon/api/grpc";
+
+package grpc;
+
+// The control service definition.
+service Control {
+  rpc Shutdown (ShutdownRequest) returns (ShutdownResponse) {}
+
+  rpc SetupTest (SetupTestRequest) returns (SetupTestResponse) {}
+  rpc ExecuteTest (ExecuteTestRequest) returns (ExecuteTestResponse) {}
+  rpc TeardownTest (TeardownTestRequest) returns (TeardownTestResponse) {}
+}
+
+message ShutdownRequest {}
+
+message ShutdownResponse {}
+
+message SetupTestRequest {
+  bytes pipeline = 1;
+}
+
+message SetupTestResponse {
+  string sessionID = 1;
+}
+
+message ExecuteTestRequest {
+  string sessionID = 1;
+  repeated string inputLines = 2;
+  map<string, string> fields = 3;
+}
+
+message ExecuteTestResponse {
+  repeated string results = 1;
+}
+
+message TeardownTestRequest {
+  string sessionID = 1;
+  bool stats = 2;
+}
+
+message TeardownTestResponse {
+  string stats = 1;
+}

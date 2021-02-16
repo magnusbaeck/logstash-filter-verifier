@@ -15,11 +15,10 @@ import (
 
 func makeStandaloneCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:           "standalone [<flags>] <testcases> <config>...",
-		Short:         "Run logstash-filter-verifier in standalone mode",
-		RunE:          runE,
-		Args:          validateArgs,
-		SilenceErrors: true,
+		Use:   "standalone [<flags>] <testcases> <config>...",
+		Short: "Run logstash-filter-verifier in standalone mode",
+		RunE:  runStandalone,
+		Args:  validateStandaloneArgs,
 	}
 
 	// TODO: This flag makes sense with daemon mode test command as well.
@@ -60,7 +59,7 @@ func makeStandaloneCmd() *cobra.Command {
 	return cmd
 }
 
-func runE(_ *cobra.Command, args []string) error {
+func runStandalone(_ *cobra.Command, args []string) error {
 	s := standalone.New(
 		viper.GetBool("quiet"),
 		viper.GetString("diff-command"),
@@ -79,7 +78,7 @@ func runE(_ *cobra.Command, args []string) error {
 	return s.Run()
 }
 
-func validateArgs(cmd *cobra.Command, args []string) error {
+func validateStandaloneArgs(cmd *cobra.Command, args []string) error {
 	if len(args) < 1 {
 		return errors.New("required argument 'testcases' not provided, try --help")
 	}
