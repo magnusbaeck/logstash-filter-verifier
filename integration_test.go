@@ -45,7 +45,7 @@ func TestIntegration(t *testing.T) {
 	}
 
 	log := testLogger
-	server := daemon.New(socket, logstashPath, log)
+	server := daemon.New(socket, logstashPath, log, 10*time.Second, 3*time.Second)
 
 	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
 	defer cancel()

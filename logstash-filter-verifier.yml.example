@@ -20,3 +20,5 @@ pipeline: ./testdata/basic_pipeline.yml
 pipeline-base: ./testdata/basic_pipeline
 testcase-dir: ./testdata/testcases/basic_pipeline
 socket: /tmp/logstash-filter-verifier.sock
+inflight-shutdown-timeout: 10s
+shutdown-timeout: 3s

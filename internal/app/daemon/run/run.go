@@ -46,7 +46,6 @@ func New(socket string, log logging.Logger, pipeline, pipelineBase, testcasePath
 }
 
 func (s Test) Run() error {
-	// FIXME: Read pipeline, find config (fix paths based on pipelineBase if necessary)
 	a, err := pipeline.New(s.pipeline, s.pipelineBase)
 	if err != nil {
 		return err

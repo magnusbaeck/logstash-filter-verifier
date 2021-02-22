@@ -44,6 +44,9 @@ type Daemon struct {
 
 	tempdir string
 
+	inflightShutdownTimeout time.Duration
+	shutdownTimeout         time.Duration
+
 	sessionController *session.Controller
 
 	server             *grpc.Server
@@ -59,11 +62,13 @@ type Daemon struct {
 }
 
 // New creates a new logstash filter verifier daemon.
-func New(socket string, logstashPath string, log logging.Logger) Daemon {
+func New(socket string, logstashPath string, log logging.Logger, inflightShutdownTimeout time.Duration, shutdownTimeout time.Duration) Daemon {
 	ctxShutdownSignal, shutdownSignalFunc := context.WithCancel(context.Background())
 	return Daemon{
 		socket:                      socket,
 		logstashPath:                logstashPath,
+		inflightShutdownTimeout:     inflightShutdownTimeout,
+		shutdownTimeout:             shutdownTimeout,
 		log:                         log,
 		shutdownLogstashInstancesWG: &sync.WaitGroup{},
 		ctxShutdownSignal:           ctxShutdownSignal,
@@ -159,8 +164,7 @@ func (d *Daemon) shutdownSignalHandler(shutdown func()) {
 		d.log.Info("Term signal received. Shutdown initiated.")
 	}
 
-	// TODO: Make shutdown timeout configurable
-	t := time.NewTimer(10 * time.Second)
+	t := time.NewTimer(d.inflightShutdownTimeout)
 
 	// Wait for currently running sessions to finish.
 	select {
@@ -195,8 +199,7 @@ func (d *Daemon) shutdownSignalHandler(shutdown func()) {
 		close(logstashInstancesStopped)
 	}()
 
-	// TODO: Make shutdown timeout configurable
-	t.Reset(10 * time.Second)
+	t.Reset(d.shutdownTimeout)
 
 	// Wait for Logstash and GRPC Server to shutdown
 	serverStopComplete := false
