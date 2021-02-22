@@ -157,6 +157,7 @@ func (d *Daemon) shutdownSignalHandler(shutdown func()) {
 
 	select {
 	case <-d.ctxShutdownSignal.Done():
+		d.log.Info("Shutdown initiated.")
 	case <-sigInt:
 		d.log.Info("Interrupt signal (Ctrl+c) received. Shutdown initiated.")
 		d.log.Info("Press Ctrl+c again to exit immediately")

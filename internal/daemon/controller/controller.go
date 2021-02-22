@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path"
+	"sync"
 
 	"gopkg.in/yaml.v2"
 
@@ -22,7 +23,8 @@ type Controller struct {
 	workDir string
 	log     logging.Logger
 
-	instance Instance
+	instance      Instance
+	instanceReady *sync.Once
 
 	stateMachine   *stateMachine
 	receivedEvents *events
@@ -60,10 +62,11 @@ func NewController(instance Instance, baseDir string, log logging.Logger) (*Cont
 	}
 
 	controller := Controller{
-		id:       id,
-		workDir:  workDir,
-		log:      log,
-		instance: instance,
+		id:            id,
+		workDir:       workDir,
+		log:           log,
+		instance:      instance,
+		instanceReady: &sync.Once{},
 
 		receivedEvents: newEvents(),
 		pipelines:      newPipelines(),
@@ -190,6 +193,10 @@ func (c *Controller) ReceiveEvent(event string) error {
 func (c *Controller) PipelinesReady(pipelines ...string) {
 	c.pipelines.setReady(pipelines...)
 	if c.pipelines.isReady() {
+		c.instanceReady.Do(func() {
+			c.log.Info("Ready to process tests")
+		})
+
 		c.stateMachine.executeCommand(commandPipelineReady)
 	}
 }
