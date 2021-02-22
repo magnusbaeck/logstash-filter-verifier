@@ -28,7 +28,7 @@ message SetupTestResponse {
 message ExecuteTestRequest {
   string sessionID = 1;
   repeated string inputLines = 2;
-  map<string, string> fields = 3;
+  bytes fields = 3;
 }
 
 message ExecuteTestResponse {

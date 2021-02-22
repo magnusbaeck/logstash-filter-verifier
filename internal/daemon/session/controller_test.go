@@ -78,7 +78,7 @@ func TestSession(t *testing.T) {
 			is.NoErr(err)
 
 			inputLines := []string{"some_random_input"}
-			inFields := map[string]string{
+			inFields := map[string]interface{}{
 				"some_random_key": "value",
 			}
 			err = s.ExecuteTest(inputLines, inFields)

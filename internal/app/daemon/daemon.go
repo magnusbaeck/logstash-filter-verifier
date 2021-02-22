@@ -4,6 +4,7 @@ import (
 	"archive/zip"
 	"bytes"
 	"context"
+	"encoding/json"
 	"io/ioutil"
 	"net"
 	"os"
@@ -331,7 +332,13 @@ func (d *Daemon) ExecuteTest(ctx context.Context, in *pb.ExecuteTestRequest) (*p
 		return nil, errors.Wrap(err, "invalid session ID")
 	}
 
-	err = session.ExecuteTest(in.InputLines, in.Fields)
+	fields := map[string]interface{}{}
+	err = json.Unmarshal(in.Fields, &fields)
+	if err != nil {
+		return nil, errors.Wrap(err, "invalid json for fields")
+	}
+
+	err = session.ExecuteTest(in.InputLines, fields)
 	if err != nil {
 		return nil, err
 	}

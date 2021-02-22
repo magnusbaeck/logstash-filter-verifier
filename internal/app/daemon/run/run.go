@@ -3,7 +3,6 @@ package run
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"net"
 	"os"
 	"path"
@@ -103,15 +102,14 @@ func (s Test) Run() error {
 	}
 
 	for _, t := range tests {
-		fields := make(map[string]string, len(t.InputFields))
-		for k, v := range t.InputFields {
-			// FIXME: dirty hack to convert interface{} to string, does not work with nested Logstash fields e.g. [fields][nested_field]
-			fields[k] = fmt.Sprint(v)
+		b, err := json.Marshal(t.InputFields)
+		if err != nil {
+			return err
 		}
 		result, err := c.ExecuteTest(context.Background(), &pb.ExecuteTestRequest{
 			SessionID:  sessionID,
 			InputLines: t.InputLines,
-			Fields:     fields,
+			Fields:     b,
 		})
 		if err != nil {
 			return err

@@ -145,7 +145,7 @@ func (s *Session) createOutputPipelines(outputs []string) ([]pipeline.Pipeline, 
 
 // ExecuteTest runs a test case set against the Logstash configuration, that has
 // been loaded previously with SetupTest.
-func (s *Session) ExecuteTest(inputLines []string, inFields map[string]string) error {
+func (s *Session) ExecuteTest(inputLines []string, inFields map[string]interface{}) error {
 	s.testexec++
 	pipelineName := fmt.Sprintf("lfv_input_%d", s.testexec)
 	inputDir := path.Join(s.sessionDir, "lfv_inputs", strconv.Itoa(s.testexec))
@@ -183,15 +183,15 @@ func (s *Session) ExecuteTest(inputLines []string, inFields map[string]string) e
 	return nil
 }
 
-func prepareFields(fieldsFilename string, inputLines []string, inFields map[string]string) ([]string, error) {
+func prepareFields(fieldsFilename string, inputLines []string, inFields map[string]interface{}) ([]string, error) {
 	// FIXME: This does not allow arbritrary nested fields yet.
-	fields := make(map[string]map[string]string)
+	fields := make(map[string]map[string]interface{})
 
 	ids := make([]string, 0, len(inputLines))
 	for i, line := range inputLines {
 		id := fmt.Sprintf("%d", i)
 		ids = append(ids, fmt.Sprintf("%q", id))
-		fields[id] = make(map[string]string)
+		fields[id] = make(map[string]interface{})
 		fields[id]["message"] = line
 
 		for field, value := range inFields {
