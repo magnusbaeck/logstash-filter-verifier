@@ -69,11 +69,9 @@ $(GOVVV):
 $(OVERALLS):
 	go get github.com/go-playground/overalls
 
-# TODO: For protoc to find this dependency, I suppose, they must reside in the PATH
 $(PROTOC_GEN_GO):
 	go get google.golang.org/protobuf/cmd/protoc-gen-go
 
-# TODO: For protoc to find this dependency, I suppose, they must reside in the PATH
 $(PROTOC_GEN_GO_GRPC):
 	go get google.golang.org/grpc/cmd/protoc-gen-go-grpc
 
@@ -86,7 +84,7 @@ $(PROGRAM)$(EXEC_SUFFIX): gogenerate .FORCE $(GOVVV)
 	govvv build -o $@
 
 .PHONY: gogenerate
-generate: $(MOQ) # TODO: go generate also depends on protobuf-compiler, which needs to be installed as well.
+generate: $(MOQ)
 	go generate ./...
 
 .PHONY: check

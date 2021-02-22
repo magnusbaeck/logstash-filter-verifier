@@ -466,6 +466,18 @@ are a couple of known quirks that are easy to work around:
   tool to use.
 
 
+## Development
+
+### Dependencies
+
+For a fully working development environment, the following tooling needs to be
+present:
+
+* Go compiler
+* `make` command
+* Proto buffer compiler (`protobuf-compiler`)
+
+
 ## Known limitations and future work
 
 * Some log formats don't include all timestamp components. For

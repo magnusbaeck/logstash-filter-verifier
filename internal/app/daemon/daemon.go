@@ -247,35 +247,38 @@ func (d *Daemon) extractZip(in []byte) (pipeline.Pipelines, []logstashconfig.Fil
 	pipelines := pipeline.Pipelines{}
 	configFiles := make([]logstashconfig.File, 0, len(r.File))
 	for _, f := range r.File {
-		rc, err := f.Open()
-		if err != nil {
-			return pipeline.Pipelines{}, nil, err
-		}
-
-		switch f.Name {
-		case "pipelines.yml":
-			pipelinesBody, err := ioutil.ReadAll(rc)
+		err = func() (err error) {
+			rc, err := f.Open()
 			if err != nil {
-				return pipeline.Pipelines{}, nil, err
+				return err
 			}
+			defer func() {
+				errClose := rc.Close()
+				if errClose != nil {
+					err = errors.Wrapf(errClose, "failed to close file, underlying error: %v", err)
+				}
+			}()
 
-			err = yaml.Unmarshal([]byte(pipelinesBody), &pipelines)
-			if err != nil {
-				return pipeline.Pipelines{}, nil, err
-			}
-		default:
 			body, err := ioutil.ReadAll(rc)
 			if err != nil {
-				return pipeline.Pipelines{}, nil, err
+				return err
 			}
-			configFile := logstashconfig.File{
-				Name: f.Name,
-				Body: body,
-			}
-			configFiles = append(configFiles, configFile)
-		}
 
-		err = rc.Close()
+			switch f.Name {
+			case "pipelines.yml":
+				err = yaml.Unmarshal(body, &pipelines)
+				if err != nil {
+					return err
+				}
+			default:
+				configFile := logstashconfig.File{
+					Name: f.Name,
+					Body: body,
+				}
+				configFiles = append(configFiles, configFile)
+			}
+			return nil
+		}()
 		if err != nil {
 			return pipeline.Pipelines{}, nil, err
 		}
