@@ -23,7 +23,6 @@ func TestIntegration(t *testing.T) {
 
 	is := is.New(t)
 
-	// FIXME: use test logger
 	testLogger := &logging.LoggerMock{
 		DebugFunc:    func(args ...interface{}) { t.Log(args...) },
 		DebugfFunc:   func(format string, args ...interface{}) { t.Logf(format, args...) },
@@ -45,11 +44,10 @@ func TestIntegration(t *testing.T) {
 		t.Fatalf("Logstash needs to be present in %q for the integration tests to work", logstashPath)
 	}
 
-	// FIXME: use test logger
 	log := testLogger
 	server := daemon.New(socket, logstashPath, log)
 
-	ctx, cancel := context.WithCancel(context.Background())
+	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
 	defer cancel()
 
 	go func() {
