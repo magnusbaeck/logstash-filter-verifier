@@ -1,0 +1,4 @@
+---
+
+- pipeline.id: main
+  path.config: "testdata/folder/main.conf"

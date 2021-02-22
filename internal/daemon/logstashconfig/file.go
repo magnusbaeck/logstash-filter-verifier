@@ -1,11 +1,12 @@
 package logstashconfig
 
 import (
-	"errors"
 	"fmt"
 	"io/ioutil"
 	"os"
 	"path"
+
+	"github.com/pkg/errors"
 
 	config "github.com/breml/logstash-config"
 	"github.com/breml/logstash-config/ast"
@@ -115,4 +116,39 @@ func (o *outputPipelineReplacer) walk(c *astutil.Cursor) {
 	o.outputs = append(o.outputs, id)
 
 	c.Replace(ast.NewPlugin("pipeline", ast.NewArrayAttribute("send_to", ast.NewStringAttribute("", outputName, ast.DoubleQuoted))))
+}
+
+func (f *File) Validate() error {
+	err := f.parse()
+	if err != nil {
+		return err
+	}
+
+	v := validator{}
+
+	for i := range f.config.Input {
+		astutil.ApplyPlugins(f.config.Input[i].BranchOrPlugins, v.walk)
+	}
+	for i := range f.config.Filter {
+		astutil.ApplyPlugins(f.config.Filter[i].BranchOrPlugins, v.walk)
+	}
+	for i := range f.config.Output {
+		astutil.ApplyPlugins(f.config.Output[i].BranchOrPlugins, v.walk)
+	}
+
+	if len(v.noIDs) > 0 {
+		return errors.Errorf("no IDs found for %v", v.noIDs)
+	}
+	return nil
+}
+
+type validator struct {
+	noIDs []string
+}
+
+func (v *validator) walk(c *astutil.Cursor) {
+	_, err := c.Plugin().ID()
+	if err != nil {
+		v.noIDs = append(v.noIDs, c.Plugin().Name())
+	}
 }

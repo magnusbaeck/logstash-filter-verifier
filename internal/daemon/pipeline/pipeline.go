@@ -10,6 +10,8 @@ import (
 
 	"github.com/bmatcuk/doublestar/v2"
 	"gopkg.in/yaml.v2"
+
+	"github.com/magnusbaeck/logstash-filter-verifier/v2/internal/daemon/logstashconfig"
 )
 
 type Archive struct {
@@ -27,7 +29,7 @@ type Pipeline struct {
 	Workers int    `yaml:"pipeline.workers"`
 }
 
-func NewArchive(file, basePath string) (Archive, error) {
+func New(file, basePath string) (Archive, error) {
 	b, err := ioutil.ReadFile(file)
 	if err != nil {
 		return Archive{}, err
@@ -48,7 +50,48 @@ func NewArchive(file, basePath string) (Archive, error) {
 	return a, nil
 }
 
-func (a Archive) ZipBytes() ([]byte, error) {
+func (a Archive) Validate() error {
+	for _, pipeline := range a.Pipelines {
+		files, err := doublestar.Glob(path.Join(a.BasePath, pipeline.Config))
+		if err != nil {
+			return err
+		}
+		for _, file := range files {
+			var relFile string
+			if path.IsAbs(a.BasePath) {
+				relFile = strings.TrimPrefix(file, a.BasePath)
+			} else {
+				cwd, err := os.Getwd()
+				if err != nil {
+					return err
+				}
+				relFile = strings.TrimPrefix(file, path.Join(cwd, a.BasePath))
+			}
+
+			body, err := ioutil.ReadFile(file)
+			if err != nil {
+				return err
+			}
+
+			configFile := logstashconfig.File{
+				Name: relFile,
+				Body: body,
+			}
+
+			err = configFile.Validate()
+			if err != nil {
+				return err
+			}
+		}
+	}
+	return nil
+}
+
+// func (a Archive) walk() {
+
+// }
+
+func (a Archive) Zip() ([]byte, error) {
 	buf := new(bytes.Buffer)
 	w := zip.NewWriter(buf)
 

@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/matryer/is"
+	"github.com/pkg/errors"
 
 	"github.com/magnusbaeck/logstash-filter-verifier/v2/internal/daemon/file"
 	"github.com/magnusbaeck/logstash-filter-verifier/v2/internal/daemon/logstashconfig"
@@ -165,5 +166,53 @@ func TestReplaceOutputsWithoutID(t *testing.T) {
 			is.True(strings.Contains(string(f.Body), "pipeline"))    // f.Body contains "pipeline"
 			is.True(strings.Contains(string(f.Body), "lfv_output_")) // f.Body contains "lfv_output_"
 		})
+	}
+}
+
+func TestValidate(t *testing.T) {
+	cases := []struct {
+		name   string
+		config string
+
+		wantErr error
+	}{
+		{
+			name: "successful validate",
+			config: `input { stdin { id => stdin } }
+filter { mutate { id => mutate } }
+output { stdout { id => testid } }`,
+		},
+		{
+			name: "error without ids",
+			config: `input { stdin { } }
+filter { mutate { } }
+output { stdout { } }`,
+
+			wantErr: errors.Errorf("no IDs found for [stdin mutate stdout]"),
+		},
+	}
+
+	for _, test := range cases {
+		t.Run(test.name, func(t *testing.T) {
+			f := logstashconfig.File{
+				Body: []byte(test.config),
+			}
+
+			err := f.Validate()
+			compareErr(t, test.wantErr, err)
+		})
+	}
+}
+
+func compareErr(t *testing.T, wantErr, err error) {
+	switch {
+	case wantErr == nil && err == nil:
+	case wantErr == nil && err != nil:
+		t.Errorf("expect error to be nil, got: %q", err.Error())
+	case wantErr != nil && err == nil:
+		t.Errorf("expect error to be %q, got no error", wantErr.Error())
+	case wantErr.Error() == err.Error():
+	default:
+		t.Errorf("expect error to be %q, got: %q", wantErr.Error(), err.Error())
 	}
 }

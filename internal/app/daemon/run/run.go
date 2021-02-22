@@ -47,8 +47,24 @@ func New(socket string, log logging.Logger, pipeline, pipelineBase, testcasePath
 }
 
 func (s Test) Run() error {
-	s.log.Debug("Test on socket ", s.socket)
+	// FIXME: Read pipeline, find config (fix paths based on pipelineBase if necessary)
+	a, err := pipeline.New(s.pipeline, s.pipelineBase)
+	if err != nil {
+		return err
+	}
 
+	// TODO: ensure, that IDs are also unique for the whole set of pipelines
+	err = a.Validate()
+	if err != nil {
+		return err
+	}
+
+	b, err := a.Zip()
+	if err != nil {
+		return err
+	}
+
+	s.log.Debugf("socket to daemon %q", s.socket)
 	conn, err := grpc.Dial(
 		s.socket,
 		grpc.WithInsecure(),
@@ -63,17 +79,6 @@ func (s Test) Run() error {
 	}
 	defer conn.Close()
 	c := pb.NewControlClient(conn)
-
-	// FIXME: Read pipeline, find config (fix paths based on pipelineBase if necessary)
-	a, err := pipeline.NewArchive(s.pipeline, s.pipelineBase)
-	if err != nil {
-		return err
-	}
-
-	b, err := a.ZipBytes()
-	if err != nil {
-		return err
-	}
 
 	result, err := c.SetupTest(context.Background(), &pb.SetupTestRequest{
 		Pipeline: b,
