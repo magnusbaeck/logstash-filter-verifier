@@ -49,12 +49,17 @@ func TestIntegration(t *testing.T) {
 	log := testLogger
 	server := daemon.New(socket, logstashPath, log)
 
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
 	go func() {
+		defer cancel()
+
 		is := is.New(t)
 
 		defer server.Cleanup()
 
-		err := server.Run()
+		err := server.Run(ctx)
 		is.NoErr(err)
 	}()
 
@@ -107,5 +112,5 @@ func TestIntegration(t *testing.T) {
 	_, err := server.Shutdown(context.Background(), &grpc.ShutdownRequest{})
 	is.NoErr(err)
 
-	time.Sleep(3 * time.Second)
+	<-ctx.Done()
 }

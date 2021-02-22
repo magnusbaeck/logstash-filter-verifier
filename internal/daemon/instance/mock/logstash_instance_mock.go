@@ -4,6 +4,7 @@
 package mock
 
 import (
+	"context"
 	"sync"
 
 	"github.com/magnusbaeck/logstash-filter-verifier/v2/internal/daemon/controller"
@@ -22,10 +23,7 @@ var _ controller.Instance = &InstanceMock{}
 // 			ConfigReloadFunc: func() error {
 // 				panic("mock out the ConfigReload method")
 // 			},
-// 			ShutdownFunc: func()  {
-// 				panic("mock out the Shutdown method")
-// 			},
-// 			StartFunc: func(controllerMoqParam *controller.Controller, workdir string) error {
+// 			StartFunc: func(ctx context.Context, controllerMoqParam *controller.Controller, workdir string) error {
 // 				panic("mock out the Start method")
 // 			},
 // 		}
@@ -38,20 +36,18 @@ type InstanceMock struct {
 	// ConfigReloadFunc mocks the ConfigReload method.
 	ConfigReloadFunc func() error
 
-	// ShutdownFunc mocks the Shutdown method.
-	ShutdownFunc func()
-
 	// StartFunc mocks the Start method.
-	StartFunc func(controllerMoqParam *controller.Controller, workdir string) error
+	StartFunc func(ctx context.Context, controllerMoqParam *controller.Controller, workdir string) error
 
 	// calls tracks calls to the methods.
 	calls struct {
 		// ConfigReload holds details about calls to the ConfigReload method.
-		ConfigReload []struct{}
-		// Shutdown holds details about calls to the Shutdown method.
-		Shutdown []struct{}
+		ConfigReload []struct {
+		}
 		// Start holds details about calls to the Start method.
 		Start []struct {
+			// Ctx is the ctx argument value.
+			Ctx context.Context
 			// ControllerMoqParam is the controllerMoqParam argument value.
 			ControllerMoqParam *controller.Controller
 			// Workdir is the workdir argument value.
@@ -59,7 +55,6 @@ type InstanceMock struct {
 		}
 	}
 	lockConfigReload sync.RWMutex
-	lockShutdown     sync.RWMutex
 	lockStart        sync.RWMutex
 }
 
@@ -68,7 +63,8 @@ func (mock *InstanceMock) ConfigReload() error {
 	if mock.ConfigReloadFunc == nil {
 		panic("InstanceMock.ConfigReloadFunc: method is nil but Instance.ConfigReload was just called")
 	}
-	callInfo := struct{}{}
+	callInfo := struct {
+	}{}
 	mock.lockConfigReload.Lock()
 	mock.calls.ConfigReload = append(mock.calls.ConfigReload, callInfo)
 	mock.lockConfigReload.Unlock()
@@ -78,63 +74,46 @@ func (mock *InstanceMock) ConfigReload() error {
 // ConfigReloadCalls gets all the calls that were made to ConfigReload.
 // Check the length with:
 //     len(mockedInstance.ConfigReloadCalls())
-func (mock *InstanceMock) ConfigReloadCalls() []struct{} {
-	var calls []struct{}
+func (mock *InstanceMock) ConfigReloadCalls() []struct {
+} {
+	var calls []struct {
+	}
 	mock.lockConfigReload.RLock()
 	calls = mock.calls.ConfigReload
 	mock.lockConfigReload.RUnlock()
 	return calls
 }
 
-// Shutdown calls ShutdownFunc.
-func (mock *InstanceMock) Shutdown() {
-	if mock.ShutdownFunc == nil {
-		panic("InstanceMock.ShutdownFunc: method is nil but Instance.Shutdown was just called")
-	}
-	callInfo := struct{}{}
-	mock.lockShutdown.Lock()
-	mock.calls.Shutdown = append(mock.calls.Shutdown, callInfo)
-	mock.lockShutdown.Unlock()
-	mock.ShutdownFunc()
-}
-
-// ShutdownCalls gets all the calls that were made to Shutdown.
-// Check the length with:
-//     len(mockedInstance.ShutdownCalls())
-func (mock *InstanceMock) ShutdownCalls() []struct{} {
-	var calls []struct{}
-	mock.lockShutdown.RLock()
-	calls = mock.calls.Shutdown
-	mock.lockShutdown.RUnlock()
-	return calls
-}
-
 // Start calls StartFunc.
-func (mock *InstanceMock) Start(controllerMoqParam *controller.Controller, workdir string) error {
+func (mock *InstanceMock) Start(ctx context.Context, controllerMoqParam *controller.Controller, workdir string) error {
 	if mock.StartFunc == nil {
 		panic("InstanceMock.StartFunc: method is nil but Instance.Start was just called")
 	}
 	callInfo := struct {
+		Ctx                context.Context
 		ControllerMoqParam *controller.Controller
 		Workdir            string
 	}{
+		Ctx:                ctx,
 		ControllerMoqParam: controllerMoqParam,
 		Workdir:            workdir,
 	}
 	mock.lockStart.Lock()
 	mock.calls.Start = append(mock.calls.Start, callInfo)
 	mock.lockStart.Unlock()
-	return mock.StartFunc(controllerMoqParam, workdir)
+	return mock.StartFunc(ctx, controllerMoqParam, workdir)
 }
 
 // StartCalls gets all the calls that were made to Start.
 // Check the length with:
 //     len(mockedInstance.StartCalls())
 func (mock *InstanceMock) StartCalls() []struct {
+	Ctx                context.Context
 	ControllerMoqParam *controller.Controller
 	Workdir            string
 } {
 	var calls []struct {
+		Ctx                context.Context
 		ControllerMoqParam *controller.Controller
 		Workdir            string
 	}

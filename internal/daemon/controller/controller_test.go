@@ -1,6 +1,7 @@
 package controller_test
 
 import (
+	"context"
 	"errors"
 	"path"
 	"testing"
@@ -29,7 +30,7 @@ func TestNewController(t *testing.T) {
 
 			tempdir := t.TempDir()
 
-			c, err := controller.NewController(nil, tempdir, logging.NoopLogger, nil)
+			c, err := controller.NewController(nil, tempdir, logging.NoopLogger)
 			is.NoErr(err)
 
 			is.True(file.Exists(path.Join(tempdir, controller.LogstashInstanceDirectoryPrefix, c.ID(), "logstash.yml")))      // logstash.yml
@@ -64,18 +65,17 @@ func TestLaunch(t *testing.T) {
 			is := is.New(t)
 
 			instance := &mock.InstanceMock{
-				StartFunc: func(controllerMoqParam *controller.Controller, workdir string) error {
+				StartFunc: func(ctx context.Context, controllerMoqParam *controller.Controller, workdir string) error {
 					return test.instanceStartErr
 				},
-				ShutdownFunc: func() {},
 			}
 
 			tempdir := t.TempDir()
 
-			c, err := controller.NewController(instance, tempdir, logging.NoopLogger, nil)
+			c, err := controller.NewController(instance, tempdir, logging.NoopLogger)
 			is.NoErr(err)
 
-			err = c.Launch()
+			err = c.Launch(context.Background())
 			is.True(err != nil == test.wantErr) // Launch error
 		})
 	}
@@ -95,7 +95,7 @@ func TestCompleteCycle(t *testing.T) {
 			is := is.New(t)
 
 			instance := &mock.InstanceMock{
-				StartFunc: func(controllerMoqParam *controller.Controller, workdir string) error {
+				StartFunc: func(ctx context.Context, controllerMoqParam *controller.Controller, workdir string) error {
 					return nil
 				},
 				ConfigReloadFunc: func() error {
@@ -105,12 +105,10 @@ func TestCompleteCycle(t *testing.T) {
 
 			tempdir := t.TempDir()
 
-			shutdown := make(chan struct{})
-
-			c, err := controller.NewController(instance, tempdir, logging.NoopLogger, shutdown)
+			c, err := controller.NewController(instance, tempdir, logging.NoopLogger)
 			is.NoErr(err)
 
-			err = c.Launch()
+			err = c.Launch(context.Background())
 			is.NoErr(err)
 
 			// Simulate pipelines ready from instance
@@ -182,7 +180,7 @@ func TestSetupTest_Shutdown(t *testing.T) {
 			is := is.New(t)
 
 			instance := &mock.InstanceMock{
-				StartFunc: func(controllerMoqParam *controller.Controller, workdir string) error {
+				StartFunc: func(ctx context.Context, controllerMoqParam *controller.Controller, workdir string) error {
 					return nil
 				},
 				ConfigReloadFunc: func() error {
@@ -191,16 +189,16 @@ func TestSetupTest_Shutdown(t *testing.T) {
 			}
 
 			tempdir := t.TempDir()
-			shutdown := make(chan struct{})
 
-			c, err := controller.NewController(instance, tempdir, logging.NoopLogger, shutdown)
+			c, err := controller.NewController(instance, tempdir, logging.NoopLogger)
 			is.NoErr(err)
 
-			err = c.Launch()
+			ctx, cancel := context.WithCancel(context.Background())
+			err = c.Launch(ctx)
 			is.NoErr(err)
 
-			// Simulate shutdown signal
-			close(shutdown)
+			// signal shutdown
+			cancel()
 
 			pipelines := pipeline.Pipelines{
 				pipeline.Pipeline{

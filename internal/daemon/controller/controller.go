@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"context"
 	"io/ioutil"
 	"os"
 	"path"
@@ -16,12 +17,12 @@ import (
 const LogstashInstanceDirectoryPrefix = "logstash-instance"
 
 type Controller struct {
+	ctx context.Context
+
 	id string
 
 	workDir string
 	log     logging.Logger
-
-	shutdown chan struct{}
 
 	instance Instance
 
@@ -30,7 +31,7 @@ type Controller struct {
 	pipelines      *pipelines
 }
 
-func NewController(instance Instance, baseDir string, log logging.Logger, shutdown chan struct{}) (*Controller, error) {
+func NewController(instance Instance, baseDir string, log logging.Logger) (*Controller, error) {
 	id := idgen.New()
 
 	workDir := path.Join(baseDir, LogstashInstanceDirectoryPrefix, id)
@@ -64,10 +65,8 @@ func NewController(instance Instance, baseDir string, log logging.Logger, shutdo
 		id:       id,
 		workDir:  workDir,
 		log:      log,
-		shutdown: shutdown,
 		instance: instance,
 
-		stateMachine:   newStateMachine(shutdown, log),
 		receivedEvents: newEvents(),
 		pipelines:      newPipelines(),
 	}
@@ -84,13 +83,13 @@ func (c *Controller) ID() string {
 	return c.id
 }
 
-func (c *Controller) Launch() error {
+func (c *Controller) Launch(ctx context.Context) error {
 	c.pipelines.reset("stdin", "output")
+	c.stateMachine = newStateMachine(ctx, c.log)
 	c.stateMachine.executeCommand(commandStart)
 
-	err := c.instance.Start(c, c.workDir)
+	err := c.instance.Start(ctx, c, c.workDir)
 	if err != nil {
-		c.instance.Shutdown()
 		return err
 	}
 

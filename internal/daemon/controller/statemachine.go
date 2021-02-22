@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"context"
 	"sync"
 
 	"github.com/pkg/errors"
@@ -9,27 +10,29 @@ import (
 )
 
 type stateMachine struct {
+	ctx context.Context
+
 	currentState stateName
 	mutex        *sync.Mutex
 	cond         *sync.Cond
 
-	shutdown chan struct{}
-	log      logging.Logger
+	log logging.Logger
 }
 
-func newStateMachine(shutdown chan struct{}, log logging.Logger) *stateMachine {
+func newStateMachine(ctx context.Context, log logging.Logger) *stateMachine {
 	mu := &sync.Mutex{}
 	cond := sync.NewCond(mu)
 	go func() {
-		<-shutdown
+		<-ctx.Done()
 		log.Debug("broadcast shutdown for waitForState")
 		cond.Broadcast()
 	}()
 	return &stateMachine{
+		ctx: ctx,
+
 		currentState: stateCreated,
 		mutex:        mu,
 		cond:         cond,
-		shutdown:     shutdown,
 		log:          log,
 	}
 }
@@ -45,7 +48,7 @@ func (s *stateMachine) waitForState(target stateName) error {
 		s.cond.Wait()
 
 		select {
-		case <-s.shutdown:
+		case <-s.ctx.Done():
 			// TODO: Can we do this without error return?
 			return errors.Errorf("shutdown while waiting for state: %s", target)
 		default:

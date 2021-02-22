@@ -15,7 +15,7 @@ func (i *instance) stdoutProcessor(stdout io.ReadCloser) {
 	// The stdoutProcessor can only be started after the process is created.
 	select {
 	case <-i.logstashStarted:
-	case <-i.instanceShutdown:
+	case <-i.ctxShutdown.Done():
 		return
 	}
 
@@ -42,9 +42,9 @@ func (i *instance) stdoutProcessor(stdout io.ReadCloser) {
 
 	// Termination of stdout scanner is only expected, if shutdown is in progress.
 	select {
-	case <-i.instanceShutdown:
+	case <-i.ctxShutdown.Done():
 	default:
-		i.log.Warning("stdout scanner closed unexpectetly")
+		i.log.Warning("stdout scanner closed unexpectedly")
 	}
 
 	i.log.Debug("exit stdout scanner")
@@ -56,7 +56,7 @@ func (i *instance) stderrProcessor(stderr io.ReadCloser) {
 	// The stderrProcessor can only be started after the process is created.
 	select {
 	case <-i.logstashStarted:
-	case <-i.instanceShutdown:
+	case <-i.ctxShutdown.Done():
 		return
 	}
 
@@ -72,9 +72,9 @@ func (i *instance) stderrProcessor(stderr io.ReadCloser) {
 
 	// Termination of stderr scanner is only expected, if shutdown is in progress.
 	select {
-	case <-i.instanceShutdown:
+	case <-i.ctxShutdown.Done():
 	default:
-		i.log.Warning("stderr scanner closed unexpectetly")
+		i.log.Warning("stderr scanner closed unexpectedly")
 	}
 
 	i.log.Debug("exit stderr scanner")
@@ -99,7 +99,7 @@ func (i *instance) logstashLogProcessor(t *tail.Tail) {
 
 				i.controller.PipelinesReady(runningPipelines...)
 			}
-		case <-i.instanceShutdown:
+		case <-i.ctxShutdown.Done():
 			i.log.Debug("shutdown log reader")
 			return
 		}

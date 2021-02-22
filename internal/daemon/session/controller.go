@@ -103,9 +103,11 @@ func (s *Controller) WaitFinish() chan struct{} {
 
 	s.cond.Broadcast()
 
-	s.wg.Wait()
-
 	c := make(chan struct{})
-	close(c)
+	go func() {
+		s.wg.Wait()
+		close(c)
+	}()
+
 	return c
 }

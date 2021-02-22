@@ -1,6 +1,8 @@
 package app
 
 import (
+	"context"
+
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
@@ -32,5 +34,5 @@ func runDaemonStart(_ *cobra.Command, _ []string) error {
 	s := daemon.New(socket, logstashPath, log)
 	defer s.Cleanup()
 
-	return s.Run()
+	return s.Run(context.Background())
 }

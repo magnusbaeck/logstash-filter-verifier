@@ -1,6 +1,7 @@
 package logstash
 
 import (
+	"context"
 	"os"
 	"os/exec"
 	"sync"
@@ -14,6 +15,9 @@ import (
 )
 
 type instance struct {
+	ctxKill     context.Context
+	ctxShutdown context.Context
+
 	controller *controller.Controller
 
 	command string
@@ -22,18 +26,16 @@ type instance struct {
 	log logging.Logger
 
 	logstashStarted    chan struct{}
-	shutdown           chan struct{}
-	instanceShutdown   chan struct{}
 	logstashShutdownWG *sync.WaitGroup
 	shutdownWG         *sync.WaitGroup
 }
 
-func New(command string, log logging.Logger, shutdown chan struct{}, shutdownWG *sync.WaitGroup) controller.Instance {
+func New(ctxKill context.Context, command string, log logging.Logger, shutdownWG *sync.WaitGroup) controller.Instance {
 	return &instance{
+		ctxKill:            ctxKill,
 		command:            command,
 		log:                log,
 		logstashStarted:    make(chan struct{}),
-		shutdown:           shutdown,
 		logstashShutdownWG: &sync.WaitGroup{},
 		shutdownWG:         shutdownWG,
 	}
@@ -41,7 +43,17 @@ func New(command string, log logging.Logger, shutdown chan struct{}, shutdownWG 
 
 // start starts a Logstash child process with the previously supplied
 // configuration.
-func (i *instance) Start(controller *controller.Controller, workdir string) error {
+func (i *instance) Start(ctx context.Context, controller *controller.Controller, workdir string) (err error) {
+	ctx, cancel := context.WithCancel(ctx)
+	i.ctxShutdown = ctx
+	defer func() {
+		// if there has been an error during Start, cancel the context to signal
+		// shutdown to all potentially running Go routines of instance.
+		if err != nil {
+			cancel()
+		}
+	}()
+
 	i.controller = controller
 
 	args := []string{
@@ -49,7 +61,7 @@ func (i *instance) Start(controller *controller.Controller, workdir string) erro
 		workdir,
 	}
 
-	i.child = exec.Command(i.command, args...)
+	i.child = exec.CommandContext(i.ctxKill, i.command, args...) // nolint: gosec
 	stdout, err := i.child.StdoutPipe()
 	if err != nil {
 		return errors.Wrap(err, "failed to setup stdoutPipe")
@@ -58,10 +70,12 @@ func (i *instance) Start(controller *controller.Controller, workdir string) erro
 	if err != nil {
 		return errors.Wrap(err, "failed to setup stdoutPipe")
 	}
-	i.instanceShutdown = make(chan struct{})
 	i.child.Stdin = &stdinBlockReader{
-		shutdown: i.instanceShutdown,
+		ctx: i.ctxShutdown,
 	}
+	// Ensure a separate process group id for the Logstash child process, such
+	// that signals like interrupt are not propagated automatically.
+	i.child.SysProcAttr = &syscall.SysProcAttr{Setpgid: true}
 
 	i.logstashShutdownWG.Add(2)
 	go i.stdoutProcessor(stdout)
@@ -89,17 +103,9 @@ func (i *instance) Start(controller *controller.Controller, workdir string) erro
 	return nil
 }
 
-// TODO: What is needed for what?
 func (i *instance) shutdownSignalHandler() {
 	// Wait for shutdown signal coming from the daemon.
-	<-i.shutdown
-
-	i.Shutdown()
-}
-
-// TODO: What is needed for what?
-func (i *instance) Shutdown() {
-	close(i.instanceShutdown)
+	<-i.ctxShutdown.Done()
 
 	i.stopLogstash()
 
@@ -118,7 +124,6 @@ func (i *instance) stopLogstash() {
 		i.log.Errorf("failed to send SIGTERM, Logstash might already be down:", err)
 	}
 
-	// TODO: Add timeout, then send syscall.SIGKILL
 	err = i.child.Wait()
 	if err != nil {
 		i.log.Errorf("failed to wait for child process: %v", err)

@@ -61,14 +61,16 @@ type LogstashControllerMock struct {
 			ExpectedEvents int
 		}
 		// GetResults holds details about calls to the GetResults method.
-		GetResults []struct{}
+		GetResults []struct {
+		}
 		// SetupTest holds details about calls to the SetupTest method.
 		SetupTest []struct {
 			// Pipelines is the pipelines argument value.
 			Pipelines pipeline.Pipelines
 		}
 		// Teardown holds details about calls to the Teardown method.
-		Teardown []struct{}
+		Teardown []struct {
+		}
 	}
 	lockExecuteTest sync.RWMutex
 	lockGetResults  sync.RWMutex
@@ -116,7 +118,8 @@ func (mock *LogstashControllerMock) GetResults() ([]string, error) {
 	if mock.GetResultsFunc == nil {
 		panic("LogstashControllerMock.GetResultsFunc: method is nil but LogstashController.GetResults was just called")
 	}
-	callInfo := struct{}{}
+	callInfo := struct {
+	}{}
 	mock.lockGetResults.Lock()
 	mock.calls.GetResults = append(mock.calls.GetResults, callInfo)
 	mock.lockGetResults.Unlock()
@@ -126,8 +129,10 @@ func (mock *LogstashControllerMock) GetResults() ([]string, error) {
 // GetResultsCalls gets all the calls that were made to GetResults.
 // Check the length with:
 //     len(mockedLogstashController.GetResultsCalls())
-func (mock *LogstashControllerMock) GetResultsCalls() []struct{} {
-	var calls []struct{}
+func (mock *LogstashControllerMock) GetResultsCalls() []struct {
+} {
+	var calls []struct {
+	}
 	mock.lockGetResults.RLock()
 	calls = mock.calls.GetResults
 	mock.lockGetResults.RUnlock()
@@ -170,7 +175,8 @@ func (mock *LogstashControllerMock) Teardown() error {
 	if mock.TeardownFunc == nil {
 		panic("LogstashControllerMock.TeardownFunc: method is nil but LogstashController.Teardown was just called")
 	}
-	callInfo := struct{}{}
+	callInfo := struct {
+	}{}
 	mock.lockTeardown.Lock()
 	mock.calls.Teardown = append(mock.calls.Teardown, callInfo)
 	mock.lockTeardown.Unlock()
@@ -180,8 +186,10 @@ func (mock *LogstashControllerMock) Teardown() error {
 // TeardownCalls gets all the calls that were made to Teardown.
 // Check the length with:
 //     len(mockedLogstashController.TeardownCalls())
-func (mock *LogstashControllerMock) TeardownCalls() []struct{} {
-	var calls []struct{}
+func (mock *LogstashControllerMock) TeardownCalls() []struct {
+} {
+	var calls []struct {
+	}
 	mock.lockTeardown.RLock()
 	calls = mock.calls.Teardown
 	mock.lockTeardown.RUnlock()
