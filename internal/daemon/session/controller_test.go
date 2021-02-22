@@ -159,7 +159,7 @@ func TestCreate(t *testing.T) {
 			s2, err := c.Create(pipelines, configFiles)
 			is.NoErr(err)
 
-			is.True(s.ID() != s2.ID()) // IDs of two seperate sessions are not equal
+			is.True(s.ID() != s2.ID()) // IDs of two separate sessions are not equal
 		})
 	}
 }

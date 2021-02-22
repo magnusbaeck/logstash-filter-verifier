@@ -144,7 +144,7 @@ func (s *Session) createOutputPipelines(outputs []string) ([]pipeline.Pipeline, 
 }
 
 // ExecuteTest runs a test case set against the Logstash configuration, that has
-// been loaded previously with SetupTest
+// been loaded previously with SetupTest.
 func (s *Session) ExecuteTest(inputLines []string, inFields map[string]string) error {
 	s.testexec++
 	pipelineName := fmt.Sprintf("lfv_input_%d", s.testexec)
@@ -184,7 +184,7 @@ func (s *Session) ExecuteTest(inputLines []string, inFields map[string]string) e
 }
 
 func prepareFields(fieldsFilename string, inputLines []string, inFields map[string]string) ([]string, error) {
-	// FIXME: This does not allow arbritary nested fields yet.
+	// FIXME: This does not allow arbritrary nested fields yet.
 	fields := make(map[string]map[string]string)
 
 	ids := make([]string, 0, len(inputLines))

@@ -17,8 +17,6 @@ import (
 const LogstashInstanceDirectoryPrefix = "logstash-instance"
 
 type Controller struct {
-	ctx context.Context
-
 	id string
 
 	workDir string

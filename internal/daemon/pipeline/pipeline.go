@@ -36,7 +36,7 @@ func New(file, basePath string) (Archive, error) {
 	}
 
 	p := Pipelines{}
-	err = yaml.Unmarshal([]byte(b), &p)
+	err = yaml.Unmarshal(b, &p)
 	if err != nil {
 		return Archive{}, err
 	}
