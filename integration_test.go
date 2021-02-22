@@ -10,7 +10,7 @@ import (
 	"github.com/matryer/is"
 
 	"github.com/magnusbaeck/logstash-filter-verifier/v2/internal/app/daemon"
-	"github.com/magnusbaeck/logstash-filter-verifier/v2/internal/app/daemon/test"
+	"github.com/magnusbaeck/logstash-filter-verifier/v2/internal/app/daemon/run"
 	"github.com/magnusbaeck/logstash-filter-verifier/v2/internal/daemon/api/grpc"
 	"github.com/magnusbaeck/logstash-filter-verifier/v2/internal/daemon/file"
 	"github.com/magnusbaeck/logstash-filter-verifier/v2/internal/logging"
@@ -90,7 +90,7 @@ func TestIntegration(t *testing.T) {
 
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
-			client, err := test.New(
+			client, err := run.New(
 				path.Join(tempdir, "integration_test.socket"),
 				log,
 				"testdata/"+tc.name+".yml",
