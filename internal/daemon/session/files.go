@@ -38,13 +38,13 @@ filter {
     remove_field => [ "host", "sequence" ]
     # We use the message as the LFV event ID, so move this to the right field.
     replace => {
-      "[@metadata][__lfv_id]" => "%{[message]}"
+      "[__lfv_id]" => "%{[message]}"
     }
   }
 
   translate {
     dictionary_path => "{{ .FieldsFilename }}"
-    field => "[@metadata][__lfv_id]"
+    field => "[__lfv_id]"
     destination => "[@metadata][__lfv_fields]"
     exact => true
     override => true

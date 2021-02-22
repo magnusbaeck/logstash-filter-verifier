@@ -40,18 +40,22 @@ const outputPipeline = `input {
     address => __lfv_output
   }
 }
-# filter {
-#   mutate {
-#     copy => {
-#       "[@metadata]" => "[__metadata]"
-#     }
-#   }
-#   ruby {
-#     code => 'metadata = event.get("__metadata")
-#              metadata.delete_if {|key, value| key.start_with?("__lfv") || key.start_with?("__tmp") }
-#              event.set("__metadata", metadata)'
-#   }
-# }
+filter {
+  mutate {
+    copy => {
+      "[@metadata]" => "[__metadata]"
+    }
+  }
+  ruby {
+    code => 'metadata = event.get("__metadata")
+             metadata.delete_if {|key, value| key.start_with?("__lfv") || key.start_with?("__tmp") }
+             if metadata.length > 0
+               event.set("__metadata", metadata)
+             else
+               event.remove("__metadata")
+             end'
+  }
+}
 output {
   stdout {
     codec => json_lines

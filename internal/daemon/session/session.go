@@ -6,10 +6,13 @@ import (
 	"io/ioutil"
 	"os"
 	"path"
+	"sort"
 	"strconv"
 	"strings"
 
 	"github.com/pkg/errors"
+	"github.com/tidwall/gjson"
+	"github.com/tidwall/sjson"
 
 	"github.com/magnusbaeck/logstash-filter-verifier/v2/internal/daemon/idgen"
 	"github.com/magnusbaeck/logstash-filter-verifier/v2/internal/daemon/logstashconfig"
@@ -226,7 +229,20 @@ func createInput(pipelineFilename string, fieldsFilename string, ids []string) e
 
 // GetResults returns the returned events from Logstash.
 func (s *Session) GetResults() ([]string, error) {
-	return s.logstashController.GetResults()
+	results, err := s.logstashController.GetResults()
+	if err != nil {
+		return results, err
+	}
+	sort.Slice(results, func(i, j int) bool {
+		return gjson.Get(results[i], `__lfv_id`).Int() < gjson.Get(results[j], `__lfv_id`).Int()
+	})
+	for i := range results {
+		results[i], err = sjson.Delete(results[i], "__lfv_id")
+		if err != nil {
+			return results, err
+		}
+	}
+	return results, err
 }
 
 // GetStats returns the statistics for a test suite.
