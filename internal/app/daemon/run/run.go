@@ -11,12 +11,12 @@ import (
 	"github.com/imkira/go-observer"
 	"google.golang.org/grpc"
 
-	"github.com/magnusbaeck/logstash-filter-verifier/logstash"
-	lfvobserver "github.com/magnusbaeck/logstash-filter-verifier/observer"
-	"github.com/magnusbaeck/logstash-filter-verifier/testcase"
 	pb "github.com/magnusbaeck/logstash-filter-verifier/v2/internal/daemon/api/grpc"
 	"github.com/magnusbaeck/logstash-filter-verifier/v2/internal/daemon/pipeline"
 	"github.com/magnusbaeck/logstash-filter-verifier/v2/internal/logging"
+	"github.com/magnusbaeck/logstash-filter-verifier/v2/internal/logstash"
+	lfvobserver "github.com/magnusbaeck/logstash-filter-verifier/v2/internal/observer"
+	"github.com/magnusbaeck/logstash-filter-verifier/v2/internal/testcase"
 )
 
 type Test struct {

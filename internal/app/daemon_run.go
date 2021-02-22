@@ -26,9 +26,6 @@ func makeDaemonRunCmd() *cobra.Command {
 }
 
 func runDaemonRun(_ *cobra.Command, args []string) error {
-	// TODO: Remove this
-	// logging.SetLevel(oplogging.INFO)
-
 	t, err := run.New(viper.GetString("socket"), viper.Get("logger").(logging.Logger), viper.GetString("pipeline"), viper.GetString("pipeline-base"), viper.GetString("testcase-dir"))
 	if err != nil {
 		return err
