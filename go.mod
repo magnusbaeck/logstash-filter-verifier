@@ -8,13 +8,11 @@ require (
 	github.com/axw/gocov v1.0.0
 	github.com/bmatcuk/doublestar/v2 v2.0.4
 	github.com/breml/logstash-config v0.4.0
-	github.com/chzyer/test v0.0.0-20180213035817-a1ea475d72b1
 	github.com/go-playground/overalls v0.0.0-20191218162659-7df9f728c018
 	github.com/golang/protobuf v1.4.2
 	github.com/hashicorp/packer v1.4.4
 	github.com/hpcloud/tail v1.0.0
 	github.com/imkira/go-observer v1.0.3
-	github.com/magnusbaeck/logstash-filter-verifier v0.0.0-20201128205846-61a579889997
 	github.com/matm/gocov-html v0.0.0-20200509184451-71874e2e203b
 	github.com/matoous/go-nanoid v1.5.0
 	github.com/matryer/is v1.4.0
@@ -28,9 +26,11 @@ require (
 	github.com/stretchr/testify v1.5.1
 	github.com/tidwall/gjson v1.6.8
 	github.com/tidwall/sjson v1.1.5
+	github.com/yookoala/realpath v1.0.0 // indirect
 	golang.org/x/sys v0.0.0-20210124154548-22da62e12c0c // indirect
 	google.golang.org/grpc v1.34.0
 	google.golang.org/grpc/cmd/protoc-gen-go-grpc v1.0.1
 	google.golang.org/protobuf v1.25.0
+	gopkg.in/go-playground/assert.v1 v1.2.1 // indirect
 	gopkg.in/yaml.v2 v2.2.8
 )
