@@ -10,6 +10,7 @@ import (
 	"github.com/magnusbaeck/logstash-filter-verifier/v2/internal/daemon/file"
 	"github.com/magnusbaeck/logstash-filter-verifier/v2/internal/daemon/logstashconfig"
 	"github.com/magnusbaeck/logstash-filter-verifier/v2/internal/daemon/pipeline"
+	"github.com/magnusbaeck/logstash-filter-verifier/v2/internal/daemon/pool"
 	"github.com/magnusbaeck/logstash-filter-verifier/v2/internal/daemon/session"
 	"github.com/magnusbaeck/logstash-filter-verifier/v2/internal/logging"
 )
@@ -29,24 +30,30 @@ func TestSession(t *testing.T) {
 
 			tempdir := t.TempDir()
 
-			logstashController := &LogstashControllerMock{
-				SetupTestFunc: func(pipelines pipeline.Pipelines) error {
-					is.True(len(pipelines) == 2) // Expect 2 pipelines (main, output)
-					return nil
+			pool := &PoolMock{
+				GetFunc: func() (pool.LogstashController, error) {
+					logstashController := &LogstashControllerMock{
+						SetupTestFunc: func(pipelines pipeline.Pipelines) error {
+							is.True(len(pipelines) == 2) // Expect 2 pipelines (main, output)
+							return nil
+						},
+						TeardownFunc: func() error {
+							return nil
+						},
+						ExecuteTestFunc: func(pipelines pipeline.Pipelines, expectedEvents int) error {
+							is.True(len(pipelines) == 3) // Expect 2 pipelines (input, main, output)
+							return nil
+						},
+						GetResultsFunc: func() ([]string, error) {
+							return []string{"some_random_result"}, nil
+						},
+					}
+					return logstashController, nil
 				},
-				TeardownFunc: func() error {
-					return nil
-				},
-				ExecuteTestFunc: func(pipelines pipeline.Pipelines, expectedEvents int) error {
-					is.True(len(pipelines) == 3) // Expect 2 pipelines (input, main, output)
-					return nil
-				},
-				GetResultsFunc: func() ([]string, error) {
-					return []string{"some_random_result"}, nil
-				},
+				ReturnFunc: func(instance pool.LogstashController, clean bool) {},
 			}
 
-			c := session.NewController(tempdir, logstashController, logging.NoopLogger)
+			c := session.NewController(tempdir, pool, logging.NoopLogger)
 
 			pipelines := pipeline.Pipelines{
 				pipeline.Pipeline{
@@ -120,16 +127,22 @@ func TestCreate(t *testing.T) {
 
 			tempdir := t.TempDir()
 
-			logstashController := &LogstashControllerMock{
-				SetupTestFunc: func(pipelines pipeline.Pipelines) error {
-					return nil
+			pool := &PoolMock{
+				GetFunc: func() (pool.LogstashController, error) {
+					logstashController := &LogstashControllerMock{
+						SetupTestFunc: func(pipelines pipeline.Pipelines) error {
+							return nil
+						},
+						TeardownFunc: func() error {
+							return nil
+						},
+					}
+					return logstashController, nil
 				},
-				TeardownFunc: func() error {
-					return nil
-				},
+				ReturnFunc: func(instance pool.LogstashController, clean bool) {},
 			}
 
-			c := session.NewController(tempdir, logstashController, logging.NoopLogger)
+			c := session.NewController(tempdir, pool, logging.NoopLogger)
 
 			pipelines := pipeline.Pipelines{
 				pipeline.Pipeline{

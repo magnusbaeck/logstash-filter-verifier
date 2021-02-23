@@ -17,6 +17,7 @@ import (
 	"github.com/magnusbaeck/logstash-filter-verifier/v2/internal/daemon/idgen"
 	"github.com/magnusbaeck/logstash-filter-verifier/v2/internal/daemon/logstashconfig"
 	"github.com/magnusbaeck/logstash-filter-verifier/v2/internal/daemon/pipeline"
+	"github.com/magnusbaeck/logstash-filter-verifier/v2/internal/daemon/pool"
 	"github.com/magnusbaeck/logstash-filter-verifier/v2/internal/daemon/template"
 	"github.com/magnusbaeck/logstash-filter-verifier/v2/internal/logging"
 )
@@ -24,7 +25,7 @@ import (
 type Session struct {
 	id string
 
-	logstashController LogstashController
+	logstashController pool.LogstashController
 
 	baseDir    string
 	sessionDir string
@@ -35,7 +36,7 @@ type Session struct {
 	log logging.Logger
 }
 
-func new(baseDir string, logstashController LogstashController, log logging.Logger) *Session {
+func new(baseDir string, logstashController pool.LogstashController, log logging.Logger) *Session {
 	sessionID := idgen.New()
 	sessionDir := fmt.Sprintf("%s/session/%s", baseDir, sessionID)
 	return &Session{

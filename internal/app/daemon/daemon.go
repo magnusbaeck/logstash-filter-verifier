@@ -22,6 +22,7 @@ import (
 	"github.com/magnusbaeck/logstash-filter-verifier/v2/internal/daemon/instance/logstash"
 	"github.com/magnusbaeck/logstash-filter-verifier/v2/internal/daemon/logstashconfig"
 	"github.com/magnusbaeck/logstash-filter-verifier/v2/internal/daemon/pipeline"
+	"github.com/magnusbaeck/logstash-filter-verifier/v2/internal/daemon/pool"
 	"github.com/magnusbaeck/logstash-filter-verifier/v2/internal/daemon/session"
 	"github.com/magnusbaeck/logstash-filter-verifier/v2/internal/logging"
 )
@@ -49,12 +50,7 @@ type Daemon struct {
 
 	sessionController *session.Controller
 
-	server             *grpc.Server
-	logstashController *controller.Controller
-
-	// Global shutdown wait group. Daemon.Run() will wait for this wait group
-	// before returning and exiting the main Go routine.
-	shutdownLogstashInstancesWG *sync.WaitGroup
+	server *grpc.Server
 
 	log logging.Logger
 
@@ -65,14 +61,13 @@ type Daemon struct {
 func New(socket string, logstashPath string, log logging.Logger, inflightShutdownTimeout time.Duration, shutdownTimeout time.Duration) Daemon {
 	ctxShutdownSignal, shutdownSignalFunc := context.WithCancel(context.Background())
 	return Daemon{
-		socket:                      socket,
-		logstashPath:                logstashPath,
-		inflightShutdownTimeout:     inflightShutdownTimeout,
-		shutdownTimeout:             shutdownTimeout,
-		log:                         log,
-		shutdownLogstashInstancesWG: &sync.WaitGroup{},
-		ctxShutdownSignal:           ctxShutdownSignal,
-		shutdownSignalFunc:          shutdownSignalFunc,
+		socket:                  socket,
+		logstashPath:            logstashPath,
+		inflightShutdownTimeout: inflightShutdownTimeout,
+		shutdownTimeout:         shutdownTimeout,
+		log:                     log,
+		ctxShutdownSignal:       ctxShutdownSignal,
+		shutdownSignalFunc:      shutdownSignalFunc,
 	}
 }
 
@@ -92,22 +87,31 @@ func (d *Daemon) Run(ctx context.Context) error {
 	d.tempdir = tempdir
 	d.log.Debugf("Temporary directory for daemon created in %q", d.tempdir)
 
-	// Create and start Logstash Controller
-	d.shutdownLogstashInstancesWG.Add(1)
-	instance := logstash.New(ctxKill, d.logstashPath, d.log, d.shutdownLogstashInstancesWG)
-	logstashController, err := controller.NewController(instance, tempdir, d.log)
-	if err != nil {
-		return err
-	}
-	d.logstashController = logstashController
+	// Factory to create and start Logstash Controller
+	shutdownLogstashInstancesWG := &sync.WaitGroup{}
+	logstashControllerFactory := func() (session.LogstashController, error) {
+		shutdownLogstashInstancesWG.Add(1)
+		instance := logstash.New(ctxKill, d.logstashPath, d.log, shutdownLogstashInstancesWG)
+		logstashController, err := controller.NewController(instance, tempdir, d.log)
+		if err != nil {
+			return nil, err
+		}
 
-	err = d.logstashController.Launch(ctx)
+		err = logstashController.Launch(ctx)
+		if err != nil {
+			return nil, err
+		}
+
+		return logstashController, nil
+	}
+
+	pool, err := pool.New(logstashControllerFactory, 1)
 	if err != nil {
 		return err
 	}
 
 	// Create Session Handler
-	d.sessionController = session.NewController(d.tempdir, d.logstashController, d.log)
+	d.sessionController = session.NewController(d.tempdir, pool, d.log)
 
 	// Create and start GRPC Server
 	lis, err := net.Listen("unix", d.socket)
@@ -126,14 +130,14 @@ func (d *Daemon) Run(ctx context.Context) error {
 	}()
 
 	// Setup signal handler and shutdown coordinator
-	d.shutdownSignalHandler(shutdown)
+	d.shutdownSignalHandler(shutdown, shutdownLogstashInstancesWG)
 
 	return nil
 }
 
 const hardExitDelay = 20 * time.Millisecond
 
-func (d *Daemon) shutdownSignalHandler(shutdown func()) {
+func (d *Daemon) shutdownSignalHandler(shutdown func(), shutdownLogstashInstancesWG *sync.WaitGroup) {
 	var hardExit bool
 
 	defer func() {
@@ -196,7 +200,7 @@ func (d *Daemon) shutdownSignalHandler(shutdown func()) {
 	// Stop Logstash instance
 	logstashInstancesStopped := make(chan struct{})
 	go func() {
-		d.shutdownLogstashInstancesWG.Wait()
+		shutdownLogstashInstancesWG.Wait()
 		close(logstashInstancesStopped)
 	}()
 

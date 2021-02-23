@@ -20,13 +20,13 @@ type Controller struct {
 	sessions map[string]*Session
 	finished bool
 
-	tempdir            string
-	logstashController LogstashController
-	log                logging.Logger
+	tempdir      string
+	logstashPool Pool
+	log          logging.Logger
 }
 
 // NewController creates a new session Controller.
-func NewController(tempdir string, logstashController LogstashController, log logging.Logger) *Controller {
+func NewController(tempdir string, logstashPool Pool, log logging.Logger) *Controller {
 	mu := &sync.Mutex{}
 
 	return &Controller{
@@ -36,9 +36,9 @@ func NewController(tempdir string, logstashController LogstashController, log lo
 
 		sessions: make(map[string]*Session, 10),
 
-		tempdir:            tempdir,
-		logstashController: logstashController,
-		log:                log,
+		tempdir:      tempdir,
+		logstashPool: logstashPool,
+		log:          log,
 	}
 }
 
@@ -54,12 +54,17 @@ func (s *Controller) Create(pipelines pipeline.Pipelines, configFiles []logstash
 		}
 	}
 
-	session := new(s.tempdir, s.logstashController, s.log)
+	logstashController, err := s.logstashPool.Get()
+	if err != nil {
+		return nil, err
+	}
+
+	session := new(s.tempdir, logstashController, s.log)
 	s.sessions[session.ID()] = session
 
 	s.wg.Add(1)
 
-	err := session.setupTest(pipelines, configFiles)
+	err = session.setupTest(pipelines, configFiles)
 	if err != nil {
 		return nil, err
 	}
@@ -92,7 +97,14 @@ func (s *Controller) DestroyByID(id string) error {
 		s.wg.Done()
 	}()
 
-	return session.teardown()
+	err := session.teardown()
+	if err != nil {
+		s.logstashPool.Return(session.logstashController, false)
+		return err
+	}
+	s.logstashPool.Return(session.logstashController, true)
+
+	return nil
 }
 
 // WaitFinish waits for all currently running sessions to finish.
