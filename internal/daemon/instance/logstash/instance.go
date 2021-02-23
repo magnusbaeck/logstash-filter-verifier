@@ -59,6 +59,15 @@ func (i *instance) Start(ctx context.Context, controller *controller.Controller,
 	args := []string{
 		"--path.settings",
 		workdir,
+		"--path.logs",
+		workdir,
+		"--path.data",
+		workdir,
+		// TODO: figure out the correct paths
+		// "--path.plugins",
+		// workdir,
+		// "--path.config",
+		// workdir,
 	}
 
 	i.child = exec.CommandContext(i.ctxKill, i.command, args...) // nolint: gosec

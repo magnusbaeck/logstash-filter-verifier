@@ -47,7 +47,8 @@ func (s *Controller) Create(pipelines pipeline.Pipelines, configFiles []logstash
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
 
-	for len(s.sessions) != 0 {
+	// TODO: Link this value to pool size
+	for len(s.sessions) > 1 {
 		s.cond.Wait()
 		if s.finished {
 			return nil, errors.New("shutdown in progress")

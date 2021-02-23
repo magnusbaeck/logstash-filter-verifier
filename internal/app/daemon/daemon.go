@@ -105,7 +105,7 @@ func (d *Daemon) Run(ctx context.Context) error {
 		return logstashController, nil
 	}
 
-	pool, err := pool.New(logstashControllerFactory, 1)
+	pool, err := pool.New(logstashControllerFactory, 2)
 	if err != nil {
 		return err
 	}
