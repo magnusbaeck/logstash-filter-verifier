@@ -45,6 +45,7 @@ func (i *instance) stdoutProcessor(stdout io.ReadCloser) {
 	case <-i.ctxShutdown.Done():
 	default:
 		i.log.Warning("stdout scanner closed unexpectedly")
+		i.controller.SignalCrash()
 	}
 
 	i.log.Debug("exit stdout scanner")
@@ -75,6 +76,7 @@ func (i *instance) stderrProcessor(stderr io.ReadCloser) {
 	case <-i.ctxShutdown.Done():
 	default:
 		i.log.Warning("stderr scanner closed unexpectedly")
+		i.controller.SignalCrash()
 	}
 
 	i.log.Debug("exit stderr scanner")

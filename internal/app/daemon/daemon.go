@@ -105,7 +105,7 @@ func (d *Daemon) Run(ctx context.Context) error {
 		return logstashController, nil
 	}
 
-	pool, err := pool.New(logstashControllerFactory, 2)
+	pool, err := pool.New(ctx, logstashControllerFactory, 2, d.log)
 	if err != nil {
 		return err
 	}
@@ -334,11 +334,17 @@ func (d *Daemon) extractZip(in []byte) (pipeline.Pipelines, []logstashconfig.Fil
 
 // ExecuteTest runs a test case set against the Logstash configuration, that has
 // been loaded previously with SetupTest.
-func (d *Daemon) ExecuteTest(ctx context.Context, in *pb.ExecuteTestRequest) (*pb.ExecuteTestResponse, error) {
+func (d *Daemon) ExecuteTest(ctx context.Context, in *pb.ExecuteTestRequest) (out *pb.ExecuteTestResponse, err error) {
 	session, err := d.sessionController.Get(in.SessionID)
 	if err != nil {
 		return nil, errors.Wrap(err, "invalid session ID")
 	}
+
+	defer func() {
+		if err != nil {
+			d.sessionController.DestroyByID(in.SessionID)
+		}
+	}()
 
 	fields := map[string]interface{}{}
 	err = json.Unmarshal(in.Fields, &fields)

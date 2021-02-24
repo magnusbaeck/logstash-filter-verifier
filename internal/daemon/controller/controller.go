@@ -25,6 +25,7 @@ type Controller struct {
 
 	instance      Instance
 	instanceReady *sync.Once
+	shutdown      context.CancelFunc
 
 	stateMachine   *stateMachine
 	receivedEvents *events
@@ -85,6 +86,9 @@ func (c *Controller) ID() string {
 }
 
 func (c *Controller) Launch(ctx context.Context) error {
+	ctx, cancel := context.WithCancel(ctx)
+	c.shutdown = cancel
+
 	c.pipelines.reset("stdin", "output")
 	c.stateMachine = newStateMachine(ctx, c.log)
 	c.stateMachine.executeCommand(commandStart)
@@ -199,4 +203,17 @@ func (c *Controller) PipelinesReady(pipelines ...string) {
 
 		c.stateMachine.executeCommand(commandPipelineReady)
 	}
+}
+
+func (c *Controller) SignalCrash() {
+	c.stateMachine.executeCommand(commandCrash)
+	c.Kill()
+}
+
+func (c *Controller) Kill() {
+	c.shutdown()
+}
+
+func (c *Controller) IsHealthy() bool {
+	return c.stateMachine.getState() != stateUnknown
 }

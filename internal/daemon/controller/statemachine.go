@@ -3,6 +3,7 @@ package controller
 import (
 	"context"
 	"sync"
+	"time"
 
 	"github.com/pkg/errors"
 
@@ -23,9 +24,19 @@ func newStateMachine(ctx context.Context, log logging.Logger) *stateMachine {
 	mu := &sync.Mutex{}
 	cond := sync.NewCond(mu)
 	go func() {
-		<-ctx.Done()
-		log.Debug("broadcast shutdown for waitForState")
-		cond.Broadcast()
+		defer cond.Broadcast()
+		t := time.NewTicker(time.Second)
+		defer t.Stop()
+		for {
+			select {
+			case <-ctx.Done():
+				log.Debug("broadcast shutdown for waitForState")
+				return
+			case <-t.C:
+				// Wakeup all waitForState to allow them to timeout
+				cond.Broadcast()
+			}
+		}
 	}()
 	return &stateMachine{
 		ctx: ctx,
@@ -37,22 +48,44 @@ func newStateMachine(ctx context.Context, log logging.Logger) *stateMachine {
 	}
 }
 
+// TODO: Allow this timeout to be set in configuration.
+// TODO: Maybe allow different timeouts for different states.
+const waitForStateTimeout = 30 * time.Second
+
 func (s *stateMachine) waitForState(target stateName) error {
 	s.log.Debugf("waitForState: %v", target)
-	// TODO: Add a timeout to exit if the expected state is not reached in due time.
-	// Create go routine to wake up every 1 second,
+
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
 
-	for s.currentState != target {
-		s.cond.Wait()
+	t := time.NewTimer(waitForStateTimeout)
+	defer func() {
+		// Stop timer and drain channel
+		if !t.Stop() {
+			select {
+			case <-t.C:
+			default:
+			}
+		}
+	}()
 
+	for s.currentState != target {
 		select {
 		case <-s.ctx.Done():
 			// TODO: Can we do this without error return?
 			return errors.Errorf("shutdown while waiting for state: %s", target)
+		case <-t.C:
+			s.log.Debugf("state change: %q because of waitForState timeout", stateUnknown)
+			s.currentState = stateUnknown
+			s.cond.Broadcast()
+			return errors.Errorf("timed out while waiting for state: %s", target)
 		default:
 		}
+		if s.currentState == stateUnknown {
+			return errors.Errorf("state unknown, failed to wait for state: %s", target)
+		}
+
+		s.cond.Wait()
 	}
 	return nil
 }
@@ -72,6 +105,13 @@ func (s *stateMachine) executeCommand(command command) {
 	s.log.Debugf("state change: %q -> %q by %q", currentState, newState, command)
 	s.currentState = newState
 	s.cond.Broadcast()
+}
+
+func (s *stateMachine) getState() stateName {
+	s.mutex.Lock()
+	defer s.mutex.Unlock()
+
+	return s.currentState
 }
 
 type stateName string
@@ -101,6 +141,7 @@ const (
 	commandExecuteTest   command = "execute-test"
 	commandTestComplete  command = "test-complete"
 	commandTeardown      command = "teardown"
+	commandCrash         command = "crash"
 )
 
 type stateCommand struct {
@@ -134,4 +175,7 @@ var stateTransitionsTable = map[stateCommand]transitionFunc{
 	// State Running Test
 	{stateRunningTest, commandPipelineReady}: func() stateName { return stateRunningTest },
 	{stateRunningTest, commandTestComplete}:  func() stateName { return stateReadyForTest },
+
+	// State Unknown is the fallback state for all undefined state transitions.
+	// {*, *}:  func() stateName { return stateUnknown },
 }

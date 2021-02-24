@@ -26,6 +26,12 @@ var _ session.LogstashController = &LogstashControllerMock{}
 // 			GetResultsFunc: func() ([]string, error) {
 // 				panic("mock out the GetResults method")
 // 			},
+// 			IsHealthyFunc: func() bool {
+// 				panic("mock out the IsHealthy method")
+// 			},
+// 			KillFunc: func()  {
+// 				panic("mock out the Kill method")
+// 			},
 // 			SetupTestFunc: func(pipelines pipeline.Pipelines) error {
 // 				panic("mock out the SetupTest method")
 // 			},
@@ -45,6 +51,12 @@ type LogstashControllerMock struct {
 	// GetResultsFunc mocks the GetResults method.
 	GetResultsFunc func() ([]string, error)
 
+	// IsHealthyFunc mocks the IsHealthy method.
+	IsHealthyFunc func() bool
+
+	// KillFunc mocks the Kill method.
+	KillFunc func()
+
 	// SetupTestFunc mocks the SetupTest method.
 	SetupTestFunc func(pipelines pipeline.Pipelines) error
 
@@ -63,6 +75,12 @@ type LogstashControllerMock struct {
 		// GetResults holds details about calls to the GetResults method.
 		GetResults []struct {
 		}
+		// IsHealthy holds details about calls to the IsHealthy method.
+		IsHealthy []struct {
+		}
+		// Kill holds details about calls to the Kill method.
+		Kill []struct {
+		}
 		// SetupTest holds details about calls to the SetupTest method.
 		SetupTest []struct {
 			// Pipelines is the pipelines argument value.
@@ -74,6 +92,8 @@ type LogstashControllerMock struct {
 	}
 	lockExecuteTest sync.RWMutex
 	lockGetResults  sync.RWMutex
+	lockIsHealthy   sync.RWMutex
+	lockKill        sync.RWMutex
 	lockSetupTest   sync.RWMutex
 	lockTeardown    sync.RWMutex
 }
@@ -136,6 +156,58 @@ func (mock *LogstashControllerMock) GetResultsCalls() []struct {
 	mock.lockGetResults.RLock()
 	calls = mock.calls.GetResults
 	mock.lockGetResults.RUnlock()
+	return calls
+}
+
+// IsHealthy calls IsHealthyFunc.
+func (mock *LogstashControllerMock) IsHealthy() bool {
+	if mock.IsHealthyFunc == nil {
+		panic("LogstashControllerMock.IsHealthyFunc: method is nil but LogstashController.IsHealthy was just called")
+	}
+	callInfo := struct {
+	}{}
+	mock.lockIsHealthy.Lock()
+	mock.calls.IsHealthy = append(mock.calls.IsHealthy, callInfo)
+	mock.lockIsHealthy.Unlock()
+	return mock.IsHealthyFunc()
+}
+
+// IsHealthyCalls gets all the calls that were made to IsHealthy.
+// Check the length with:
+//     len(mockedLogstashController.IsHealthyCalls())
+func (mock *LogstashControllerMock) IsHealthyCalls() []struct {
+} {
+	var calls []struct {
+	}
+	mock.lockIsHealthy.RLock()
+	calls = mock.calls.IsHealthy
+	mock.lockIsHealthy.RUnlock()
+	return calls
+}
+
+// Kill calls KillFunc.
+func (mock *LogstashControllerMock) Kill() {
+	if mock.KillFunc == nil {
+		panic("LogstashControllerMock.KillFunc: method is nil but LogstashController.Kill was just called")
+	}
+	callInfo := struct {
+	}{}
+	mock.lockKill.Lock()
+	mock.calls.Kill = append(mock.calls.Kill, callInfo)
+	mock.lockKill.Unlock()
+	mock.KillFunc()
+}
+
+// KillCalls gets all the calls that were made to Kill.
+// Check the length with:
+//     len(mockedLogstashController.KillCalls())
+func (mock *LogstashControllerMock) KillCalls() []struct {
+} {
+	var calls []struct {
+	}
+	mock.lockKill.RLock()
+	calls = mock.calls.Kill
+	mock.lockKill.RUnlock()
 	return calls
 }
 
