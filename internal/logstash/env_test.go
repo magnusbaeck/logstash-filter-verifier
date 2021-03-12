@@ -81,7 +81,7 @@ func TestGetLimitedEnvironment(t *testing.T) {
 		},
 	}
 	for i, c := range cases {
-		actual := getLimitedEnvironment(c.original, c.kept)
+		actual := GetLimitedEnvironment(c.original, c.kept)
 		if !reflect.DeepEqual(c.expected, actual) {
 			t.Errorf("Test %d:\nExpected:\n%#v\nGot:\n%#v", i, c.expected, actual)
 		}

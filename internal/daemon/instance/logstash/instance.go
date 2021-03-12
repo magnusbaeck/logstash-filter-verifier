@@ -21,6 +21,7 @@ type instance struct {
 	controller *controller.Controller
 
 	command string
+	env     []string
 	child   *exec.Cmd
 
 	log logging.Logger
@@ -30,10 +31,11 @@ type instance struct {
 	shutdownWG         *sync.WaitGroup
 }
 
-func New(ctxKill context.Context, command string, log logging.Logger, shutdownWG *sync.WaitGroup) controller.Instance {
+func New(ctxKill context.Context, command string, env []string, log logging.Logger, shutdownWG *sync.WaitGroup) controller.Instance {
 	return &instance{
 		ctxKill:            ctxKill,
 		command:            command,
+		env:                env,
 		log:                log,
 		logstashStarted:    make(chan struct{}),
 		logstashShutdownWG: &sync.WaitGroup{},
@@ -71,6 +73,7 @@ func (i *instance) Start(ctx context.Context, controller *controller.Controller,
 	}
 
 	i.child = exec.CommandContext(i.ctxKill, i.command, args...) // nolint: gosec
+	i.child.Env = i.env
 	stdout, err := i.child.StdoutPipe()
 	if err != nil {
 		return errors.Wrap(err, "failed to setup stdoutPipe")

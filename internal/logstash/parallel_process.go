@@ -187,7 +187,7 @@ func NewParallelProcess(inv *Invocation, testStream []*TestStream, keptEnvVars [
 		return nil, err
 	}
 
-	env := getLimitedEnvironment(os.Environ(), keptEnvVars)
+	env := GetLimitedEnvironment(os.Environ(), keptEnvVars)
 	inputs := fmt.Sprintf("input { %s } ", strings.Join(logstashInput, " "))
 	outputs := fmt.Sprintf("output { %s }", strings.Join(logstashOutput, " "))
 	args, err := inv.Args(inputs, outputs)

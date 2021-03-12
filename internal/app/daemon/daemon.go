@@ -25,6 +25,7 @@ import (
 	"github.com/magnusbaeck/logstash-filter-verifier/v2/internal/daemon/pool"
 	"github.com/magnusbaeck/logstash-filter-verifier/v2/internal/daemon/session"
 	"github.com/magnusbaeck/logstash-filter-verifier/v2/internal/logging"
+	standalonelogstash "github.com/magnusbaeck/logstash-filter-verifier/v2/internal/logstash"
 )
 
 type Daemon struct {
@@ -42,6 +43,7 @@ type Daemon struct {
 
 	socket       string
 	logstashPath string
+	keptEnvVars  []string
 
 	tempdir string
 
@@ -58,11 +60,12 @@ type Daemon struct {
 }
 
 // New creates a new logstash filter verifier daemon.
-func New(socket string, logstashPath string, log logging.Logger, inflightShutdownTimeout time.Duration, shutdownTimeout time.Duration) Daemon {
+func New(socket string, logstashPath string, keptEnvVars []string, log logging.Logger, inflightShutdownTimeout time.Duration, shutdownTimeout time.Duration) Daemon {
 	ctxShutdownSignal, shutdownSignalFunc := context.WithCancel(context.Background())
 	return Daemon{
 		socket:                  socket,
 		logstashPath:            logstashPath,
+		keptEnvVars:             keptEnvVars,
 		inflightShutdownTimeout: inflightShutdownTimeout,
 		shutdownTimeout:         shutdownTimeout,
 		log:                     log,
@@ -87,11 +90,13 @@ func (d *Daemon) Run(ctx context.Context) error {
 	d.tempdir = tempdir
 	d.log.Debugf("Temporary directory for daemon created in %q", d.tempdir)
 
+	env := standalonelogstash.GetLimitedEnvironment(os.Environ(), d.keptEnvVars)
+
 	// Factory to create and start Logstash Controller
 	shutdownLogstashInstancesWG := &sync.WaitGroup{}
 	logstashControllerFactory := func() (session.LogstashController, error) {
 		shutdownLogstashInstancesWG.Add(1)
-		instance := logstash.New(ctxKill, d.logstashPath, d.log, shutdownLogstashInstancesWG)
+		instance := logstash.New(ctxKill, d.logstashPath, env, d.log, shutdownLogstashInstancesWG)
 		logstashController, err := controller.NewController(instance, tempdir, d.log)
 		if err != nil {
 			return nil, err
