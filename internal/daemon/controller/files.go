@@ -43,7 +43,7 @@ const outputPipeline = `input {
 filter {
   mutate {
     copy => {
-      "[@metadata]" => "[__metadata]"
+      "[@metadata]" => "[__lfv_metadata]"
     }
   }
 }

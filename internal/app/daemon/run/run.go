@@ -171,7 +171,7 @@ func (s Test) postProcessResults(results []string, exportMetadata bool) ([]strin
 
 	for i := range results {
 		if exportMetadata {
-			metadata := gjson.Get(results[i], "__metadata")
+			metadata := gjson.Get(results[i], "__lfv_metadata")
 			if metadata.Exists() && metadata.IsObject() {
 				md := make(map[string]json.RawMessage, len(metadata.Map()))
 				for key, value := range metadata.Map() {
@@ -188,7 +188,7 @@ func (s Test) postProcessResults(results []string, exportMetadata bool) ([]strin
 				}
 			}
 		}
-		results[i], err = sjson.Delete(results[i], "__metadata")
+		results[i], err = sjson.Delete(results[i], "__lfv_metadata")
 		if err != nil {
 			return nil, err
 		}
