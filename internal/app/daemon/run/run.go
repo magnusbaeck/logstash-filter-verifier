@@ -122,7 +122,7 @@ func (s Test) Run() error {
 			return err
 		}
 
-		results, err := s.postProcessResults(result.Results)
+		results, err := s.postProcessResults(result.Results, t.ExportMetadata)
 		if err != nil {
 			return err
 		}
@@ -162,7 +162,7 @@ func (s Test) Run() error {
 	return nil
 }
 
-func (s Test) postProcessResults(results []string) ([]string, error) {
+func (s Test) postProcessResults(results []string, exportMetadata bool) ([]string, error) {
 	var err error
 
 	sort.Slice(results, func(i, j int) bool {
@@ -170,19 +170,21 @@ func (s Test) postProcessResults(results []string) ([]string, error) {
 	})
 
 	for i := range results {
-		metadata := gjson.Get(results[i], "__metadata")
-		if metadata.Exists() && metadata.IsObject() {
-			md := make(map[string]json.RawMessage, len(metadata.Map()))
-			for key, value := range metadata.Map() {
-				if strings.HasPrefix(key, "__lfv") || strings.HasPrefix(key, "__tmp") {
-					continue
+		if exportMetadata {
+			metadata := gjson.Get(results[i], "__metadata")
+			if metadata.Exists() && metadata.IsObject() {
+				md := make(map[string]json.RawMessage, len(metadata.Map()))
+				for key, value := range metadata.Map() {
+					if strings.HasPrefix(key, "__lfv") || strings.HasPrefix(key, "__tmp") {
+						continue
+					}
+					md[key] = json.RawMessage(value.Raw)
 				}
-				md[key] = json.RawMessage(value.Raw)
-			}
-			if len(md) > 0 {
-				results[i], err = sjson.Set(results[i], s.metadataKey, md)
-				if err != nil {
-					return nil, err
+				if len(md) > 0 {
+					results[i], err = sjson.Set(results[i], s.metadataKey, md)
+					if err != nil {
+						return nil, err
+					}
 				}
 			}
 		}

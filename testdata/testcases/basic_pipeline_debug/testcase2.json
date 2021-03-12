@@ -6,6 +6,7 @@
   "ignore": [
     "@timestamp"
   ],
+  "exportMetadata": true,
   "testcases": [
     {
       "input": [

@@ -13,9 +13,6 @@
       ],
       "expected": [
         {
-          "@metadata": {
-            "hidden_field": "hidden value"
-          },
           "__lfv_id": "0",
           "message": "test case message",
           "tags": [
@@ -27,9 +24,6 @@
           "type": "syslog"
         },
         {
-          "@metadata": {
-            "hidden_field": "hidden value"
-          },
           "__lfv_id": "1",
           "message": "test case message 2",
           "tags": [
