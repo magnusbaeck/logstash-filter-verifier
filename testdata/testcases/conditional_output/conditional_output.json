@@ -14,17 +14,13 @@
         {
           "message": "stdout",
           "tags": [
-            "__lfv_in_passed",
-            "conditional_output_filter",
-            "stdout_passed"
+            "conditional_output_filter"
           ]
         },
         {
           "message": "file",
           "tags": [
-            "__lfv_in_passed",
-            "conditional_output_filter",
-            "file_passed"
+            "conditional_output_filter"
           ]
         }
       ]

@@ -6,9 +6,13 @@ import (
 	"net"
 	"os"
 	"path"
+	"sort"
+	"strings"
 	"time"
 
 	"github.com/imkira/go-observer"
+	"github.com/tidwall/gjson"
+	"github.com/tidwall/sjson"
 	"google.golang.org/grpc"
 
 	pb "github.com/magnusbaeck/logstash-filter-verifier/v2/internal/daemon/api/grpc"
@@ -24,11 +28,12 @@ type Test struct {
 	pipeline     string
 	pipelineBase string
 	testcasePath string
+	debug        bool
 
 	log logging.Logger
 }
 
-func New(socket string, log logging.Logger, pipeline, pipelineBase, testcasePath string) (Test, error) {
+func New(socket string, log logging.Logger, pipeline, pipelineBase, testcasePath string, debug bool) (Test, error) {
 	if !path.IsAbs(pipelineBase) {
 		cwd, err := os.Getwd()
 		if err != nil {
@@ -41,6 +46,7 @@ func New(socket string, log logging.Logger, pipeline, pipelineBase, testcasePath
 		pipeline:     pipeline,
 		pipelineBase: pipelineBase,
 		testcasePath: testcasePath,
+		debug:        debug,
 		log:          log,
 	}, nil
 }
@@ -114,8 +120,13 @@ func (s Test) Run() error {
 			return err
 		}
 
+		results, err := s.postProcessResults(result.Results)
+		if err != nil {
+			return err
+		}
+
 		var events []logstash.Event
-		for _, line := range result.Results {
+		for _, line := range results {
 			var event logstash.Event
 			err = json.Unmarshal([]byte(line), &event)
 			if err != nil {
@@ -147,4 +158,44 @@ func (s Test) Run() error {
 	}
 
 	return nil
+}
+
+func (s Test) postProcessResults(results []string) ([]string, error) {
+	var err error
+
+	sort.Slice(results, func(i, j int) bool {
+		return gjson.Get(results[i], `__lfv_id`).Int() < gjson.Get(results[j], `__lfv_id`).Int()
+	})
+
+	// No cleanup if debug is set
+	if s.debug {
+		return results, nil
+	}
+
+	for i := range results {
+		results[i], err = sjson.Delete(results[i], "__lfv_id")
+		if err != nil {
+			return nil, err
+		}
+
+		tags := []string{}
+		for _, tag := range gjson.Get(results[i], "tags").Array() {
+			if strings.HasPrefix(tag.String(), "__lfv_") {
+				continue
+			}
+			tags = append(tags, tag.String())
+		}
+
+		// Remove tag entry, if there are no tags
+		if len(tags) == 0 {
+			results[i], err = sjson.Delete(results[i], "tags")
+		} else {
+			results[i], err = sjson.Set(results[i], "tags", tags)
+		}
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return results, nil
 }

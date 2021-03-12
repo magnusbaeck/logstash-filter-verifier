@@ -6,13 +6,10 @@ import (
 	"io/ioutil"
 	"os"
 	"path"
-	"sort"
 	"strconv"
 	"strings"
 
 	"github.com/pkg/errors"
-	"github.com/tidwall/gjson"
-	"github.com/tidwall/sjson"
 
 	"github.com/magnusbaeck/logstash-filter-verifier/v2/internal/daemon/idgen"
 	"github.com/magnusbaeck/logstash-filter-verifier/v2/internal/daemon/logstashconfig"
@@ -33,10 +30,11 @@ type Session struct {
 	pipelines pipeline.Pipelines
 	testexec  int
 
-	log logging.Logger
+	debug bool
+	log   logging.Logger
 }
 
-func new(baseDir string, logstashController pool.LogstashController, log logging.Logger) *Session {
+func newSession(baseDir string, logstashController pool.LogstashController, log logging.Logger) *Session {
 	sessionID := idgen.New()
 	sessionDir := fmt.Sprintf("%s/session/%s", baseDir, sessionID)
 	return &Session{
@@ -232,18 +230,9 @@ func createInput(pipelineFilename string, fieldsFilename string, ids []string) e
 func (s *Session) GetResults() ([]string, error) {
 	results, err := s.logstashController.GetResults()
 	if err != nil {
-		return results, err
+		return nil, err
 	}
-	sort.Slice(results, func(i, j int) bool {
-		return gjson.Get(results[i], `__lfv_id`).Int() < gjson.Get(results[j], `__lfv_id`).Int()
-	})
-	for i := range results {
-		results[i], err = sjson.Delete(results[i], "__lfv_id")
-		if err != nil {
-			return results, err
-		}
-	}
-	return results, err
+	return results, nil
 }
 
 // GetStats returns the statistics for a test suite.

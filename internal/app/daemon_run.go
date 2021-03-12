@@ -9,24 +9,33 @@ import (
 )
 
 func makeDaemonRunCmd() *cobra.Command {
-	rootCmd := &cobra.Command{
+	cmd := &cobra.Command{
 		Use:   "run",
 		Short: "Run test suite with logstash-filter-verifier daemon",
 		RunE:  runDaemonRun,
 	}
 
-	rootCmd.Flags().StringP("pipeline", "p", "", "location of the pipelines.yml file to be processed")
-	_ = viper.BindPFlag("pipeline", rootCmd.Flags().Lookup("pipeline"))
-	rootCmd.Flags().StringP("pipeline-base", "", "", "base directory for relative paths in the pipelines.yml")
-	_ = viper.BindPFlag("pipeline-base", rootCmd.Flags().Lookup("pipeline-base"))
-	rootCmd.Flags().StringP("testcase-dir", "t", "", "directory containing the test case files")
-	_ = viper.BindPFlag("testcase-dir", rootCmd.Flags().Lookup("testcase-dir"))
+	cmd.Flags().StringP("pipeline", "p", "", "location of the pipelines.yml file to be processed")
+	_ = viper.BindPFlag("pipeline", cmd.Flags().Lookup("pipeline"))
+	cmd.Flags().StringP("pipeline-base", "", "", "base directory for relative paths in the pipelines.yml")
+	_ = viper.BindPFlag("pipeline-base", cmd.Flags().Lookup("pipeline-base"))
+	cmd.Flags().StringP("testcase-dir", "t", "", "directory containing the test case files")
+	_ = viper.BindPFlag("testcase-dir", cmd.Flags().Lookup("testcase-dir"))
+	cmd.Flags().Bool("debug", false, "enable debug mode; e.g. prevents stripping '__lfv' data from Logstash events")
+	_ = viper.BindPFlag("debug", cmd.Flags().Lookup("debug"))
 
-	return rootCmd
+	return cmd
 }
 
 func runDaemonRun(_ *cobra.Command, args []string) error {
-	t, err := run.New(viper.GetString("socket"), viper.Get("logger").(logging.Logger), viper.GetString("pipeline"), viper.GetString("pipeline-base"), viper.GetString("testcase-dir"))
+	socket := viper.GetString("socket")
+	log := viper.Get("logger").(logging.Logger)
+	pipeline := viper.GetString("pipeline")
+	pipelineBase := viper.GetString("pipeline-base")
+	testcaseDir := viper.GetString("testcase-dir")
+	debug := viper.GetBool("debug")
+
+	t, err := run.New(socket, log, pipeline, pipelineBase, testcaseDir, debug)
 	if err != nil {
 		return err
 	}

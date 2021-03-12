@@ -60,7 +60,7 @@ func (s *Controller) Create(pipelines pipeline.Pipelines, configFiles []logstash
 		return nil, err
 	}
 
-	session := new(s.tempdir, logstashController, s.log)
+	session := newSession(s.tempdir, logstashController, s.log)
 	s.sessions[session.ID()] = session
 
 	s.wg.Add(1)

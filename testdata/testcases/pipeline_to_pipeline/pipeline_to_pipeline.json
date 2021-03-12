@@ -13,10 +13,8 @@
         {
           "message": "test case message",
           "tags": [
-            "__lfv_in_passed",
             "mutate_stage_1_passed",
-            "mutate_stage_2_passed",
-            "stage2_output_passed"
+            "mutate_stage_2_passed"
           ]
         }
       ]

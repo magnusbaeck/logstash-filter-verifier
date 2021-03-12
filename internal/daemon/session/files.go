@@ -8,7 +8,7 @@ const outputPipeline = `input {
 
 filter {
   mutate {
-    add_tag => [ "{{ .PipelineOrigName }}_passed" ]
+    add_tag => [ "__lfv_out_{{ .PipelineOrigName }}_passed" ]
   }
 }
 

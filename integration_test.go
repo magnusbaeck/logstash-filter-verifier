@@ -75,10 +75,8 @@ func TestIntegration(t *testing.T) {
 
 	// Run tests
 	cases := []struct {
-		name      string
-		pipeline  string
-		basePath  string
-		testcases string
+		name  string
+		debug bool
 	}{
 		{
 			name: "basic_pipeline",
@@ -89,16 +87,25 @@ func TestIntegration(t *testing.T) {
 		{
 			name: "pipeline_to_pipeline",
 		},
+		{
+			name:  "basic_pipeline",
+			debug: true,
+		},
 	}
 
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
+			testcases := tc.name
+			if tc.debug {
+				testcases += "_debug"
+			}
 			client, err := run.New(
 				path.Join(tempdir, "integration_test.socket"),
 				log,
 				"testdata/"+tc.name+".yml",
 				"testdata/"+tc.name,
-				"testdata/testcases/"+tc.name,
+				"testdata/testcases/"+testcases,
+				tc.debug,
 			)
 			is.NoErr(err)
 
