@@ -23,6 +23,8 @@ func makeDaemonRunCmd() *cobra.Command {
 	_ = viper.BindPFlag("testcase-dir", cmd.Flags().Lookup("testcase-dir"))
 	cmd.Flags().Bool("debug", false, "enable debug mode; e.g. prevents stripping '__lfv' data from Logstash events")
 	_ = viper.BindPFlag("debug", cmd.Flags().Lookup("debug"))
+	cmd.Flags().String("metadata-key", "@metadata", "Key under which the content of the `@metadata` field is exposed in the returned events.")
+	_ = viper.BindPFlag("metadata-key", cmd.Flags().Lookup("metadata-key"))
 
 	return cmd
 }
@@ -34,8 +36,9 @@ func runDaemonRun(_ *cobra.Command, args []string) error {
 	pipelineBase := viper.GetString("pipeline-base")
 	testcaseDir := viper.GetString("testcase-dir")
 	debug := viper.GetBool("debug")
+	metadataKey := viper.GetString("metadata-key")
 
-	t, err := run.New(socket, log, pipeline, pipelineBase, testcaseDir, debug)
+	t, err := run.New(socket, log, pipeline, pipelineBase, testcaseDir, metadataKey, debug)
 	if err != nil {
 		return err
 	}

@@ -28,12 +28,13 @@ type Test struct {
 	pipeline     string
 	pipelineBase string
 	testcasePath string
+	metadataKey  string
 	debug        bool
 
 	log logging.Logger
 }
 
-func New(socket string, log logging.Logger, pipeline, pipelineBase, testcasePath string, debug bool) (Test, error) {
+func New(socket string, log logging.Logger, pipeline, pipelineBase, testcasePath string, metadataKey string, debug bool) (Test, error) {
 	if !path.IsAbs(pipelineBase) {
 		cwd, err := os.Getwd()
 		if err != nil {
@@ -46,6 +47,7 @@ func New(socket string, log logging.Logger, pipeline, pipelineBase, testcasePath
 		pipeline:     pipeline,
 		pipelineBase: pipelineBase,
 		testcasePath: testcasePath,
+		metadataKey:  metadataKey,
 		debug:        debug,
 		log:          log,
 	}, nil
@@ -167,12 +169,33 @@ func (s Test) postProcessResults(results []string) ([]string, error) {
 		return gjson.Get(results[i], `__lfv_id`).Int() < gjson.Get(results[j], `__lfv_id`).Int()
 	})
 
-	// No cleanup if debug is set
-	if s.debug {
-		return results, nil
-	}
-
 	for i := range results {
+		metadata := gjson.Get(results[i], "__metadata")
+		if metadata.Exists() && metadata.IsObject() {
+			md := make(map[string]json.RawMessage, len(metadata.Map()))
+			for key, value := range metadata.Map() {
+				if strings.HasPrefix(key, "__lfv") || strings.HasPrefix(key, "__tmp") {
+					continue
+				}
+				md[key] = json.RawMessage(value.Raw)
+			}
+			if len(md) > 0 {
+				results[i], err = sjson.Set(results[i], s.metadataKey, md)
+				if err != nil {
+					return nil, err
+				}
+			}
+		}
+		results[i], err = sjson.Delete(results[i], "__metadata")
+		if err != nil {
+			return nil, err
+		}
+
+		// No cleanup if debug is set
+		if s.debug {
+			continue
+		}
+
 		results[i], err = sjson.Delete(results[i], "__lfv_id")
 		if err != nil {
 			return nil, err
