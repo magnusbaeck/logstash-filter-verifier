@@ -188,13 +188,14 @@ output { stdout { id => testid } }`,
 filter { mutate { } }
 output { stdout { } }`,
 
-			wantErr: errors.Errorf("no IDs found for [stdin mutate stdout]"),
+			wantErr: errors.Errorf(`"filename.conf" no IDs found for [stdin mutate stdout]`),
 		},
 	}
 
 	for _, test := range cases {
 		t.Run(test.name, func(t *testing.T) {
 			f := logstashconfig.File{
+				Name: "filename.conf",
 				Body: []byte(test.config),
 			}
 

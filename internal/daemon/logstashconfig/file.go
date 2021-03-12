@@ -132,7 +132,7 @@ func (f *File) Validate() error {
 	}
 
 	if len(v.noIDs) > 0 {
-		return errors.Errorf("no IDs found for %v", v.noIDs)
+		return errors.Errorf("%q no IDs found for %v", f.Name, v.noIDs)
 	}
 	return nil
 }
