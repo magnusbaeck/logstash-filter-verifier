@@ -27,11 +27,11 @@ type Session struct {
 	baseDir    string
 	sessionDir string
 
-	pipelines pipeline.Pipelines
-	testexec  int
+	pipelines         pipeline.Pipelines
+	inputPluginCodecs map[string]string
+	testexec          int
 
-	debug bool
-	log   logging.Logger
+	log logging.Logger
 }
 
 func newSession(baseDir string, logstashController pool.LogstashController, log logging.Logger) *Session {
@@ -42,6 +42,7 @@ func newSession(baseDir string, logstashController pool.LogstashController, log 
 		baseDir:            baseDir,
 		sessionDir:         sessionDir,
 		logstashController: logstashController,
+		inputPluginCodecs:  map[string]string{},
 		log:                log,
 	}
 }
@@ -72,10 +73,11 @@ func (s *Session) setupTest(pipelines pipeline.Pipelines, configFiles []logstash
 
 	// Preprocess and Save Config Files
 	for _, configFile := range configFiles {
-		err := configFile.ReplaceInputs()
+		inputCodecs, err := configFile.ReplaceInputs(s.id)
 		if err != nil {
 			return err
 		}
+		s.inputPluginCodecs = inputCodecs
 
 		outputs, err := configFile.ReplaceOutputs()
 		if err != nil {
@@ -144,10 +146,15 @@ func (s *Session) createOutputPipelines(outputs []string) ([]pipeline.Pipeline, 
 
 // ExecuteTest runs a test case set against the Logstash configuration, that has
 // been loaded previously with SetupTest.
-func (s *Session) ExecuteTest(inputLines []string, inFields map[string]interface{}) error {
+func (s *Session) ExecuteTest(inputPlugin string, inputLines []string, inEvents []map[string]interface{}) error {
 	s.testexec++
 	pipelineName := fmt.Sprintf("lfv_input_%d", s.testexec)
 	inputDir := path.Join(s.sessionDir, "lfv_inputs", strconv.Itoa(s.testexec))
+	inputPluginName := fmt.Sprintf("%s_%s_%s", "__lfv_input", s.id, inputPlugin)
+	inputCodec, ok := s.inputPluginCodecs[inputPlugin]
+	if !ok {
+		inputCodec = "codec => plain"
+	}
 
 	// Prepare input directory
 	err := os.MkdirAll(inputDir, 0700)
@@ -156,13 +163,13 @@ func (s *Session) ExecuteTest(inputLines []string, inFields map[string]interface
 	}
 
 	fieldsFilename := path.Join(inputDir, "fields.json")
-	ids, err := prepareFields(fieldsFilename, inputLines, inFields)
+	err = prepareFields(fieldsFilename, inEvents)
 	if err != nil {
 		return err
 	}
 
 	pipelineFilename := path.Join(inputDir, "input.conf")
-	err = createInput(pipelineFilename, fieldsFilename, ids)
+	err = createInput(pipelineFilename, fieldsFilename, inputPluginName, inputLines, inputCodec, false)
 	if err != nil {
 		return err
 	}
@@ -182,41 +189,49 @@ func (s *Session) ExecuteTest(inputLines []string, inFields map[string]interface
 	return nil
 }
 
-func prepareFields(fieldsFilename string, inputLines []string, inFields map[string]interface{}) ([]string, error) {
-	// FIXME: This does not allow arbritrary nested fields yet.
+func prepareFields(fieldsFilename string, inEvents []map[string]interface{}) error {
 	fields := make(map[string]map[string]interface{})
 
-	ids := make([]string, 0, len(inputLines))
-	for i, line := range inputLines {
+	for i, event := range inEvents {
 		id := fmt.Sprintf("%d", i)
-		ids = append(ids, fmt.Sprintf("%q", id))
-		fields[id] = make(map[string]interface{})
-		fields[id]["message"] = line
-
-		for field, value := range inFields {
-			fields[id][field] = value
-		}
+		fields[id] = event
 	}
 
 	bfields, err := json.Marshal(fields)
 	if err != nil {
-		return nil, err
+		return err
 	}
 	err = ioutil.WriteFile(fieldsFilename, bfields, 0600)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
-	return ids, nil
+	return nil
 }
 
-func createInput(pipelineFilename string, fieldsFilename string, ids []string) error {
+func createInput(pipelineFilename string, fieldsFilename string, inputPluginName string, inputLines []string, inputCodec string, removeMessageField bool) error {
+	removeGeneratorFields := `"host", "sequence"`
+	if removeMessageField {
+		removeGeneratorFields += `, "message"`
+	}
+
+	// FIXME: inputLines are not properly escaped for Logstash
+	for i := range inputLines {
+		inputLines[i] = "'" + inputLines[i] + "'"
+	}
+
 	templateData := struct {
-		InputLines     string
-		FieldsFilename string
+		InputPluginName       string
+		InputLines            string
+		InputCodec            string
+		FieldsFilename        string
+		RemoveGeneratorFields string
 	}{
-		InputLines:     strings.Join(ids, ", "),
-		FieldsFilename: fieldsFilename,
+		InputPluginName:       inputPluginName,
+		InputLines:            strings.Join(inputLines, ", "),
+		InputCodec:            inputCodec,
+		FieldsFilename:        fieldsFilename,
+		RemoveGeneratorFields: removeGeneratorFields,
 	}
 	err := template.ToFile(pipelineFilename, inputGenerator, templateData, 0600)
 	if err != nil {

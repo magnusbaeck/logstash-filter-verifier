@@ -51,29 +51,60 @@ func (f *File) parse() error {
 	return nil
 }
 
-func (f *File) ReplaceInputs() error {
+func (f *File) ReplaceInputs(idPrefix string) (map[string]string, error) {
 	err := f.parse()
 	if err != nil {
-		return err
+		return nil, err
+	}
+
+	w := replaceInputsWalker{
+		idPrefix:    idPrefix,
+		inputCodecs: map[string]string{},
 	}
 
 	for i := range f.config.Input {
-		astutil.ApplyPlugins(f.config.Input[i].BranchOrPlugins, replaceInputs)
+		astutil.ApplyPlugins(f.config.Input[i].BranchOrPlugins, w.replaceInputs)
 	}
 
 	f.Body = []byte(f.config.String())
 
-	return nil
+	return w.inputCodecs, nil
 }
 
-func replaceInputs(c *astutil.Cursor) {
+type replaceInputsWalker struct {
+	idPrefix    string
+	inputCodecs map[string]string
+}
+
+func (r replaceInputsWalker) replaceInputs(c *astutil.Cursor) {
 	if c.Plugin() == nil || c.Plugin().Name() == "pipeline" {
 		return
 	}
 
+	id, err := c.Plugin().ID()
+	if err != nil {
+		panic(err)
+	}
+
+	var attrs []ast.Attribute
+	attrs = append(attrs, ast.NewStringAttribute("address", fmt.Sprintf("%s_%s_%s", "__lfv_input", r.idPrefix, id), ast.Bareword))
+
+	for _, attr := range c.Plugin().Attributes {
+		if attr == nil {
+			continue
+		}
+		switch attr.Name() {
+		case "add_field", "tags":
+			attrs = append(attrs, attr)
+		case "codec":
+			r.inputCodecs[id] = attr.String()
+		default:
+		}
+	}
+
 	// TODO: __lfv_input must reflect the actual input, that has been replaced, such that this input
 	// can be referenced in the test case configuration.
-	c.Replace(ast.NewPlugin("pipeline", ast.NewStringAttribute("address", "__lfv_input", ast.Bareword)))
+	c.Replace(ast.NewPlugin("pipeline", attrs...))
 }
 
 func (f *File) ReplaceOutputs() ([]string, error) {

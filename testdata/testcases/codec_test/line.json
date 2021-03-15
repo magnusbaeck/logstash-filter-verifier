@@ -1,0 +1,25 @@
+{
+  "ignore": [
+    "@timestamp"
+  ],
+  "input_plugin": "line",
+  "testcases": [
+    {
+      "input": [
+        "test case message\ntest case message 2"
+      ],
+      "expected": [
+        {
+          "input_codec": "line",
+          "message": "test case message",
+          "tags": [ "input_codec_line" ]
+        },
+        {
+          "input_codec": "line",
+          "message": "test case message 2",
+          "tags": [ "input_codec_line" ]
+        }
+      ]
+    }
+  ]
+}

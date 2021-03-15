@@ -353,13 +353,13 @@ func (d *Daemon) ExecuteTest(ctx context.Context, in *pb.ExecuteTestRequest) (ou
 		}
 	}()
 
-	fields := map[string]interface{}{}
-	err = json.Unmarshal(in.Fields, &fields)
+	events := []map[string]interface{}{}
+	err = json.Unmarshal(in.Events, &events)
 	if err != nil {
 		return nil, errors.Wrap(err, "invalid json for fields")
 	}
 
-	err = session.ExecuteTest(in.InputLines, fields)
+	err = session.ExecuteTest(in.InputPlugin, in.InputLines, events)
 	if err != nil {
 		return nil, err
 	}

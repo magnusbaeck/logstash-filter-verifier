@@ -91,6 +91,9 @@ func TestIntegration(t *testing.T) {
 			name:  "basic_pipeline_debug",
 			debug: true,
 		},
+		{
+			name: "codec_test",
+		},
 	}
 
 	for _, tc := range cases {

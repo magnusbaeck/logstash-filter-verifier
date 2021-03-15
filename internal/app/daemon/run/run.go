@@ -109,14 +109,15 @@ func (s Test) Run() error {
 	}
 
 	for _, t := range tests {
-		b, err := json.Marshal(t.InputFields)
+		b, err := json.Marshal(t.Events)
 		if err != nil {
 			return err
 		}
 		result, err := c.ExecuteTest(context.Background(), &pb.ExecuteTestRequest{
-			SessionID:  sessionID,
-			InputLines: t.InputLines,
-			Fields:     b,
+			SessionID:   sessionID,
+			InputPlugin: t.InputPlugin,
+			InputLines:  t.InputLines,
+			Events:      b,
 		})
 		if err != nil {
 			return err

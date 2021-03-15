@@ -5,6 +5,7 @@
   "ignore": [
     "@timestamp"
   ],
+  "input_plugin": "stdin",
   "testcases": [
     {
       "input": [

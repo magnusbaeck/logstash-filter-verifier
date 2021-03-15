@@ -1,11 +1,8 @@
 {
-  "fields": {
-    "type": "syslog"
-  },
   "ignore": [
     "@timestamp"
   ],
-  "input_plugin": "stdin",
+  "input_plugin": "plain",
   "testcases": [
     {
       "input": [
@@ -14,20 +11,14 @@
       ],
       "expected": [
         {
+          "input_codec": "plain",
           "message": "test case message",
-          "tags": [
-            "main2_passed",
-            "sut_passed"
-          ],
-          "type": "syslog"
+          "tags": [ "input_codec_plain" ]
         },
         {
+          "input_codec": "plain",
           "message": "test case message 2",
-          "tags": [
-            "main2_passed",
-            "sut_passed"
-          ],
-          "type": "syslog"
+          "tags": [ "input_codec_plain" ]
         }
       ]
     }

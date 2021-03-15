@@ -32,6 +32,13 @@ type TestCaseSet struct {
 	// test case was read.
 	File string `json:"-" yaml:"-"`
 
+	// The unique ID of the input plugin in the tested configuration, where the
+	// test input is coming from. This is necessary, if a setup with multiple
+	// inputs is tested, which either have different codecs or are part of
+	// different pipelines.
+	// https://www.elastic.co/guide/en/logstash/7.10/plugins-inputs-file.html#plugins-inputs-file-id
+	InputPlugin string `json:"input_plugin" yaml:"input_plugin"`
+
 	// Codec names the Logstash codec that should be used when
 	// events are read. This is normally "line" or "json_lines".
 	Codec string `json:"codec" yaml:"codec"`
@@ -79,7 +86,12 @@ type TestCaseSet struct {
 	// may be supplied.
 	TestCases []TestCase `json:"testcases" yaml:"testcases"`
 
-	descriptions []string `json:"descriptions" yaml:"descriptions"`
+	// Events contains the fields for each event. This fields is filled
+	// in the New function. The sources are: InputFields, TestCase.Event and
+	// TestCase.InputLines
+	Events []logstash.FieldSet `json:"-" yaml:"-"`
+
+	descriptions []string
 }
 
 // TestCase is a pair of an input line that should be fed
@@ -89,6 +101,10 @@ type TestCase struct {
 	// InputLines contains the lines of input that should be fed
 	// to the Logstash process.
 	InputLines []string `json:"input" yaml:"input"`
+
+	// Local fields, only added to the events of this test case.
+	// These fields overwrite global fields.
+	Event logstash.FieldSet `json:"event" yaml:"event"`
 
 	// ExpectedEvents contains a slice of expected events to be
 	// compared to the actual events produced by the Logstash
@@ -173,9 +189,25 @@ func New(reader io.Reader, configType string) (*TestCaseSet, error) {
 	tcs.IgnoredFields = append(tcs.IgnoredFields, defaultIgnoredFields...)
 	sort.Strings(tcs.IgnoredFields)
 	tcs.descriptions = make([]string, len(tcs.ExpectedEvents))
+	for range tcs.InputLines {
+		tcs.Events = append(tcs.Events, tcs.InputFields)
+	}
 	for _, tc := range tcs.TestCases {
+		// Add event, if there are no input lines.
+		if len(tc.InputLines) == 0 {
+			tc.InputLines = []string{""}
+		}
 		tcs.InputLines = append(tcs.InputLines, tc.InputLines...)
 		tcs.ExpectedEvents = append(tcs.ExpectedEvents, tc.ExpectedEvents...)
+		// Process each input line
+		for range tc.InputLines {
+			// Global Fields first.
+			tcs.Events = append(tcs.Events, tcs.InputFields)
+			// Merge with test case fields, eventually overwriting global fields.
+			for k, v := range tc.Event {
+				tcs.Events[len(tcs.Events)-1][k] = v
+			}
+		}
 		for range tc.ExpectedEvents {
 			tcs.descriptions = append(tcs.descriptions, tc.Description)
 		}

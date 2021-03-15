@@ -27,8 +27,9 @@ message SetupTestResponse {
 
 message ExecuteTestRequest {
   string sessionID = 1;
-  repeated string inputLines = 2;
-  bytes fields = 3;
+  string input_plugin = 2;
+  repeated string inputLines = 3;
+  bytes events = 4;
 }
 
 message ExecuteTestResponse {

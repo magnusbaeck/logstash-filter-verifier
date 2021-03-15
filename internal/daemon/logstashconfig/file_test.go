@@ -50,21 +50,23 @@ func TestReplaceInputs(t *testing.T) {
 	}{
 		{
 			name:   "successful replacement",
-			config: "input { stdin{} }",
+			config: "input { stdin{ id => testid } }",
 
 			wantConfig: `input {
   pipeline {
-    address => __lfv_input
+    address => __lfv_input_prefix_testid
   }
 }
 `,
 		},
 		{
 			name:   "successful untouched pipeline input",
-			config: "input { pipeline{} }",
+			config: "input { pipeline{ id => testid } }",
 
 			wantConfig: `input {
-  pipeline {}
+  pipeline {
+    id => testid
+  }
 }
 `,
 		},
@@ -78,7 +80,8 @@ func TestReplaceInputs(t *testing.T) {
 				Body: []byte(test.config),
 			}
 
-			err := f.ReplaceInputs()
+			// FIXME: Add test for the inputCodecs map as well
+			_, err := f.ReplaceInputs("prefix")
 			is.NoErr(err)
 
 			is.Equal(test.wantConfig, string(f.Body))
@@ -147,7 +150,7 @@ func TestReplaceOutputsWithoutID(t *testing.T) {
 	}{
 		{
 			name:   "successful replacement without id",
-			config: "output { stdout{} }",
+			config: "output { stdout{ } }",
 		},
 	}
 

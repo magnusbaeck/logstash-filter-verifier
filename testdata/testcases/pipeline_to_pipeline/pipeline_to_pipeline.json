@@ -4,6 +4,7 @@
   "ignore": [
     "@timestamp"
   ],
+  "input_plugin": "stage1_input",
   "testcases": [
     {
       "input": [

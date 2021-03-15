@@ -11,8 +11,9 @@ import (
 	"testing"
 
 	"github.com/imkira/go-observer"
-	"github.com/magnusbaeck/logstash-filter-verifier/v2/internal/logstash"
 	"github.com/stretchr/testify/assert"
+
+	"github.com/magnusbaeck/logstash-filter-verifier/v2/internal/logstash"
 )
 
 func TestNew(t *testing.T) {
@@ -75,6 +76,7 @@ func TestNew(t *testing.T) {
 				InputLines:    []string{"{\"[test][path]\": \"test\"}"},
 				IgnoredFields: []string{"@version"},
 				InputFields:   logstash.FieldSet{},
+				Events:        []logstash.FieldSet{{}},
 			},
 		},
 		// handle input with bracket notation when codec is json_lines
@@ -85,6 +87,7 @@ func TestNew(t *testing.T) {
 				InputLines:    []string{"{\"test\":{\"path\":\"test\"}}"},
 				IgnoredFields: []string{"@version"},
 				InputFields:   logstash.FieldSet{},
+				Events:        []logstash.FieldSet{{}},
 			},
 		},
 	}

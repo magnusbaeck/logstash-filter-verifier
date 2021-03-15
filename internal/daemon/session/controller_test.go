@@ -67,7 +67,7 @@ func TestSession(t *testing.T) {
 			configFiles := []logstashconfig.File{
 				{
 					Name: "main.conf",
-					Body: []byte(`input { stdin{} } filter { mutate{ add_tag => [ "test" ] } } output { stdout{} }`),
+					Body: []byte(`input { stdin{ id => testid } } filter { mutate{ add_tag => [ "test" ] } } output { stdout{} }`),
 				},
 			}
 
@@ -85,15 +85,16 @@ func TestSession(t *testing.T) {
 			is.NoErr(err)
 
 			inputLines := []string{"some_random_input"}
-			inFields := map[string]interface{}{
-				"some_random_key": "value",
+			inFields := []map[string]interface{}{
+				{
+					"some_random_key": "value",
+				},
 			}
-			err = s.ExecuteTest(inputLines, inFields)
+			err = s.ExecuteTest("input", inputLines, inFields)
 			is.NoErr(err)
 
 			is.True(file.Exists(path.Join(tempdir, "session", s.ID(), "lfv_inputs", "1", "fields.json")))                              // lfv_inputs/1/fields.json
 			is.True(file.Contains(path.Join(tempdir, "session", s.ID(), "lfv_inputs", "1", "fields.json"), "some_random_key"))         // lfv_inputs/1/fields.json contains "some_random_key"
-			is.True(file.Contains(path.Join(tempdir, "session", s.ID(), "lfv_inputs", "1", "fields.json"), "some_random_input"))       // lfv_inputs/1/fields.json contains "some_random_input"
 			is.True(file.Exists(path.Join(tempdir, "session", s.ID(), "lfv_inputs", "1", "input.conf")))                               // lfv_inputs/1/input.conf
 			is.True(file.Contains(path.Join(tempdir, "session", s.ID(), "lfv_inputs", "1", "input.conf"), "lfv_inputs/1/fields.json")) // lfv_inputs/1/input.conf contains "lfv_inputs/1/fields.json"
 
@@ -156,7 +157,7 @@ func TestCreate(t *testing.T) {
 			configFiles := []logstashconfig.File{
 				{
 					Name: "main.conf",
-					Body: []byte(`input { stdin{} } filter { mutate{ add_tag => [ "test" ] } } output { stdout{} }`),
+					Body: []byte(`input { stdin{ id => testid } } filter { mutate{ add_tag => [ "test" ] } } output { stdout{} }`),
 				},
 			}
 
