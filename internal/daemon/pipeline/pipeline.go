@@ -87,10 +87,6 @@ func (a Archive) Validate() error {
 	return nil
 }
 
-// func (a Archive) walk() {
-
-// }
-
 func (a Archive) Zip() ([]byte, error) {
 	buf := new(bytes.Buffer)
 	w := zip.NewWriter(buf)

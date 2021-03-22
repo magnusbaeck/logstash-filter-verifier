@@ -28,12 +28,7 @@ func (f File) Save(targetDir string) error {
 		return err
 	}
 
-	err = ioutil.WriteFile(path.Join(targetDir, f.Name), f.Body, 0600)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return ioutil.WriteFile(path.Join(targetDir, f.Name), f.Body, 0600)
 }
 
 func (f *File) parse() error {
