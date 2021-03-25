@@ -296,22 +296,22 @@ func TestRemoveInputOutput(t *testing.T) {
 		{
 			// Input, output, and filter
 			"input { beats { port => 5044 } } filter { grok {} } output{ elasticsearch {} }",
-			"filter {  grok {      }}",
+			"filter {  grok {}}",
 		},
 		{
 			// Input and filter
 			"input { beats { port => 5044 } } filter { grok {} }",
-			"filter {  grok {      }}",
+			"filter {  grok {}}",
 		},
 		{
 			// Output and filter
 			"filter { grok {} } output{ elasticsearch {} }",
-			"filter {  grok {      }}",
+			"filter {  grok {}}",
 		},
 		{
 			// Filter only
 			"filter { grok {} }",
-			"filter {  grok {      }}",
+			"filter {  grok {}}",
 		},
 		{
 			// Empty file
