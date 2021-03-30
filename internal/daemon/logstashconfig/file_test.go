@@ -104,7 +104,9 @@ func TestReplaceOutputs(t *testing.T) {
 			wantOutputs: []string{"testid"},
 			wantConfig: `output {
   pipeline {
-    send_to => [ "lfv_output_testid" ]
+    send_to => [
+      "lfv_output_testid"
+    ]
   }
 }
 `,
@@ -177,13 +179,18 @@ func TestValidate(t *testing.T) {
 		name   string
 		config string
 
-		wantErr error
+		wantErr     error
+		wantInputs  int
+		wantOutputs int
 	}{
 		{
 			name: "successful validate",
 			config: `input { stdin { id => stdin } }
 filter { mutate { id => mutate } }
 output { stdout { id => testid } }`,
+
+			wantInputs:  1,
+			wantOutputs: 1,
 		},
 		{
 			name: "error without ids",
@@ -192,6 +199,15 @@ filter { mutate { } }
 output { stdout { } }`,
 
 			wantErr: errors.Errorf(`"filename.conf" no IDs found for [stdin mutate stdout]`),
+		},
+		{
+			name: "successful validate - with pipeline input and output",
+			config: `input { stdin { id => stdin } file { id => file } pipeline { id => pipeline } }
+filter { mutate { id => mutate } }
+output { stdout { id => testid } file { id => file } pipeline { id => pipeline } }`,
+
+			wantInputs:  2,
+			wantOutputs: 2,
 		},
 	}
 
@@ -202,8 +218,14 @@ output { stdout { } }`,
 				Body: []byte(test.config),
 			}
 
-			err := f.Validate()
+			inputs, outputs, err := f.Validate()
 			compareErr(t, test.wantErr, err)
+			if test.wantInputs != inputs {
+				t.Errorf("expected %d inputs, got %d", test.wantInputs, inputs)
+			}
+			if test.wantOutputs != outputs {
+				t.Errorf("expected %d outputs, got %d", test.wantOutputs, outputs)
+			}
 		})
 	}
 }

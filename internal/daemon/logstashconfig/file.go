@@ -144,37 +144,50 @@ func (o *outputPipelineReplacer) walk(c *astutil.Cursor) {
 	c.Replace(ast.NewPlugin("pipeline", ast.NewArrayAttribute("send_to", ast.NewStringAttribute("", outputName, ast.DoubleQuoted))))
 }
 
-func (f *File) Validate() error {
-	err := f.parse()
+func (f *File) Validate() (inputs int, outputs int, err error) {
+	err = f.parse()
 	if err != nil {
-		return err
+		return 0, 0, err
 	}
 
 	v := validator{}
 
 	for i := range f.config.Input {
+		v.pluginType = ast.Input
 		astutil.ApplyPlugins(f.config.Input[i].BranchOrPlugins, v.walk)
 	}
 	for i := range f.config.Filter {
+		v.pluginType = ast.Filter
 		astutil.ApplyPlugins(f.config.Filter[i].BranchOrPlugins, v.walk)
 	}
 	for i := range f.config.Output {
+		v.pluginType = ast.Output
 		astutil.ApplyPlugins(f.config.Output[i].BranchOrPlugins, v.walk)
 	}
 
 	if len(v.noIDs) > 0 {
-		return errors.Errorf("%q no IDs found for %v", f.Name, v.noIDs)
+		return 0, 0, errors.Errorf("%q no IDs found for %v", f.Name, v.noIDs)
 	}
-	return nil
+	return v.inputs, v.outputs, nil
 }
 
 type validator struct {
-	noIDs []string
+	noIDs      []string
+	pluginType ast.PluginType
+	inputs     int
+	outputs    int
 }
 
 func (v *validator) walk(c *astutil.Cursor) {
 	_, err := c.Plugin().ID()
 	if err != nil {
 		v.noIDs = append(v.noIDs, c.Plugin().Name())
+	}
+
+	if v.pluginType == ast.Input && c.Plugin().Name() != "pipeline" {
+		v.inputs++
+	}
+	if v.pluginType == ast.Output && c.Plugin().Name() != "pipeline" {
+		v.outputs++
 	}
 }

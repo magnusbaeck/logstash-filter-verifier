@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"github.com/bmatcuk/doublestar/v2"
+	"github.com/pkg/errors"
 	"gopkg.in/yaml.v2"
 
 	"github.com/magnusbaeck/logstash-filter-verifier/v2/internal/daemon/logstashconfig"
@@ -51,6 +52,7 @@ func New(file, basePath string) (Archive, error) {
 }
 
 func (a Archive) Validate() error {
+	var inputs, outputs int
 	for _, pipeline := range a.Pipelines {
 		files, err := doublestar.Glob(path.Join(a.BasePath, pipeline.Config))
 		if err != nil {
@@ -78,12 +80,19 @@ func (a Archive) Validate() error {
 				Body: body,
 			}
 
-			err = configFile.Validate()
+			in, out, err := configFile.Validate()
 			if err != nil {
 				return err
 			}
+			inputs += in
+			outputs += out
 		}
 	}
+
+	if inputs == 0 || outputs == 0 {
+		return errors.Errorf("expect the Logstash config to have at least 1 input and 1 output, got %d inputs and %d outputs", inputs, outputs)
+	}
+
 	return nil
 }
 
