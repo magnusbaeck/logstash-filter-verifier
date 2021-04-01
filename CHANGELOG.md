@@ -4,6 +4,15 @@ Logstash Filter Verifier Change Log
 All timestamps are in the Europe/Stockholm timezone.
 
 
+1.6.3 (2021-04-01)
+------------------
+
+  * Fix for a bug that caused large integer literals in the
+    configuration files to get replaced by their counterpart
+    in scientific notation, i.e. 2000000 would become 2e+06,
+    which Logstash doesn't support.
+
+
 1.6.2 (2020-11-21)
 ------------------
 
