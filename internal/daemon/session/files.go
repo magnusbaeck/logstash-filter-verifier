@@ -53,15 +53,14 @@ filter {
     destination => "[@metadata][__lfv_fields]"
     exact => true
     override => true
-    # TODO: Add default value (e.g. "__lfv_fields_not_found"), if not found in dictionary
+    fallback => "__lfv_fields_not_found"
   }
 
   ruby {
     id => '__lfv_ruby_fields'
-    # TODO: If default value ("__lfv_fields_not_found"), then skip this ruby
-    # code and add an tag instead
     code => 'fields = event.get("[@metadata][__lfv_fields]")
-             fields.each { |key, value| event.set(key, value) }'
+             fields.each { |key, value| event.set(key, value) } unless fields == "__lfv_fields_not_found"
+             event.tag("lfv_fields_not_found") if fields == "__lfv_fields_not_found"'
     tag_on_exception => '__lfv_ruby_fields_exception'
   }
 }
