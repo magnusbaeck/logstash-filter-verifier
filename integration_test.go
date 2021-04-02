@@ -24,8 +24,8 @@ func TestIntegration(t *testing.T) {
 	is := is.New(t)
 
 	testLogger := &logging.LoggerMock{
-		DebugFunc:    func(args ...interface{}) { t.Log(args...) },
-		DebugfFunc:   func(format string, args ...interface{}) { t.Logf(format, args...) },
+		DebugFunc:    func(args ...interface{}) {},
+		DebugfFunc:   func(format string, args ...interface{}) {},
 		ErrorFunc:    func(args ...interface{}) { t.Log(args...) },
 		ErrorfFunc:   func(format string, args ...interface{}) { t.Logf(format, args...) },
 		FatalFunc:    func(args ...interface{}) { t.Log(args...) },
@@ -34,6 +34,13 @@ func TestIntegration(t *testing.T) {
 		InfofFunc:    func(format string, args ...interface{}) { t.Logf(format, args...) },
 		WarningFunc:  func(args ...interface{}) { t.Log(args...) },
 		WarningfFunc: func(format string, args ...interface{}) { t.Logf(format, args...) },
+	}
+	logging.SetLevel("INFO")
+
+	if os.Getenv("INTEGRATION_TEST_DEBUG") == "1" {
+		testLogger.DebugFunc = func(args ...interface{}) { t.Log(args...) }
+		testLogger.DebugfFunc = func(format string, args ...interface{}) { t.Logf(format, args...) }
+		logging.SetLevel("DEBUG")
 	}
 
 	tempdir := t.TempDir()
