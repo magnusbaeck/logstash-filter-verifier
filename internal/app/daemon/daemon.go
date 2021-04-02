@@ -45,8 +45,6 @@ type Daemon struct {
 	logstashPath string
 	keptEnvVars  []string
 
-	metadataKey string
-
 	tempdir string
 
 	inflightShutdownTimeout time.Duration
