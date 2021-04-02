@@ -1,0 +1,33 @@
+{
+  "ignore": [
+    "@timestamp"
+  ],
+  "input_plugin": "json",
+  "testcases": [
+    {
+      "input": [
+        "[ {\"test\": \"foo\", \"value\": 0},{\"test\": \"bar\", \"value\": 1},{\"test\": \"baz\", \"value\": 2} ]"
+      ],
+      "expected": [
+        {
+          "input_codec": "json",
+          "test": "foo",
+          "tags": [ "input_codec_json" ],
+          "value": 0
+        },
+        {
+          "input_codec": "json",
+          "test": "bar",
+          "tags": [ "input_codec_json" ],
+          "value": 1
+        },
+        {
+          "input_codec": "json",
+          "test": "baz",
+          "tags": [ "input_codec_json" ],
+          "value": 2
+        }
+      ]
+    }
+  ]
+}

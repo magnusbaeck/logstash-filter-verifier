@@ -1,0 +1,2 @@
+- pipeline.id: main
+  path.config: "codec_optional_test.conf"

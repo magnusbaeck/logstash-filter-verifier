@@ -77,6 +77,10 @@ func TestIntegration(t *testing.T) {
 	cases := []struct {
 		name  string
 		debug bool
+
+		// optional integration tests require additional logstash plugins,
+		// which are not provided by a default installation.
+		optional bool
 	}{
 		{
 			name: "basic_pipeline",
@@ -94,10 +98,17 @@ func TestIntegration(t *testing.T) {
 		{
 			name: "codec_test",
 		},
+		{
+			name:     "codec_optional_test",
+			optional: true,
+		},
 	}
 
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
+			if tc.optional && os.Getenv("INTEGRATION_TEST_OPTIONAL") != "1" {
+				t.Skipf("optional integration test %q skipped, enable with env var `INTEGRATION_TEST_OPTIONAL=1`", tc.name)
+			}
 			client, err := run.New(
 				path.Join(tempdir, "integration_test.socket"),
 				log,
