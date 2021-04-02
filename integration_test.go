@@ -113,6 +113,8 @@ func TestIntegration(t *testing.T) {
 
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
+			is := is.New(t)
+
 			if tc.optional && os.Getenv("INTEGRATION_TEST_OPTIONAL") != "1" {
 				t.Skipf("optional integration test %q skipped, enable with env var `INTEGRATION_TEST_OPTIONAL=1`", tc.name)
 			}

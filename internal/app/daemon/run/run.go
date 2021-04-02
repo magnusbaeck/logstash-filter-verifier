@@ -3,6 +3,7 @@ package run
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"net"
 	"os"
 	"path"
@@ -108,6 +109,7 @@ func (s Test) Run() error {
 		}
 	}
 
+	testsPassed := true
 	for _, t := range tests {
 		b, err := json.Marshal(t.Events)
 		if err != nil {
@@ -138,9 +140,12 @@ func (s Test) Run() error {
 			events = append(events, event)
 		}
 
-		_, err = t.Compare(events, []string{"diff", "-u"}, liveObserver)
+		ok, err := t.Compare(events, []string{"diff", "-u"}, liveObserver)
 		if err != nil {
 			return err
+		}
+		if !ok {
+			testsPassed = false
 		}
 	}
 
@@ -158,6 +163,10 @@ func (s Test) Run() error {
 		if err := obs.Finalize(); err != nil {
 			return err
 		}
+	}
+
+	if !testsPassed {
+		return errors.New("failed test cases")
 	}
 
 	return nil
