@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/matryer/is"
+	"github.com/spf13/viper"
 
 	"github.com/magnusbaeck/logstash-filter-verifier/v2/internal/app/daemon"
 	"github.com/magnusbaeck/logstash-filter-verifier/v2/internal/app/daemon/run"
@@ -22,6 +23,18 @@ func TestIntegration(t *testing.T) {
 	}
 
 	is := is.New(t)
+
+	viper.SetConfigName("logstash-filter-verifier")
+	viper.AddConfigPath(".")
+
+	viper.SetDefault("logstash.path", "/usr/share/logstash/bin/logstash")
+
+	// Read config
+	if err := viper.ReadInConfig(); err != nil {
+		if _, ok := err.(viper.ConfigFileNotFoundError); !ok {
+			t.Fatalf("Error processing config file: %v", err)
+		}
+	}
 
 	testLogger := &logging.LoggerMock{
 		DebugFunc:    func(args ...interface{}) {},
@@ -46,7 +59,7 @@ func TestIntegration(t *testing.T) {
 	tempdir := t.TempDir()
 	// Start Daemon
 	socket := filepath.Join(tempdir, "integration_test.socket")
-	logstashPath := filepath.Join("3rdparty/logstash-7.10.0/bin/logstash")
+	logstashPath := viper.GetString("logstash.path")
 	if !file.Exists(logstashPath) {
 		t.Fatalf("Logstash needs to be present in %q for the integration tests to work", logstashPath)
 	}
