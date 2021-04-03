@@ -79,6 +79,7 @@ func makeRootCmd(version string) *cobra.Command {
 
 	rootCmd.AddCommand(makeStandaloneCmd())
 	rootCmd.AddCommand(makeDaemonCmd())
+	rootCmd.AddCommand(makeSetupCmd())
 
 	return rootCmd
 }
