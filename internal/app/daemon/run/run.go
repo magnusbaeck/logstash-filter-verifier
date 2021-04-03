@@ -7,6 +7,7 @@ import (
 	"net"
 	"os"
 	"path"
+	"path/filepath"
 	"sort"
 	"strings"
 	"time"
@@ -41,7 +42,7 @@ func New(socket string, log logging.Logger, pipeline, pipelineBase, testcasePath
 		if err != nil {
 			return Test{}, err
 		}
-		pipelineBase = path.Join(cwd, pipelineBase)
+		pipelineBase = filepath.Join(cwd, pipelineBase)
 	}
 	return Test{
 		socket:       socket,

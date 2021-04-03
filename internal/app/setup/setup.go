@@ -5,7 +5,6 @@ import (
 	"io"
 	"net/http"
 	"os"
-	"path"
 	"path/filepath"
 	"strings"
 
@@ -54,10 +53,10 @@ func (s *Setup) Run() error {
 		oss = "oss-"
 	}
 	filename := fmt.Sprintf("logstash-%s%s-%s.%s", oss, s.version, s.osArch, s.archiveType)
-	targetDirVersion := path.Join(s.targetDir, fmt.Sprintf("logstash-%s%s-%s", oss, s.version, s.osArch))
+	targetDirVersion := filepath.Join(s.targetDir, fmt.Sprintf("logstash-%s%s-%s", oss, s.version, s.osArch))
 	if semver.Compare("v"+s.version, firstOSSpecificRelease) < 0 {
 		filename = fmt.Sprintf("logstash-%s%s.%s", oss, s.version, s.archiveType)
-		targetDirVersion = path.Join(s.targetDir, fmt.Sprintf("logstash-%s%s-%s", oss, s.version, s.osArch))
+		targetDirVersion = filepath.Join(s.targetDir, fmt.Sprintf("logstash-%s%s-%s", oss, s.version, s.osArch))
 	}
 
 	targetFile := filepath.Join(downloadDir, filename)

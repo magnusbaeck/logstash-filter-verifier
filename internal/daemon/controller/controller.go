@@ -4,7 +4,7 @@ import (
 	"context"
 	"io/ioutil"
 	"os"
-	"path"
+	"path/filepath"
 	"sync"
 
 	"gopkg.in/yaml.v2"
@@ -35,7 +35,7 @@ type Controller struct {
 func NewController(instance Instance, baseDir string, log logging.Logger) (*Controller, error) {
 	id := idgen.New()
 
-	workDir := path.Join(baseDir, LogstashInstanceDirectoryPrefix, id)
+	workDir := filepath.Join(baseDir, LogstashInstanceDirectoryPrefix, id)
 
 	templateData := struct {
 		WorkDir string
@@ -56,7 +56,7 @@ func NewController(instance Instance, baseDir string, log logging.Logger) (*Cont
 	}
 
 	for filename, tmpl := range templates {
-		err = template.ToFile(path.Join(workDir, filename), tmpl, templateData, 0600)
+		err = template.ToFile(filepath.Join(workDir, filename), tmpl, templateData, 0600)
 		if err != nil {
 			return nil, err
 		}
@@ -171,7 +171,7 @@ func (c *Controller) writePipelines(pipelines ...pipeline.Pipeline) error {
 		return err
 	}
 
-	err = ioutil.WriteFile(path.Join(c.workDir, "pipelines.yml"), pipelinesBody, 0600)
+	err = ioutil.WriteFile(filepath.Join(c.workDir, "pipelines.yml"), pipelinesBody, 0600)
 	if err != nil {
 		return err
 	}

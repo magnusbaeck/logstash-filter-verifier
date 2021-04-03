@@ -1,7 +1,7 @@
 package logstashconfig_test
 
 import (
-	"path"
+	"path/filepath"
 	"strings"
 	"testing"
 
@@ -35,8 +35,8 @@ func TestSave(t *testing.T) {
 			err := f.Save(tempdir)
 			is.NoErr(err)
 
-			is.True(file.Exists(path.Join(tempdir, f.Name)))                   // test.conf
-			is.True(file.Contains(path.Join(tempdir, f.Name), string(f.Body))) // test.conf contains "test"
+			is.True(file.Exists(filepath.Join(tempdir, f.Name)))                   // test.conf
+			is.True(file.Contains(filepath.Join(tempdir, f.Name), string(f.Body))) // test.conf contains "test"
 		})
 	}
 }

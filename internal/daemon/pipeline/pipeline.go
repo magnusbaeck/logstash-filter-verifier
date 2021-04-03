@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path"
+	"path/filepath"
 	"strings"
 
 	"github.com/bmatcuk/doublestar/v2"
@@ -54,7 +55,7 @@ func New(file, basePath string) (Archive, error) {
 func (a Archive) Validate() error {
 	var inputs, outputs int
 	for _, pipeline := range a.Pipelines {
-		files, err := doublestar.Glob(path.Join(a.BasePath, pipeline.Config))
+		files, err := doublestar.Glob(filepath.Join(a.BasePath, pipeline.Config))
 		if err != nil {
 			return err
 		}
@@ -67,7 +68,7 @@ func (a Archive) Validate() error {
 				if err != nil {
 					return err
 				}
-				relFile = strings.TrimPrefix(file, path.Join(cwd, a.BasePath))
+				relFile = strings.TrimPrefix(file, filepath.Join(cwd, a.BasePath))
 			}
 
 			body, err := ioutil.ReadFile(file)
@@ -114,7 +115,7 @@ func (a Archive) Zip() ([]byte, error) {
 	}
 
 	for _, pipeline := range a.Pipelines {
-		files, err := doublestar.Glob(path.Join(a.BasePath, pipeline.Config))
+		files, err := doublestar.Glob(filepath.Join(a.BasePath, pipeline.Config))
 		if err != nil {
 			return nil, err
 		}
@@ -127,7 +128,7 @@ func (a Archive) Zip() ([]byte, error) {
 				if err != nil {
 					return nil, err
 				}
-				relFile = strings.TrimPrefix(file, path.Join(cwd, a.BasePath))
+				relFile = strings.TrimPrefix(file, filepath.Join(cwd, a.BasePath))
 			}
 
 			f, err := w.Create(relFile)

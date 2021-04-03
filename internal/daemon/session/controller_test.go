@@ -1,7 +1,7 @@
 package session_test
 
 import (
-	"path"
+	"path/filepath"
 	"testing"
 	"time"
 
@@ -74,9 +74,9 @@ func TestSession(t *testing.T) {
 			s, err := c.Create(pipelines, configFiles)
 			is.NoErr(err)
 
-			is.True(file.Exists(path.Join(tempdir, "session", s.ID(), "sut", "main.conf")))                  // sut/main.conf
-			is.True(file.Contains(path.Join(tempdir, "session", s.ID(), "sut", "main.conf"), "__lfv_input")) // sut/main.conf contains "__lfv_input"
-			is.True(file.Contains(path.Join(tempdir, "session", s.ID(), "sut", "main.conf"), "lfv_output_")) // sut/main.conf contains "lfv_output_"
+			is.True(file.Exists(filepath.Join(tempdir, "session", s.ID(), "sut", "main.conf")))                  // sut/main.conf
+			is.True(file.Contains(filepath.Join(tempdir, "session", s.ID(), "sut", "main.conf"), "__lfv_input")) // sut/main.conf contains "__lfv_input"
+			is.True(file.Contains(filepath.Join(tempdir, "session", s.ID(), "sut", "main.conf"), "lfv_output_")) // sut/main.conf contains "lfv_output_"
 
 			_, err = c.Get("invalid")
 			is.True(err != nil) // Get invalid session error
@@ -93,10 +93,10 @@ func TestSession(t *testing.T) {
 			err = s.ExecuteTest("input", inputLines, inFields)
 			is.NoErr(err)
 
-			is.True(file.Exists(path.Join(tempdir, "session", s.ID(), "lfv_inputs", "1", "fields.json")))                              // lfv_inputs/1/fields.json
-			is.True(file.Contains(path.Join(tempdir, "session", s.ID(), "lfv_inputs", "1", "fields.json"), "some_random_key"))         // lfv_inputs/1/fields.json contains "some_random_key"
-			is.True(file.Exists(path.Join(tempdir, "session", s.ID(), "lfv_inputs", "1", "input.conf")))                               // lfv_inputs/1/input.conf
-			is.True(file.Contains(path.Join(tempdir, "session", s.ID(), "lfv_inputs", "1", "input.conf"), "lfv_inputs/1/fields.json")) // lfv_inputs/1/input.conf contains "lfv_inputs/1/fields.json"
+			is.True(file.Exists(filepath.Join(tempdir, "session", s.ID(), "lfv_inputs", "1", "fields.json")))                              // lfv_inputs/1/fields.json
+			is.True(file.Contains(filepath.Join(tempdir, "session", s.ID(), "lfv_inputs", "1", "fields.json"), "some_random_key"))         // lfv_inputs/1/fields.json contains "some_random_key"
+			is.True(file.Exists(filepath.Join(tempdir, "session", s.ID(), "lfv_inputs", "1", "input.conf")))                               // lfv_inputs/1/input.conf
+			is.True(file.Contains(filepath.Join(tempdir, "session", s.ID(), "lfv_inputs", "1", "input.conf"), "lfv_inputs/1/fields.json")) // lfv_inputs/1/input.conf contains "lfv_inputs/1/fields.json"
 
 			results, err := s.GetResults()
 			is.NoErr(err)

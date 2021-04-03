@@ -3,7 +3,7 @@ package main_test
 import (
 	"context"
 	"os"
-	"path"
+	"path/filepath"
 	"testing"
 	"time"
 
@@ -45,8 +45,8 @@ func TestIntegration(t *testing.T) {
 
 	tempdir := t.TempDir()
 	// Start Daemon
-	socket := path.Join(tempdir, "integration_test.socket")
-	logstashPath := path.Join("3rdparty/logstash-7.10.0/bin/logstash")
+	socket := filepath.Join(tempdir, "integration_test.socket")
+	logstashPath := filepath.Join("3rdparty/logstash-7.10.0/bin/logstash")
 	if !file.Exists(logstashPath) {
 		t.Fatalf("Logstash needs to be present in %q for the integration tests to work", logstashPath)
 	}
@@ -119,7 +119,7 @@ func TestIntegration(t *testing.T) {
 				t.Skipf("optional integration test %q skipped, enable with env var `INTEGRATION_TEST_OPTIONAL=1`", tc.name)
 			}
 			client, err := run.New(
-				path.Join(tempdir, "integration_test.socket"),
+				filepath.Join(tempdir, "integration_test.socket"),
 				log,
 				"testdata/"+tc.name+".yml",
 				"testdata/"+tc.name,

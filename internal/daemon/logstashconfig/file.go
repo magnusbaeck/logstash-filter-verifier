@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path"
+	"path/filepath"
 
 	"github.com/pkg/errors"
 
@@ -23,12 +24,12 @@ type File struct {
 }
 
 func (f File) Save(targetDir string) error {
-	err := os.MkdirAll(path.Join(targetDir, path.Dir(f.Name)), 0700)
+	err := os.MkdirAll(filepath.Join(targetDir, path.Dir(f.Name)), 0700)
 	if err != nil {
 		return err
 	}
 
-	return ioutil.WriteFile(path.Join(targetDir, f.Name), f.Body, 0600)
+	return ioutil.WriteFile(filepath.Join(targetDir, f.Name), f.Body, 0600)
 }
 
 func (f *File) parse() error {

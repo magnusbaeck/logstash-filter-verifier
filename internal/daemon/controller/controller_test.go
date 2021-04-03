@@ -3,7 +3,7 @@ package controller_test
 import (
 	"context"
 	"errors"
-	"path"
+	"path/filepath"
 	"testing"
 
 	"github.com/matryer/is"
@@ -33,11 +33,11 @@ func TestNewController(t *testing.T) {
 			c, err := controller.NewController(nil, tempdir, logging.NoopLogger)
 			is.NoErr(err)
 
-			is.True(file.Exists(path.Join(tempdir, controller.LogstashInstanceDirectoryPrefix, c.ID(), "logstash.yml")))      // logstash.yml
-			is.True(file.Exists(path.Join(tempdir, controller.LogstashInstanceDirectoryPrefix, c.ID(), "log4j2.properties"))) // log4j2.properties
-			is.True(file.Exists(path.Join(tempdir, controller.LogstashInstanceDirectoryPrefix, c.ID(), "stdin.conf")))        // stdin.conf
-			is.True(file.Exists(path.Join(tempdir, controller.LogstashInstanceDirectoryPrefix, c.ID(), "output.conf")))       // output.conf
-			is.True(file.Exists(path.Join(tempdir, controller.LogstashInstanceDirectoryPrefix, c.ID(), "pipelines.yml")))     // pipelines.yml
+			is.True(file.Exists(filepath.Join(tempdir, controller.LogstashInstanceDirectoryPrefix, c.ID(), "logstash.yml")))      // logstash.yml
+			is.True(file.Exists(filepath.Join(tempdir, controller.LogstashInstanceDirectoryPrefix, c.ID(), "log4j2.properties"))) // log4j2.properties
+			is.True(file.Exists(filepath.Join(tempdir, controller.LogstashInstanceDirectoryPrefix, c.ID(), "stdin.conf")))        // stdin.conf
+			is.True(file.Exists(filepath.Join(tempdir, controller.LogstashInstanceDirectoryPrefix, c.ID(), "output.conf")))       // output.conf
+			is.True(file.Exists(filepath.Join(tempdir, controller.LogstashInstanceDirectoryPrefix, c.ID(), "pipelines.yml")))     // pipelines.yml
 		})
 	}
 }
@@ -151,17 +151,17 @@ func TestCompleteCycle(t *testing.T) {
 			is.Equal(2, len(res))
 
 			// Test content of pipeline.yml
-			is.True(file.Exists(path.Join(tempdir, controller.LogstashInstanceDirectoryPrefix, c.ID(), "pipelines.yml")))                // pipelines.yml
-			is.True(file.Contains(path.Join(tempdir, controller.LogstashInstanceDirectoryPrefix, c.ID(), "pipelines.yml"), "id: main"))  // pipelines.yml contains "id: main"
-			is.True(file.Contains(path.Join(tempdir, controller.LogstashInstanceDirectoryPrefix, c.ID(), "pipelines.yml"), "id: input")) // pipelines.yml contains "id: input"
+			is.True(file.Exists(filepath.Join(tempdir, controller.LogstashInstanceDirectoryPrefix, c.ID(), "pipelines.yml")))                // pipelines.yml
+			is.True(file.Contains(filepath.Join(tempdir, controller.LogstashInstanceDirectoryPrefix, c.ID(), "pipelines.yml"), "id: main"))  // pipelines.yml contains "id: main"
+			is.True(file.Contains(filepath.Join(tempdir, controller.LogstashInstanceDirectoryPrefix, c.ID(), "pipelines.yml"), "id: input")) // pipelines.yml contains "id: input"
 
 			err = c.Teardown()
 			is.NoErr(err)
 
 			// Test if pipelines are reomved from pipeline.yml
-			is.True(file.Exists(path.Join(tempdir, controller.LogstashInstanceDirectoryPrefix, c.ID(), "pipelines.yml")))                 // pipelines.yml
-			is.True(!file.Contains(path.Join(tempdir, controller.LogstashInstanceDirectoryPrefix, c.ID(), "pipelines.yml"), "id: main"))  // pipelines.yml contains "id: main"
-			is.True(!file.Contains(path.Join(tempdir, controller.LogstashInstanceDirectoryPrefix, c.ID(), "pipelines.yml"), "id: input")) // pipelines.yml contains "id: input"
+			is.True(file.Exists(filepath.Join(tempdir, controller.LogstashInstanceDirectoryPrefix, c.ID(), "pipelines.yml")))                 // pipelines.yml
+			is.True(!file.Contains(filepath.Join(tempdir, controller.LogstashInstanceDirectoryPrefix, c.ID(), "pipelines.yml"), "id: main"))  // pipelines.yml contains "id: main"
+			is.True(!file.Contains(filepath.Join(tempdir, controller.LogstashInstanceDirectoryPrefix, c.ID(), "pipelines.yml"), "id: input")) // pipelines.yml contains "id: input"
 		})
 	}
 }

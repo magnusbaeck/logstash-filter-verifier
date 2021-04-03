@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
-	"path"
+	"path/filepath"
 	"strconv"
 	"strings"
 
@@ -59,14 +59,14 @@ func (s *Session) setupTest(pipelines pipeline.Pipelines, configFiles []logstash
 		return err
 	}
 
-	sutConfigDir := path.Join(s.sessionDir, "sut")
+	sutConfigDir := filepath.Join(s.sessionDir, "sut")
 
 	// adjust pipeline names and config directories to session
 	for i := range pipelines {
 		pipelineName := fmt.Sprintf("lfv_%s_%s", s.id, pipelines[i].ID)
 
 		pipelines[i].ID = pipelineName
-		pipelines[i].Config = path.Join(sutConfigDir, pipelines[i].Config)
+		pipelines[i].Config = filepath.Join(sutConfigDir, pipelines[i].Config)
 		pipelines[i].Ordered = "true"
 		pipelines[i].Workers = 1
 	}
@@ -109,7 +109,7 @@ func (s *Session) setupTest(pipelines pipeline.Pipelines, configFiles []logstash
 }
 
 func (s *Session) createOutputPipelines(outputs []string) ([]pipeline.Pipeline, error) {
-	lfvOutputsDir := path.Join(s.sessionDir, "lfv_outputs")
+	lfvOutputsDir := filepath.Join(s.sessionDir, "lfv_outputs")
 	err := os.MkdirAll(lfvOutputsDir, 0700)
 	if err != nil {
 		return nil, err
@@ -127,14 +127,14 @@ func (s *Session) createOutputPipelines(outputs []string) ([]pipeline.Pipeline, 
 			PipelineOrigName: output,
 		}
 
-		err = template.ToFile(path.Join(lfvOutputsDir, output+".conf"), outputPipeline, templateData, 0644)
+		err = template.ToFile(filepath.Join(lfvOutputsDir, output+".conf"), outputPipeline, templateData, 0644)
 		if err != nil {
 			return nil, err
 		}
 
 		pipeline := pipeline.Pipeline{
 			ID:      pipelineName,
-			Config:  path.Join(lfvOutputsDir, output+".conf"),
+			Config:  filepath.Join(lfvOutputsDir, output+".conf"),
 			Ordered: "true",
 			Workers: 1,
 		}
@@ -149,7 +149,7 @@ func (s *Session) createOutputPipelines(outputs []string) ([]pipeline.Pipeline, 
 func (s *Session) ExecuteTest(inputPlugin string, inputLines []string, inEvents []map[string]interface{}) error {
 	s.testexec++
 	pipelineName := fmt.Sprintf("lfv_input_%d", s.testexec)
-	inputDir := path.Join(s.sessionDir, "lfv_inputs", strconv.Itoa(s.testexec))
+	inputDir := filepath.Join(s.sessionDir, "lfv_inputs", strconv.Itoa(s.testexec))
 	inputPluginName := fmt.Sprintf("%s_%s_%s", "__lfv_input", s.id, inputPlugin)
 	inputCodec, ok := s.inputPluginCodecs[inputPlugin]
 	if !ok {
@@ -162,13 +162,13 @@ func (s *Session) ExecuteTest(inputPlugin string, inputLines []string, inEvents 
 		return err
 	}
 
-	fieldsFilename := path.Join(inputDir, "fields.json")
+	fieldsFilename := filepath.Join(inputDir, "fields.json")
 	err = prepareFields(fieldsFilename, inEvents)
 	if err != nil {
 		return err
 	}
 
-	pipelineFilename := path.Join(inputDir, "input.conf")
+	pipelineFilename := filepath.Join(inputDir, "input.conf")
 	err = createInput(pipelineFilename, fieldsFilename, inputPluginName, inputLines, inputCodec, false)
 	if err != nil {
 		return err

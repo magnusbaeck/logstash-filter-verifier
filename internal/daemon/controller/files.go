@@ -1,7 +1,7 @@
 package controller
 
 import (
-	"path"
+	"path/filepath"
 
 	"github.com/magnusbaeck/logstash-filter-verifier/v2/internal/daemon/pipeline"
 )
@@ -58,13 +58,13 @@ func basePipelines(workDir string) pipeline.Pipelines {
 	return pipeline.Pipelines{
 		pipeline.Pipeline{
 			ID:      "stdin",
-			Config:  path.Join(workDir, "stdin.conf"),
+			Config:  filepath.Join(workDir, "stdin.conf"),
 			Ordered: "true",
 			Workers: 1,
 		},
 		pipeline.Pipeline{
 			ID:      "output",
-			Config:  path.Join(workDir, "output.conf"),
+			Config:  filepath.Join(workDir, "output.conf"),
 			Ordered: "true",
 			Workers: 1,
 		},
