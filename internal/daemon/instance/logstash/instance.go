@@ -65,6 +65,10 @@ func (i *instance) Start(ctx context.Context, controller *controller.Controller,
 		workdir,
 		"--path.data",
 		workdir,
+		// Workaround from https://github.com/magnusbaeck/logstash-filter-verifier/commit/6166b6249256689806e64a1e078c1701307c9438
+		// to ensure ordering of events in Logstash before 7.7.0
+		"--pipeline.batch.size",
+		"1",
 		// TODO: figure out the correct paths
 		// "--path.plugins",
 		// workdir,
