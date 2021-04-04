@@ -8,7 +8,6 @@ require (
 	github.com/axw/gocov v1.0.0
 	github.com/bmatcuk/doublestar/v2 v2.0.4
 	github.com/breml/logstash-config v0.4.1
-	github.com/cheggaaa/pb v1.0.29 // indirect
 	github.com/go-playground/overalls v0.0.0-20191218162659-7df9f728c018
 	github.com/golang/protobuf v1.4.2
 	github.com/hashicorp/packer v1.4.4
@@ -18,8 +17,10 @@ require (
 	github.com/matoous/go-nanoid v1.5.0
 	github.com/matryer/is v1.4.0
 	github.com/matryer/moq v0.2.1
+	github.com/mattn/go-colorable v0.1.4 // indirect
+	github.com/mattn/go-isatty v0.0.11 // indirect
 	github.com/mattn/go-shellwords v1.0.6
-	github.com/mholt/archiver/v3 v3.5.0 // indirect
+	github.com/mholt/archiver/v3 v3.5.0
 	github.com/mikefarah/yaml/v2 v2.4.0
 	github.com/op/go-logging v0.0.0-20160315200505-970db520ece7
 	github.com/pkg/errors v0.9.1
@@ -35,7 +36,7 @@ require (
 	google.golang.org/grpc/cmd/protoc-gen-go-grpc v1.0.1
 	google.golang.org/protobuf v1.25.0
 	gopkg.in/VividCortex/ewma.v1 v1.1.1 // indirect
-	gopkg.in/cheggaaa/pb.v2 v2.0.7 // indirect
+	gopkg.in/cheggaaa/pb.v2 v2.0.7
 	gopkg.in/fatih/color.v1 v1.7.0 // indirect
 	gopkg.in/go-playground/assert.v1 v1.2.1 // indirect
 	gopkg.in/mattn/go-colorable.v0 v0.1.0 // indirect

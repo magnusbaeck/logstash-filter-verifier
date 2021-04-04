@@ -1,13 +1,13 @@
 package app
 
 import (
-	"errors"
 	"fmt"
 	"runtime"
 
+	semver "github.com/Masterminds/semver/v3"
+	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-	"golang.org/x/mod/semver"
 
 	"github.com/magnusbaeck/logstash-filter-verifier/v2/internal/app/setup"
 	"github.com/magnusbaeck/logstash-filter-verifier/v2/internal/logging"
@@ -38,7 +38,8 @@ func makeSetupCmd() *cobra.Command {
 
 func runSetup(_ *cobra.Command, args []string) error {
 	s := setup.New(
-		args[0],
+		// version argument already validated in validateSetupArgs
+		semver.MustParse(args[0]),
 		viper.GetString("target-dir"),
 		viper.GetBool("oss"),
 		viper.GetString("os-arch"),
@@ -54,8 +55,9 @@ func validateSetupArgs(cmd *cobra.Command, args []string) error {
 		return errors.New("required argument 'logstash-version' not provided, try --help")
 	}
 
-	if !semver.IsValid("v" + args[0]) {
-		return errors.New("invalid version string provided, correct format x.y.z, e.g. 7.12.0")
+	_, err := semver.NewVersion(args[0])
+	if err != nil {
+		return errors.Wrapf(err, "failed to parse version string %q, correct format x.y.z, e.g. 7.12.0", args[0])
 	}
 	return nil
 }

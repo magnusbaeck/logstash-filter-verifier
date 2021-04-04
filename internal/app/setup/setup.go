@@ -8,16 +8,16 @@ import (
 	"path/filepath"
 	"strings"
 
+	semver "github.com/Masterminds/semver/v3"
 	"github.com/mholt/archiver/v3"
 	"github.com/pkg/errors"
-	"golang.org/x/mod/semver"
 	"gopkg.in/cheggaaa/pb.v2"
 
 	"github.com/magnusbaeck/logstash-filter-verifier/v2/internal/logging"
 )
 
 type Setup struct {
-	version     string
+	version     *semver.Version
 	targetDir   string
 	oss         bool
 	osArch      string
@@ -26,7 +26,7 @@ type Setup struct {
 }
 
 // New creates a new setup command to install versions of Logstash.
-func New(version string, targetDir string, oss bool, osArch string, archiveType string, log logging.Logger) Setup {
+func New(version *semver.Version, targetDir string, oss bool, osArch string, archiveType string, log logging.Logger) Setup {
 	return Setup{
 		version:     version,
 		targetDir:   targetDir,
@@ -37,7 +37,7 @@ func New(version string, targetDir string, oss bool, osArch string, archiveType 
 	}
 }
 
-const firstOSSpecificRelease = "v7.10.0"
+var firstOSSpecificRelease = semver.MustParse("7.10.0")
 
 // Setup installs versions of Logstash.
 func (s *Setup) Run() error {
@@ -54,7 +54,8 @@ func (s *Setup) Run() error {
 	}
 	filename := fmt.Sprintf("logstash-%s%s-%s.%s", oss, s.version, s.osArch, s.archiveType)
 	targetDirVersion := filepath.Join(s.targetDir, fmt.Sprintf("logstash-%s%s-%s", oss, s.version, s.osArch))
-	if semver.Compare("v"+s.version, firstOSSpecificRelease) < 0 {
+
+	if s.version.Compare(firstOSSpecificRelease) < 0 {
 		filename = fmt.Sprintf("logstash-%s%s.%s", oss, s.version, s.archiveType)
 		targetDirVersion = filepath.Join(s.targetDir, fmt.Sprintf("logstash-%s%s-%s", oss, s.version, s.osArch))
 	}
