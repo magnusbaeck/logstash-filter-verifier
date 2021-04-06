@@ -102,8 +102,6 @@ func (r replaceInputsWalker) replaceInputs(c *astutil.Cursor) {
 		}
 	}
 
-	// TODO: __lfv_input must reflect the actual input, that has been replaced, such that this input
-	// can be referenced in the test case configuration.
 	c.Replace(ast.NewPlugin("pipeline", attrs...))
 }
 

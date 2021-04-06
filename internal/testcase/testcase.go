@@ -78,7 +78,7 @@ type TestCaseSet struct {
 	// `[@metadata]` in the Logstash event.
 	// If the metadata is exported, the respective fields are compared
 	// with the expected result of the testcase as well. (default: false)
-	ExportMetadata bool `json:"exportMetadata" yaml:"exportMetadata"`
+	ExportMetadata bool `json:"export_metadata" yaml:"export_metadata"`
 
 	// TestCases is a slice of test cases, which include at minimum
 	// a pair of an input and an expected event

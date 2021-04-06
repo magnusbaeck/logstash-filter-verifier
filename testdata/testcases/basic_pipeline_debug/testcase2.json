@@ -7,7 +7,7 @@
     "@timestamp"
   ],
   "input_plugin": "stdin",
-  "exportMetadata": true,
+  "export_metadata": true,
   "testcases": [
     {
       "input": [
