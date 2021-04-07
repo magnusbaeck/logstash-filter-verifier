@@ -50,10 +50,10 @@ all: $(PROGRAM)$(EXEC_SUFFIX)
 .FORCE:
 
 $(GOCOV):
-	go get github.com/axw/gocov/gocov
+	go install github.com/axw/gocov/gocov
 
 $(GOCOV_HTML):
-	go get github.com/matm/gocov-html
+	go install github.com/matm/gocov-html
 
 $(GOLANGCI_LINT):
 	curl --silent --show-error --location \
@@ -61,10 +61,10 @@ $(GOLANGCI_LINT):
 		| sh -s -- -b $(dir $(GOLANGCI_LINT)) $(GOLANGCI_LINT_VERSION)
 
 $(GOVVV):
-	go get github.com/ahmetb/govvv
+	go install github.com/ahmetb/govvv
 
 $(OVERALLS):
-	go get github.com/go-playground/overalls
+	go install github.com/go-playground/overalls
 
 # The Go compiler is fast and pretty good about figuring out what to
 # build so we don't try to to outsmart it.
