@@ -83,12 +83,13 @@ func (p *Pool) housekeeping(ctx context.Context) {
 					p.availableControllers = p.availableControllers[:len(p.availableControllers)-1]
 				}
 			}
-			for i := range p.assignedControllers {
+			for i := 0; i < len(p.assignedControllers); i++ {
 				if !p.assignedControllers[i].IsHealthy() {
 					// Delete without preserving order
 					p.assignedControllers[i].Kill()
 					p.assignedControllers[i] = p.assignedControllers[len(p.assignedControllers)-1]
 					p.assignedControllers = p.assignedControllers[:len(p.assignedControllers)-1]
+					i--
 				}
 			}
 
@@ -108,12 +109,13 @@ func (p *Pool) Get() (LogstashController, error) {
 	defer p.mutex.Unlock()
 
 	// Remove unhealthy instances
-	for i := range p.availableControllers {
+	for i := 0; i < len(p.availableControllers); i++ {
 		if !p.availableControllers[i].IsHealthy() {
 			// Delete without preserving order
 			p.availableControllers[i].Kill()
 			p.availableControllers[i] = p.availableControllers[len(p.availableControllers)-1]
 			p.availableControllers = p.availableControllers[:len(p.availableControllers)-1]
+			i--
 		}
 	}
 
@@ -140,7 +142,7 @@ func (p *Pool) Return(instance LogstashController, clean bool) {
 	p.mutex.Lock()
 	defer p.mutex.Unlock()
 
-	for i := range p.assignedControllers {
+	for i := 0; i < len(p.assignedControllers); i++ {
 		if p.assignedControllers[i] == instance {
 			// Delete without preserving order
 			p.assignedControllers[i] = p.assignedControllers[len(p.assignedControllers)-1]
