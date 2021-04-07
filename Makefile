@@ -84,7 +84,7 @@ $(PROGRAM)$(EXEC_SUFFIX): gogenerate .FORCE $(GOVVV)
 	govvv build -o $@
 
 .PHONY: gogenerate
-gogenerate: $(MOQ)
+gogenerate: $(MOQ) $(PROTOC_GEN_GO) $(PROTOC_GEN_GO_GRPC)
 	go generate ./...
 
 .PHONY: check
