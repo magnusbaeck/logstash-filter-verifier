@@ -94,12 +94,18 @@ func (i *instance) logstashLogProcessor(t *tail.Tail) {
 				i.log.Debugf("taillog: -> pipeline started: %s", pipelineID)
 
 				i.controller.PipelinesReady(pipelineID)
+			case "Pipeline started successfully": // Logstash < 7.0.0
+				pipelineID := gjson.Get(line.Text, `logEvent.pipeline_id`).String()
+				i.log.Debugf("taillog: -> pipeline started: %s", pipelineID)
+
+				i.controller.PipelinesReady(pipelineID)
 			case "Pipelines running":
 				rp := gjson.Get(line.Text, `logEvent.running_pipelines.0.metaClass.metaClass.metaClass.running_pipelines`).String()
 				runningPipelines := extractPipelines(rp)
 				i.log.Debugf("taillog: -> pipeline running: %v", runningPipelines)
 
 				i.controller.PipelinesReady(runningPipelines...)
+				i.controller.PipelinesReady("__lfv_pipelines_running")
 			}
 		case <-i.ctxShutdown.Done():
 			i.log.Debug("shutdown log reader")

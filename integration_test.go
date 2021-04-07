@@ -7,6 +7,7 @@ import (
 	"testing"
 	"time"
 
+	semver "github.com/Masterminds/semver/v3"
 	"github.com/matryer/is"
 	"github.com/spf13/viper"
 
@@ -15,6 +16,7 @@ import (
 	"github.com/magnusbaeck/logstash-filter-verifier/v2/internal/daemon/api/grpc"
 	"github.com/magnusbaeck/logstash-filter-verifier/v2/internal/daemon/file"
 	"github.com/magnusbaeck/logstash-filter-verifier/v2/internal/logging"
+	standalonelogstash "github.com/magnusbaeck/logstash-filter-verifier/v2/internal/logstash"
 )
 
 func TestIntegration(t *testing.T) {
@@ -67,6 +69,9 @@ func TestIntegration(t *testing.T) {
 	log := testLogger
 	server := daemon.New(socket, logstashPath, nil, log, 10*time.Second, 3*time.Second)
 
+	version, err := standalonelogstash.DetectVersion(logstashPath, os.Environ())
+	is.NoErr(err)
+
 	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
 	defer cancel()
 
@@ -98,6 +103,8 @@ func TestIntegration(t *testing.T) {
 		name  string
 		debug bool
 
+		minimumVersion *semver.Version
+
 		// optional integration tests require additional logstash plugins,
 		// which are not provided by a default installation.
 		optional bool
@@ -128,6 +135,10 @@ func TestIntegration(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			is := is.New(t)
 
+			if tc.minimumVersion != nil && tc.minimumVersion.GreaterThan(version) {
+				t.Skipf("Logstash minimum version not satisfied, require %s, have %s", tc.minimumVersion.String(), version.String())
+			}
+
 			if tc.optional && os.Getenv("INTEGRATION_TEST_OPTIONAL") != "1" {
 				t.Skipf("optional integration test %q skipped, enable with env var `INTEGRATION_TEST_OPTIONAL=1`", tc.name)
 			}
@@ -147,7 +158,7 @@ func TestIntegration(t *testing.T) {
 		})
 	}
 
-	_, err := server.Shutdown(context.Background(), &grpc.ShutdownRequest{})
+	_, err = server.Shutdown(context.Background(), &grpc.ShutdownRequest{})
 	is.NoErr(err)
 
 	<-ctx.Done()
