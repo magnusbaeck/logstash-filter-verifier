@@ -129,7 +129,7 @@ func (d *Daemon) Run(ctx context.Context) error {
 		d.log.Infof("Daemon listening on %s", d.socket)
 		err = d.server.Serve(lis)
 		if err != nil {
-			d.log.Error("failed to start daemon: %v", err)
+			d.log.Errorf("failed to start daemon: %v", err)
 			shutdown()
 		}
 	}()
