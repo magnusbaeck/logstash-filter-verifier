@@ -1,0 +1,27 @@
+name: test
+
+on:
+  push:
+    branches:
+      - maint-1.x
+  pull_request:
+    branches:
+      - maint-1.x
+
+jobs:
+  run-tests:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Set up Go
+      uses: actions/setup-go@v2
+      with:
+        go-version: "1.15.5"
+
+    - name: Run static analysis
+      run: make check checktidy
+
+    - name: Run tests
+      run: make test
