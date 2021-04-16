@@ -112,7 +112,7 @@ func TestCompleteCycle(t *testing.T) {
 			is.NoErr(err)
 
 			// Simulate pipelines ready from instance
-			c.PipelinesReady("stdin", "output")
+			c.PipelinesReady("stdin", "output", "__lfv_pipelines_running")
 
 			pipelines := pipeline.Pipelines{
 				pipeline.Pipeline{
@@ -127,7 +127,7 @@ func TestCompleteCycle(t *testing.T) {
 			is.NoErr(err)
 
 			// Simulate pipelines ready from instance
-			c.PipelinesReady("stdin", "output", "main")
+			c.PipelinesReady("stdin", "output", "main", "__lfv_pipelines_running")
 
 			pipelines = append(pipelines, pipeline.Pipeline{
 				ID:      "input",
@@ -140,7 +140,7 @@ func TestCompleteCycle(t *testing.T) {
 			is.NoErr(err)
 
 			// Simulate pipelines ready from instance
-			c.PipelinesReady("stdin", "output", "main", "input")
+			c.PipelinesReady("stdin", "output", "main", "input", "__lfv_pipelines_running")
 			err = c.ReceiveEvent("result 1")
 			is.NoErr(err)
 			err = c.ReceiveEvent("result 2")
