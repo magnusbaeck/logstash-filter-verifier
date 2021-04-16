@@ -29,8 +29,8 @@ func makeDaemonStartCmd() *cobra.Command {
 
 	// TODO: Move default values to some sort of global lookup like defaultKeptEnvVars.
 	// TODO: Not yet sure, if this should be global or only in standalone.
-	cmd.Flags().StringSlice("keep-env", []string{"PATH"}, "Add this environment variable to the list of variables that will be preserved from the calling process's environment.")
-	_ = viper.BindPFlag("keep-envs", cmd.Flags().Lookup("keep-env"))
+	cmd.Flags().StringSlice("keep-env", nil, "Add this environment variable to the list of variables that will be preserved from the calling process's environment.")
+	_ = viper.BindPFlag("daemon-keep-envs", cmd.Flags().Lookup("keep-env"))
 
 	return cmd
 }
@@ -39,6 +39,9 @@ func runDaemonStart(_ *cobra.Command, _ []string) error {
 	socket := viper.GetString("socket")
 	logstashPath := viper.GetString("logstash.path")
 	keptEnvs := viper.GetStringSlice("keep-envs")
+	if len(viper.GetStringSlice("daemon-keep-envs")) > 0 {
+		keptEnvs = viper.GetStringSlice("daemon-keep-envs")
+	}
 	inflightShutdownTimeout := viper.GetDuration("inflight-shutdown-timeout")
 	shutdownTimeout := viper.GetDuration("shutdown-timeout")
 	log := viper.Get("logger").(logging.Logger)

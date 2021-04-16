@@ -27,7 +27,7 @@ func makeStandaloneCmd() *cobra.Command {
 
 	// TODO: Move default values to some sort of global lookup like defaultKeptEnvVars.
 	// TODO: Not yet sure, if this should be global or only in standalone.
-	cmd.Flags().StringSlice("keep-env", []string{"PATH"}, "Add this environment variable to the list of variables that will be preserved from the calling process's environment.")
+	cmd.Flags().StringSlice("keep-env", nil, "Add this environment variable to the list of variables that will be preserved from the calling process's environment.")
 	_ = viper.BindPFlag("keep-envs", cmd.Flags().Lookup("keep-env"))
 
 	// TODO: Not yet sure, if this should be global or only in standalone.
