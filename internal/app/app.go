@@ -6,6 +6,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -35,7 +36,9 @@ func Execute(version string, stdout, stderr io.Writer) int {
 	viper.SetDefault("loglevel", "WARNING")
 	viper.SetDefault("socket", "/tmp/logstash-filter-verifier.sock")
 	viper.SetDefault("pipeline", "/etc/logstash/pipelines.yml")
-	viper.SetDefault("logstash.path", "")
+	viper.SetDefault("logstash.path", "/usr/share/logstash/bin/logstash")
+	viper.SetDefault("inflight-shutdown-timeout", 10*time.Second)
+	viper.SetDefault("shutdown-timeout", 3*time.Second)
 
 	// Read config
 	if err := viper.ReadInConfig(); err != nil {
