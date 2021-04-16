@@ -17,7 +17,7 @@ func makeDaemonRunCmd() *cobra.Command {
 
 	cmd.Flags().StringP("pipeline", "p", "", "location of the pipelines.yml file to be processed")
 	_ = viper.BindPFlag("pipeline", cmd.Flags().Lookup("pipeline"))
-	cmd.Flags().StringP("pipeline-base", "", "", "base directory for relative paths in the pipelines.yml")
+	cmd.Flags().String("pipeline-base", "", "base directory for relative paths in the pipelines.yml")
 	_ = viper.BindPFlag("pipeline-base", cmd.Flags().Lookup("pipeline-base"))
 	cmd.Flags().StringP("testcase-dir", "t", "", "directory containing the test case files")
 	_ = viper.BindPFlag("testcase-dir", cmd.Flags().Lookup("testcase-dir"))

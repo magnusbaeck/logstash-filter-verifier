@@ -18,13 +18,13 @@ func makeDaemonStartCmd() *cobra.Command {
 		RunE:  runDaemonStart,
 	}
 
-	cmd.Flags().StringP("logstash-path", "", "/usr/share/logstash/bin/logstash", "location where the logstash executable is found")
+	cmd.Flags().String("logstash-path", "/usr/share/logstash/bin/logstash", "location where the logstash executable is found")
 	_ = viper.BindPFlag("logstash.path", cmd.Flags().Lookup("logstash-path"))
 
-	cmd.Flags().DurationP("inflight-shutdown-timeout", "", 10*time.Second, "maximum duration to wait for in-flight test executions to finish during shutdown")
+	cmd.Flags().Duration("inflight-shutdown-timeout", 10*time.Second, "maximum duration to wait for in-flight test executions to finish during shutdown")
 	_ = viper.BindPFlag("inflight-shutdown-timeout", cmd.Flags().Lookup("inflight-shutdown-timeout"))
 
-	cmd.Flags().DurationP("shutdown-timeout", "", 3*time.Second, "maximum duration to wait for Logstash and gRPC server to gracefully shutdown")
+	cmd.Flags().Duration("shutdown-timeout", 3*time.Second, "maximum duration to wait for Logstash and gRPC server to gracefully shutdown")
 	_ = viper.BindPFlag("shutdown-timeout", cmd.Flags().Lookup("shutdown-timeout"))
 
 	// TODO: Move default values to some sort of global lookup like defaultKeptEnvVars.
