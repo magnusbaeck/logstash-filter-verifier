@@ -75,12 +75,13 @@ func (p *Pool) housekeeping(ctx context.Context) {
 			defer p.mutex.Unlock()
 
 			// Remove unhealthy instances
-			for i := range p.availableControllers {
+			for i := 0; i < len(p.availableControllers); i++ {
 				if !p.availableControllers[i].IsHealthy() {
 					// Delete without preserving order
 					p.availableControllers[i].Kill()
 					p.availableControllers[i] = p.availableControllers[len(p.availableControllers)-1]
 					p.availableControllers = p.availableControllers[:len(p.availableControllers)-1]
+					i--
 				}
 			}
 			for i := 0; i < len(p.assignedControllers); i++ {
@@ -135,7 +136,7 @@ func (p *Pool) Get() (LogstashController, error) {
 		return instance, nil
 	}
 
-	return nil, errors.Errorf("No instance available from pool")
+	return nil, errors.Errorf("no instance available from pool")
 }
 
 func (p *Pool) Return(instance LogstashController, clean bool) {
@@ -155,5 +156,5 @@ func (p *Pool) Return(instance LogstashController, clean bool) {
 			return
 		}
 	}
-	panic("instance not found in assigned controllers")
+	p.log.Warning("Instance not found in assigned controllers. Instance might have been cleaned up by housekeeping due to unhealthy state.")
 }
