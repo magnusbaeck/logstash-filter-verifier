@@ -6,6 +6,7 @@ import (
 	"os"
 	"path/filepath"
 	"sync"
+	"time"
 
 	"gopkg.in/yaml.v2"
 
@@ -27,12 +28,13 @@ type Controller struct {
 	instanceReady *sync.Once
 	shutdown      context.CancelFunc
 
-	stateMachine   *stateMachine
-	receivedEvents *events
-	pipelines      *pipelines
+	stateMachine        *stateMachine
+	waitForStateTimeout time.Duration
+	receivedEvents      *events
+	pipelines           *pipelines
 }
 
-func NewController(instance Instance, baseDir string, log logging.Logger) (*Controller, error) {
+func NewController(instance Instance, baseDir string, log logging.Logger, waitForStateTimeout time.Duration) (*Controller, error) {
 	id := idgen.New()
 
 	workDir := filepath.Join(baseDir, LogstashInstanceDirectoryPrefix, id)
@@ -69,6 +71,8 @@ func NewController(instance Instance, baseDir string, log logging.Logger) (*Cont
 		instance:      instance,
 		instanceReady: &sync.Once{},
 
+		waitForStateTimeout: waitForStateTimeout,
+
 		receivedEvents: newEvents(),
 		pipelines:      newPipelines(),
 	}
@@ -90,7 +94,7 @@ func (c *Controller) Launch(ctx context.Context) error {
 	c.shutdown = cancel
 
 	c.pipelines.reset("stdin", "output")
-	c.stateMachine = newStateMachine(ctx, c.log)
+	c.stateMachine = newStateMachine(ctx, c.log, c.waitForStateTimeout)
 	c.stateMachine.executeCommand(commandStart)
 
 	err := c.instance.Start(ctx, c, c.workDir)

@@ -49,6 +49,7 @@ type Daemon struct {
 
 	inflightShutdownTimeout time.Duration
 	shutdownTimeout         time.Duration
+	waitForStateTimeout     time.Duration
 
 	sessionController *session.Controller
 
@@ -60,7 +61,7 @@ type Daemon struct {
 }
 
 // New creates a new logstash filter verifier daemon.
-func New(socket string, logstashPath string, keptEnvVars []string, log logging.Logger, inflightShutdownTimeout time.Duration, shutdownTimeout time.Duration) Daemon {
+func New(socket string, logstashPath string, keptEnvVars []string, log logging.Logger, inflightShutdownTimeout time.Duration, shutdownTimeout time.Duration, waitForStateTimeout time.Duration) Daemon {
 	ctxShutdownSignal, shutdownSignalFunc := context.WithCancel(context.Background())
 	return Daemon{
 		socket:                  socket,
@@ -71,6 +72,7 @@ func New(socket string, logstashPath string, keptEnvVars []string, log logging.L
 		log:                     log,
 		ctxShutdownSignal:       ctxShutdownSignal,
 		shutdownSignalFunc:      shutdownSignalFunc,
+		waitForStateTimeout:     waitForStateTimeout,
 	}
 }
 
@@ -97,7 +99,7 @@ func (d *Daemon) Run(ctx context.Context) error {
 	logstashControllerFactory := func() (session.LogstashController, error) {
 		shutdownLogstashInstancesWG.Add(1)
 		instance := logstash.New(ctxKill, d.logstashPath, env, d.log, shutdownLogstashInstancesWG)
-		logstashController, err := controller.NewController(instance, tempdir, d.log)
+		logstashController, err := controller.NewController(instance, tempdir, d.log, d.waitForStateTimeout)
 		if err != nil {
 			return nil, err
 		}

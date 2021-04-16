@@ -39,6 +39,7 @@ func Execute(version string, stdout, stderr io.Writer) int {
 	viper.SetDefault("logstash.path", "/usr/share/logstash/bin/logstash")
 	viper.SetDefault("inflight-shutdown-timeout", 10*time.Second)
 	viper.SetDefault("shutdown-timeout", 3*time.Second)
+	viper.SetDefault("wait-for-state-timeout", 30*time.Second)
 
 	// Read config
 	if err := viper.ReadInConfig(); err != nil {

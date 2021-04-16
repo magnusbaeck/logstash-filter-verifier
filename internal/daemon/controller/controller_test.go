@@ -5,6 +5,7 @@ import (
 	"errors"
 	"path/filepath"
 	"testing"
+	"time"
 
 	"github.com/matryer/is"
 
@@ -14,6 +15,8 @@ import (
 	"github.com/magnusbaeck/logstash-filter-verifier/v2/internal/daemon/pipeline"
 	"github.com/magnusbaeck/logstash-filter-verifier/v2/internal/logging"
 )
+
+const defaultWaitForStateTimeout = 30 * time.Second
 
 func TestNewController(t *testing.T) {
 	cases := []struct {
@@ -30,7 +33,7 @@ func TestNewController(t *testing.T) {
 
 			tempdir := t.TempDir()
 
-			c, err := controller.NewController(nil, tempdir, logging.NoopLogger)
+			c, err := controller.NewController(nil, tempdir, logging.NoopLogger, defaultWaitForStateTimeout)
 			is.NoErr(err)
 
 			is.True(file.Exists(filepath.Join(tempdir, controller.LogstashInstanceDirectoryPrefix, c.ID(), "logstash.yml")))      // logstash.yml
@@ -72,7 +75,7 @@ func TestLaunch(t *testing.T) {
 
 			tempdir := t.TempDir()
 
-			c, err := controller.NewController(instance, tempdir, logging.NoopLogger)
+			c, err := controller.NewController(instance, tempdir, logging.NoopLogger, defaultWaitForStateTimeout)
 			is.NoErr(err)
 
 			err = c.Launch(context.Background())
@@ -105,7 +108,7 @@ func TestCompleteCycle(t *testing.T) {
 
 			tempdir := t.TempDir()
 
-			c, err := controller.NewController(instance, tempdir, logging.NoopLogger)
+			c, err := controller.NewController(instance, tempdir, logging.NoopLogger, defaultWaitForStateTimeout)
 			is.NoErr(err)
 
 			err = c.Launch(context.Background())
@@ -190,7 +193,7 @@ func TestSetupTest_Shutdown(t *testing.T) {
 
 			tempdir := t.TempDir()
 
-			c, err := controller.NewController(instance, tempdir, logging.NoopLogger)
+			c, err := controller.NewController(instance, tempdir, logging.NoopLogger, defaultWaitForStateTimeout)
 			is.NoErr(err)
 
 			ctx, cancel := context.WithCancel(context.Background())

@@ -17,10 +17,13 @@ type stateMachine struct {
 	mutex        *sync.Mutex
 	cond         *sync.Cond
 
+	// TODO: Maybe allow different timeouts for different states.
+	waitForStateTimeout time.Duration
+
 	log logging.Logger
 }
 
-func newStateMachine(ctx context.Context, log logging.Logger) *stateMachine {
+func newStateMachine(ctx context.Context, log logging.Logger, waitForStateTimeout time.Duration) *stateMachine {
 	mu := &sync.Mutex{}
 	cond := sync.NewCond(mu)
 	go func() {
@@ -44,13 +47,12 @@ func newStateMachine(ctx context.Context, log logging.Logger) *stateMachine {
 		currentState: stateCreated,
 		mutex:        mu,
 		cond:         cond,
-		log:          log,
+
+		waitForStateTimeout: waitForStateTimeout,
+
+		log: log,
 	}
 }
-
-// TODO: Allow this timeout to be set in configuration.
-// TODO: Maybe allow different timeouts for different states.
-const waitForStateTimeout = 30 * time.Second
 
 func (s *stateMachine) waitForState(target stateName) error {
 	s.log.Debugf("waitForState: %v", target)
@@ -58,7 +60,7 @@ func (s *stateMachine) waitForState(target stateName) error {
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
 
-	t := time.NewTimer(waitForStateTimeout)
+	t := time.NewTimer(s.waitForStateTimeout)
 	defer func() {
 		// Stop timer and drain channel
 		if !t.Stop() {

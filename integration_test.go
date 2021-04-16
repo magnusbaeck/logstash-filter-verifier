@@ -67,7 +67,7 @@ func TestIntegration(t *testing.T) {
 	}
 
 	log := testLogger
-	server := daemon.New(socket, logstashPath, nil, log, 10*time.Second, 3*time.Second)
+	server := daemon.New(socket, logstashPath, nil, log, 10*time.Second, 3*time.Second, 30*time.Second)
 
 	version, err := standalonelogstash.DetectVersion(logstashPath, os.Environ())
 	is.NoErr(err)
