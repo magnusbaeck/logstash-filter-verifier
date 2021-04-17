@@ -129,6 +129,9 @@ func TestIntegration(t *testing.T) {
 			name:     "codec_optional_test",
 			optional: true,
 		},
+		{
+			name: "special_chars",
+		},
 	}
 
 	for _, tc := range cases {

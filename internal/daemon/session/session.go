@@ -11,6 +11,9 @@ import (
 
 	"github.com/pkg/errors"
 
+	"github.com/breml/logstash-config/ast"
+	"github.com/breml/logstash-config/ast/astutil"
+
 	"github.com/magnusbaeck/logstash-filter-verifier/v2/internal/daemon/idgen"
 	"github.com/magnusbaeck/logstash-filter-verifier/v2/internal/daemon/logstashconfig"
 	"github.com/magnusbaeck/logstash-filter-verifier/v2/internal/daemon/pipeline"
@@ -215,9 +218,13 @@ func createInput(pipelineFilename string, fieldsFilename string, inputPluginName
 		removeGeneratorFields += `, "message"`
 	}
 
-	// FIXME: inputLines are not properly escaped for Logstash
 	for i := range inputLines {
-		inputLines[i] = "'" + inputLines[i] + "'"
+		var err error
+		inputLine, err := astutil.Quote(inputLines[i], ast.DoubleQuoted)
+		if err != nil {
+			inputLine = astutil.QuoteWithEscape(inputLines[i], ast.SingleQuoted)
+		}
+		inputLines[i] = inputLine
 	}
 
 	templateData := struct {

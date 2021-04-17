@@ -3,7 +3,6 @@ package run
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"net"
 	"os"
 	"path"
@@ -13,9 +12,13 @@ import (
 	"time"
 
 	"github.com/imkira/go-observer"
+	"github.com/pkg/errors"
 	"github.com/tidwall/gjson"
 	"github.com/tidwall/sjson"
 	"google.golang.org/grpc"
+
+	"github.com/breml/logstash-config/ast"
+	"github.com/breml/logstash-config/ast/astutil"
 
 	pb "github.com/magnusbaeck/logstash-filter-verifier/v2/internal/daemon/api/grpc"
 	"github.com/magnusbaeck/logstash-filter-verifier/v2/internal/daemon/pipeline"
@@ -116,6 +119,8 @@ func (s Test) Run() error {
 		if err != nil {
 			return err
 		}
+		s.validateInputLines(t.InputLines)
+
 		result, err := c.ExecuteTest(context.Background(), &pb.ExecuteTestRequest{
 			SessionID:   sessionID,
 			InputPlugin: t.InputPlugin,
@@ -171,6 +176,17 @@ func (s Test) Run() error {
 	}
 
 	return nil
+}
+
+func (s Test) validateInputLines(lines []string) {
+	for _, line := range lines {
+		_, doubleQuoteErr := astutil.Quote(line, ast.DoubleQuoted)
+		_, singleQuoteErr := astutil.Quote(line, ast.SingleQuoted)
+
+		if doubleQuoteErr != nil && singleQuoteErr != nil {
+			s.log.Warningf("Test input line %q contains unescaped double and single quotes, single quotes will be escaped automatically", line)
+		}
+	}
 }
 
 func (s Test) postProcessResults(results []string, exportMetadata bool) ([]string, error) {
