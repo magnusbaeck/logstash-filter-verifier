@@ -11,14 +11,13 @@ import (
 	"strings"
 	"time"
 
+	"github.com/breml/logstash-config/ast"
+	"github.com/breml/logstash-config/ast/astutil"
 	"github.com/imkira/go-observer"
 	"github.com/pkg/errors"
 	"github.com/tidwall/gjson"
 	"github.com/tidwall/sjson"
 	"google.golang.org/grpc"
-
-	"github.com/breml/logstash-config/ast"
-	"github.com/breml/logstash-config/ast/astutil"
 
 	pb "github.com/magnusbaeck/logstash-filter-verifier/v2/internal/daemon/api/grpc"
 	"github.com/magnusbaeck/logstash-filter-verifier/v2/internal/daemon/pipeline"

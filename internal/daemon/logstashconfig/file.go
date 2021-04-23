@@ -7,11 +7,10 @@ import (
 	"path"
 	"path/filepath"
 
-	"github.com/pkg/errors"
-
 	config "github.com/breml/logstash-config"
 	"github.com/breml/logstash-config/ast"
 	"github.com/breml/logstash-config/ast/astutil"
+	"github.com/pkg/errors"
 
 	"github.com/magnusbaeck/logstash-filter-verifier/v2/internal/daemon/idgen"
 )

@@ -9,10 +9,9 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/pkg/errors"
-
 	"github.com/breml/logstash-config/ast"
 	"github.com/breml/logstash-config/ast/astutil"
+	"github.com/pkg/errors"
 
 	"github.com/magnusbaeck/logstash-filter-verifier/v2/internal/daemon/idgen"
 	"github.com/magnusbaeck/logstash-filter-verifier/v2/internal/daemon/logstashconfig"
