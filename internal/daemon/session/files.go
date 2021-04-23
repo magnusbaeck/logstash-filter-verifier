@@ -54,6 +54,7 @@ filter {
     exact => true
     override => true
     fallback => "__lfv_fields_not_found"
+    refresh_interval => 0
   }
 
   ruby {
