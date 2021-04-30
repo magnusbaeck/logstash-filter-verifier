@@ -33,10 +33,12 @@ type Session struct {
 	inputPluginCodecs map[string]string
 	testexec          int
 
+	noCleanup bool
+
 	log logging.Logger
 }
 
-func newSession(baseDir string, logstashController pool.LogstashController, log logging.Logger) *Session {
+func newSession(baseDir string, logstashController pool.LogstashController, noCleanup bool, log logging.Logger) *Session {
 	sessionID := idgen.New()
 	sessionDir := fmt.Sprintf("%s/session/%s", baseDir, sessionID)
 	return &Session{
@@ -44,6 +46,7 @@ func newSession(baseDir string, logstashController pool.LogstashController, log 
 		baseDir:            baseDir,
 		sessionDir:         sessionDir,
 		logstashController: logstashController,
+		noCleanup:          noCleanup,
 		inputPluginCodecs:  map[string]string{},
 		log:                log,
 	}
@@ -264,7 +267,10 @@ func (s *Session) GetStats() {
 func (s *Session) teardown() error {
 	// TODO: Perform a reset of the Logstash instance including Stdin Buffer, etc.
 	err1 := s.logstashController.Teardown()
-	err2 := os.RemoveAll(s.sessionDir)
+	var err2 error
+	if !s.noCleanup {
+		err2 = os.RemoveAll(s.sessionDir)
+	}
 	if err1 != nil || err2 != nil {
 		return errors.Errorf("session teardown failed: %v, %v", err1, err2)
 	}

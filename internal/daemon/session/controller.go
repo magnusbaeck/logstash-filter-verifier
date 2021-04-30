@@ -22,11 +22,12 @@ type Controller struct {
 
 	tempdir      string
 	logstashPool Pool
+	noCleanup    bool
 	log          logging.Logger
 }
 
 // NewController creates a new session Controller.
-func NewController(tempdir string, logstashPool Pool, log logging.Logger) *Controller {
+func NewController(tempdir string, logstashPool Pool, noCleanup bool, log logging.Logger) *Controller {
 	mu := &sync.Mutex{}
 
 	return &Controller{
@@ -38,6 +39,7 @@ func NewController(tempdir string, logstashPool Pool, log logging.Logger) *Contr
 
 		tempdir:      tempdir,
 		logstashPool: logstashPool,
+		noCleanup:    noCleanup,
 		log:          log,
 	}
 }
@@ -60,7 +62,7 @@ func (s *Controller) Create(pipelines pipeline.Pipelines, configFiles []logstash
 		return nil, err
 	}
 
-	session := newSession(s.tempdir, logstashController, s.log)
+	session := newSession(s.tempdir, logstashController, s.noCleanup, s.log)
 	s.sessions[session.ID()] = session
 
 	s.wg.Add(1)

@@ -24,6 +24,11 @@ func TestIntegration(t *testing.T) {
 		t.Skip("integration test skipped, enable with env var `INTEGRATION_TEST=1`")
 	}
 
+	noCleanup := false
+	if os.Getenv("INTEGRATION_TEST_NOCLEANUP") == "1" {
+		noCleanup = true
+	}
+
 	is := is.New(t)
 
 	viper.SetConfigName("logstash-filter-verifier")
@@ -67,7 +72,7 @@ func TestIntegration(t *testing.T) {
 	}
 
 	log := testLogger
-	server := daemon.New(socket, logstashPath, nil, log, 10*time.Second, 3*time.Second, 30*time.Second)
+	server := daemon.New(socket, logstashPath, nil, log, 10*time.Second, 3*time.Second, 30*time.Second, noCleanup)
 
 	version, err := standalonelogstash.DetectVersion(logstashPath, os.Environ())
 	is.NoErr(err)

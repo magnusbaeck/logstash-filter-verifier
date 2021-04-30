@@ -51,6 +51,8 @@ type Daemon struct {
 	shutdownTimeout         time.Duration
 	waitForStateTimeout     time.Duration
 
+	noCleanup bool
+
 	sessionController *session.Controller
 
 	server *grpc.Server
@@ -61,7 +63,7 @@ type Daemon struct {
 }
 
 // New creates a new logstash filter verifier daemon.
-func New(socket string, logstashPath string, keptEnvVars []string, log logging.Logger, inflightShutdownTimeout time.Duration, shutdownTimeout time.Duration, waitForStateTimeout time.Duration) Daemon {
+func New(socket string, logstashPath string, keptEnvVars []string, log logging.Logger, inflightShutdownTimeout time.Duration, shutdownTimeout time.Duration, waitForStateTimeout time.Duration, noCleanup bool) Daemon {
 	ctxShutdownSignal, shutdownSignalFunc := context.WithCancel(context.Background())
 	return Daemon{
 		socket:                  socket,
@@ -73,6 +75,7 @@ func New(socket string, logstashPath string, keptEnvVars []string, log logging.L
 		ctxShutdownSignal:       ctxShutdownSignal,
 		shutdownSignalFunc:      shutdownSignalFunc,
 		waitForStateTimeout:     waitForStateTimeout,
+		noCleanup:               noCleanup,
 	}
 }
 
@@ -118,7 +121,7 @@ func (d *Daemon) Run(ctx context.Context) error {
 	}
 
 	// Create Session Handler
-	d.sessionController = session.NewController(d.tempdir, pool, d.log)
+	d.sessionController = session.NewController(d.tempdir, pool, d.noCleanup, d.log)
 
 	// Create and start GRPC Server
 	lis, err := net.Listen("unix", d.socket)
@@ -248,6 +251,10 @@ func (d *Daemon) shutdownSignalHandler(shutdown func(), shutdownLogstashInstance
 
 // Cleanup removes the temporary files created by the daemon.
 func (d *Daemon) Cleanup() {
+	if d.noCleanup {
+		return
+	}
+
 	err := os.RemoveAll(d.tempdir)
 	if err != nil {
 		d.log.Errorf("Failed to cleanup temporary directory for daemon %q: %v", d.tempdir, err)
