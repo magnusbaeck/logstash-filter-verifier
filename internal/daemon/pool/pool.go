@@ -5,6 +5,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/Masterminds/semver/v3"
 	"github.com/pkg/errors"
 
 	"github.com/magnusbaeck/logstash-filter-verifier/v2/internal/daemon/pipeline"
@@ -21,6 +22,8 @@ type LogstashController interface {
 }
 
 type LogstashControllerFactory func() (LogstashController, error)
+
+type LogstashDetectVersion func() (semver.Version, error)
 
 type Pool struct {
 	logstashControllerFactory LogstashControllerFactory

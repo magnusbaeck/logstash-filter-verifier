@@ -20,14 +20,15 @@ type Controller struct {
 	sessions map[string]*Session
 	finished bool
 
-	tempdir      string
-	logstashPool Pool
-	noCleanup    bool
-	log          logging.Logger
+	tempdir                    string
+	logstashPool               Pool
+	noCleanup                  bool
+	isOrderedPipelineSupported bool
+	log                        logging.Logger
 }
 
 // NewController creates a new session Controller.
-func NewController(tempdir string, logstashPool Pool, noCleanup bool, log logging.Logger) *Controller {
+func NewController(tempdir string, logstashPool Pool, noCleanup bool, isOrderedPipelineSupported bool, log logging.Logger) *Controller {
 	mu := &sync.Mutex{}
 
 	return &Controller{
@@ -37,10 +38,11 @@ func NewController(tempdir string, logstashPool Pool, noCleanup bool, log loggin
 
 		sessions: make(map[string]*Session, 10),
 
-		tempdir:      tempdir,
-		logstashPool: logstashPool,
-		noCleanup:    noCleanup,
-		log:          log,
+		tempdir:                    tempdir,
+		logstashPool:               logstashPool,
+		noCleanup:                  noCleanup,
+		isOrderedPipelineSupported: isOrderedPipelineSupported,
+		log:                        log,
 	}
 }
 
@@ -62,7 +64,7 @@ func (s *Controller) Create(pipelines pipeline.Pipelines, configFiles []logstash
 		return nil, err
 	}
 
-	session := newSession(s.tempdir, logstashController, s.noCleanup, s.log)
+	session := newSession(s.tempdir, logstashController, s.noCleanup, s.isOrderedPipelineSupported, s.log)
 	s.sessions[session.ID()] = session
 
 	s.wg.Add(1)

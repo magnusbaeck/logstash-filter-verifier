@@ -13,6 +13,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/Masterminds/semver/v3"
 	"github.com/pkg/errors"
 	"google.golang.org/grpc"
 	"gopkg.in/yaml.v2"
@@ -97,12 +98,21 @@ func (d *Daemon) Run(ctx context.Context) error {
 
 	env := standalonelogstash.GetLimitedEnvironment(os.Environ(), d.keptEnvVars)
 
+	logstashVersion, err := standalonelogstash.DetectVersion(d.logstashPath, env)
+	if err != nil {
+		return err
+	}
+	var isOrderedPipelineSupported bool
+	if logstashVersion.Compare(semver.MustParse("v7.7.0")) >= 0 {
+		isOrderedPipelineSupported = true
+	}
+
 	// Factory to create and start Logstash Controller
 	shutdownLogstashInstancesWG := &sync.WaitGroup{}
 	logstashControllerFactory := func() (session.LogstashController, error) {
 		shutdownLogstashInstancesWG.Add(1)
 		instance := logstash.New(ctxKill, d.logstashPath, env, d.log, shutdownLogstashInstancesWG)
-		logstashController, err := controller.NewController(instance, tempdir, d.log, d.waitForStateTimeout)
+		logstashController, err := controller.NewController(instance, tempdir, d.log, d.waitForStateTimeout, isOrderedPipelineSupported)
 		if err != nil {
 			return nil, err
 		}
@@ -121,7 +131,7 @@ func (d *Daemon) Run(ctx context.Context) error {
 	}
 
 	// Create Session Handler
-	d.sessionController = session.NewController(d.tempdir, pool, d.noCleanup, d.log)
+	d.sessionController = session.NewController(d.tempdir, pool, d.noCleanup, isOrderedPipelineSupported, d.log)
 
 	// Create and start GRPC Server
 	lis, err := net.Listen("unix", d.socket)

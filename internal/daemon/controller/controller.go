@@ -28,13 +28,14 @@ type Controller struct {
 	instanceReady *sync.Once
 	shutdown      context.CancelFunc
 
-	stateMachine        *stateMachine
-	waitForStateTimeout time.Duration
-	receivedEvents      *events
-	pipelines           *pipelines
+	stateMachine               *stateMachine
+	waitForStateTimeout        time.Duration
+	isOrderedPipelineSupported bool
+	receivedEvents             *events
+	pipelines                  *pipelines
 }
 
-func NewController(instance Instance, baseDir string, log logging.Logger, waitForStateTimeout time.Duration) (*Controller, error) {
+func NewController(instance Instance, baseDir string, log logging.Logger, waitForStateTimeout time.Duration, isOrderedPipelineSupported bool) (*Controller, error) {
 	id := idgen.New()
 
 	workDir := filepath.Join(baseDir, LogstashInstanceDirectoryPrefix, id)
@@ -71,7 +72,8 @@ func NewController(instance Instance, baseDir string, log logging.Logger, waitFo
 		instance:      instance,
 		instanceReady: &sync.Once{},
 
-		waitForStateTimeout: waitForStateTimeout,
+		waitForStateTimeout:        waitForStateTimeout,
+		isOrderedPipelineSupported: isOrderedPipelineSupported,
 
 		receivedEvents: newEvents(),
 		pipelines:      newPipelines(),
@@ -167,6 +169,11 @@ func (c *Controller) reload(pipelines pipeline.Pipelines, expectedEvents int) er
 
 func (c *Controller) writePipelines(pipelines ...pipeline.Pipeline) error {
 	basePipelines := basePipelines(c.workDir)
+	if c.isOrderedPipelineSupported {
+		for i := range basePipelines {
+			basePipelines[i].Ordered = "true"
+		}
+	}
 
 	pipelines = append(basePipelines, pipelines...)
 

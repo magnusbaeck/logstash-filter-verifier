@@ -24,7 +24,8 @@ import (
 type Session struct {
 	id string
 
-	logstashController pool.LogstashController
+	logstashController         pool.LogstashController
+	isOrderedPipelineSupported bool
 
 	baseDir    string
 	sessionDir string
@@ -38,17 +39,18 @@ type Session struct {
 	log logging.Logger
 }
 
-func newSession(baseDir string, logstashController pool.LogstashController, noCleanup bool, log logging.Logger) *Session {
+func newSession(baseDir string, logstashController pool.LogstashController, noCleanup bool, isOrderedPipelineSupported bool, log logging.Logger) *Session {
 	sessionID := idgen.New()
 	sessionDir := fmt.Sprintf("%s/session/%s", baseDir, sessionID)
 	return &Session{
-		id:                 sessionID,
-		baseDir:            baseDir,
-		sessionDir:         sessionDir,
-		logstashController: logstashController,
-		noCleanup:          noCleanup,
-		inputPluginCodecs:  map[string]string{},
-		log:                log,
+		id:                         sessionID,
+		baseDir:                    baseDir,
+		sessionDir:                 sessionDir,
+		logstashController:         logstashController,
+		isOrderedPipelineSupported: isOrderedPipelineSupported,
+		noCleanup:                  noCleanup,
+		inputPluginCodecs:          map[string]string{},
+		log:                        log,
 	}
 }
 
@@ -72,7 +74,9 @@ func (s *Session) setupTest(pipelines pipeline.Pipelines, configFiles []logstash
 
 		pipelines[i].ID = pipelineName
 		pipelines[i].Config = filepath.Join(sutConfigDir, pipelines[i].Config)
-		pipelines[i].Ordered = "true"
+		if s.isOrderedPipelineSupported {
+			pipelines[i].Ordered = "true"
+		}
 		pipelines[i].Workers = 1
 	}
 
@@ -140,8 +144,10 @@ func (s *Session) createOutputPipelines(outputs []string) ([]pipeline.Pipeline, 
 		pipeline := pipeline.Pipeline{
 			ID:      pipelineName,
 			Config:  filepath.Join(lfvOutputsDir, output+".conf"),
-			Ordered: "true",
 			Workers: 1,
+		}
+		if s.isOrderedPipelineSupported {
+			pipeline.Ordered = "true"
 		}
 		pipelines = append(pipelines, pipeline)
 	}
@@ -182,8 +188,10 @@ func (s *Session) ExecuteTest(inputPlugin string, inputLines []string, inEvents 
 	pipeline := pipeline.Pipeline{
 		ID:      pipelineName,
 		Config:  pipelineFilename,
-		Ordered: "true",
 		Workers: 1,
+	}
+	if s.isOrderedPipelineSupported {
+		pipeline.Ordered = "true"
 	}
 	pipelines := append(s.pipelines, pipeline)
 	err = s.logstashController.ExecuteTest(pipelines, len(inputLines))

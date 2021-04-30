@@ -33,7 +33,7 @@ func TestNewController(t *testing.T) {
 
 			tempdir := t.TempDir()
 
-			c, err := controller.NewController(nil, tempdir, logging.NoopLogger, defaultWaitForStateTimeout)
+			c, err := controller.NewController(nil, tempdir, logging.NoopLogger, defaultWaitForStateTimeout, true)
 			is.NoErr(err)
 
 			is.True(file.Exists(filepath.Join(tempdir, controller.LogstashInstanceDirectoryPrefix, c.ID(), "logstash.yml")))      // logstash.yml
@@ -75,7 +75,7 @@ func TestLaunch(t *testing.T) {
 
 			tempdir := t.TempDir()
 
-			c, err := controller.NewController(instance, tempdir, logging.NoopLogger, defaultWaitForStateTimeout)
+			c, err := controller.NewController(instance, tempdir, logging.NoopLogger, defaultWaitForStateTimeout, true)
 			is.NoErr(err)
 
 			err = c.Launch(context.Background())
@@ -108,7 +108,7 @@ func TestCompleteCycle(t *testing.T) {
 
 			tempdir := t.TempDir()
 
-			c, err := controller.NewController(instance, tempdir, logging.NoopLogger, defaultWaitForStateTimeout)
+			c, err := controller.NewController(instance, tempdir, logging.NoopLogger, defaultWaitForStateTimeout, true)
 			is.NoErr(err)
 
 			err = c.Launch(context.Background())
@@ -193,7 +193,7 @@ func TestSetupTest_Shutdown(t *testing.T) {
 
 			tempdir := t.TempDir()
 
-			c, err := controller.NewController(instance, tempdir, logging.NoopLogger, defaultWaitForStateTimeout)
+			c, err := controller.NewController(instance, tempdir, logging.NoopLogger, defaultWaitForStateTimeout, true)
 			is.NoErr(err)
 
 			ctx, cancel := context.WithCancel(context.Background())

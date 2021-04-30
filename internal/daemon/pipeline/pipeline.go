@@ -27,7 +27,7 @@ type Pipelines []Pipeline
 type Pipeline struct {
 	ID      string `yaml:"pipeline.id"`
 	Config  string `yaml:"path.config"`
-	Ordered string `yaml:"-"`
+	Ordered string `yaml:"pipeline.ordered,omitempty"`
 	Workers int    `yaml:"pipeline.workers"`
 }
 

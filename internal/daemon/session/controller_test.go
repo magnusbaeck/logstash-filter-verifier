@@ -53,7 +53,7 @@ func TestSession(t *testing.T) {
 				ReturnFunc: func(instance pool.LogstashController, clean bool) {},
 			}
 
-			c := session.NewController(tempdir, pool, false, logging.NoopLogger)
+			c := session.NewController(tempdir, pool, false, true, logging.NoopLogger)
 
 			pipelines := pipeline.Pipelines{
 				pipeline.Pipeline{
@@ -143,7 +143,7 @@ func TestCreate(t *testing.T) {
 				ReturnFunc: func(instance pool.LogstashController, clean bool) {},
 			}
 
-			c := session.NewController(tempdir, pool, false, logging.NoopLogger)
+			c := session.NewController(tempdir, pool, false, true, logging.NoopLogger)
 
 			pipelines := pipeline.Pipelines{
 				pipeline.Pipeline{

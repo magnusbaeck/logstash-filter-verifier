@@ -59,13 +59,11 @@ func basePipelines(workDir string) pipeline.Pipelines {
 		pipeline.Pipeline{
 			ID:      "stdin",
 			Config:  filepath.Join(workDir, "stdin.conf"),
-			Ordered: "true",
 			Workers: 1,
 		},
 		pipeline.Pipeline{
 			ID:      "output",
 			Config:  filepath.Join(workDir, "output.conf"),
-			Ordered: "true",
 			Workers: 1,
 		},
 	}
