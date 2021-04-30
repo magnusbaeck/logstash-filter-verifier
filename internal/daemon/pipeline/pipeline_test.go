@@ -75,6 +75,11 @@ func TestValidate(t *testing.T) {
 
 			wantValidateErr: true,
 		},
+		{
+			name:     "success basic pipeline with nested keys",
+			pipeline: "testdata/pipelines_basic_nested_keys.yml",
+			basePath: "testdata/",
+		},
 	}
 
 	for _, test := range cases {

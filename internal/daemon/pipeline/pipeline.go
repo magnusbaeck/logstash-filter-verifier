@@ -29,6 +29,9 @@ type Pipeline struct {
 	Config  string `yaml:"path.config"`
 	Ordered string `yaml:"pipeline.ordered,omitempty"`
 	Workers int    `yaml:"pipeline.workers"`
+
+	Path     map[string]interface{} `yaml:"path,omitempty"`
+	Pipeline map[string]interface{} `yaml:"pipeline,omitempty"`
 }
 
 func New(file, basePath string) (Archive, error) {
@@ -43,6 +46,8 @@ func New(file, basePath string) (Archive, error) {
 		return Archive{}, err
 	}
 
+	processNestedKeys(p)
+
 	a := Archive{
 		Pipelines: p,
 		File:      file,
@@ -50,6 +55,22 @@ func New(file, basePath string) (Archive, error) {
 	}
 
 	return a, nil
+}
+
+func processNestedKeys(pipelines Pipelines) {
+	for i := range pipelines {
+		if ival, ok := pipelines[i].Path["config"]; ok {
+			if val, ok := ival.(string); ok {
+				pipelines[i].Config = val
+			}
+		}
+
+		if ival, ok := pipelines[i].Pipeline["id"]; ok {
+			if val, ok := ival.(string); ok {
+				pipelines[i].ID = val
+			}
+		}
+	}
 }
 
 func (a Archive) Validate() error {
