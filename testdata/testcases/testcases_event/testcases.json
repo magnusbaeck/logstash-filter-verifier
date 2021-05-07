@@ -1,0 +1,29 @@
+{
+  "ignore": [
+    "@timestamp"
+  ],
+  "input_plugin": "stdin",
+  "fields": {
+    "global_field": "global",
+    "overwritten_field": "global"
+  },
+  "testcases": [
+    {
+      "event": {
+        "string": "string value",
+        "number": 123,
+        "bool": true,
+        "overwritten_field": "event"
+      },
+      "expected": [
+        {
+          "string": "string value",
+          "number": 123,
+          "bool": true,
+          "global_field": "global",
+          "overwritten_field": "event"
+        }
+      ]
+    }
+  ]
+}

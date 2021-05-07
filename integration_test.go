@@ -137,6 +137,9 @@ func TestIntegration(t *testing.T) {
 		{
 			name: "special_chars",
 		},
+		{
+			name: "testcases_event",
+		},
 	}
 
 	for _, tc := range cases {
