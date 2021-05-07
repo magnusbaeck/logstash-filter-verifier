@@ -35,7 +35,7 @@
           "message": "expected_outputs defined (one output)"
         }
       ],
-      "expected_outputs": [ "stdout" ]
+      "expected_outputs": [ "stage1_stdout" ]
     },
     {
       "input": [
@@ -46,7 +46,49 @@
           "message": "expected_outputs defined (multiple output)"
         }
       ],
-      "expected_outputs": [ "stdout", "file" ]
+      "expected_outputs": [ "stage1_stdout", "stage1_file" ]
+    },
+    {
+      "input": [
+        "expected_outputs not defined (stage2)"
+      ],
+      "expected": [
+        {
+          "message": "expected_outputs not defined (stage2)"
+        }
+      ]
+    },
+    {
+      "input": [
+        "expected_outputs not defined (multiple outputs and stage2)"
+      ],
+      "expected": [
+        {
+          "message": "expected_outputs not defined (multiple outputs and stage2)"
+        }
+      ]
+    },
+    {
+      "input": [
+        "expected_outputs defined (stage2)"
+      ],
+      "expected": [
+        {
+          "message": "expected_outputs defined (stage2)"
+        }
+      ],
+      "expected_outputs": [ "stage1_stdout", "stage2_file" ]
+    },
+    {
+      "input": [
+        "expected_outputs defined (multiple output and stage2)"
+      ],
+      "expected": [
+        {
+          "message": "expected_outputs defined (multiple output and stage2)"
+        }
+      ],
+      "expected_outputs": [ "stage1_stdout", "stage1_file", "stage2_file" ]
     }
   ]
 }
