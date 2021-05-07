@@ -144,9 +144,9 @@ func TestCompleteCycle(t *testing.T) {
 
 			// Simulate pipelines ready from instance
 			c.PipelinesReady("stdin", "output", "main", "input", "__lfv_pipelines_running")
-			err = c.ReceiveEvent("result 1")
+			err = c.ReceiveEvent(`{ "__lfv_id": "1", "message": "result 1" }`)
 			is.NoErr(err)
-			err = c.ReceiveEvent("result 2")
+			err = c.ReceiveEvent(`{ "__lfv_id": "2", "message": "result 2" }`)
 			is.NoErr(err)
 
 			res, err := c.GetResults()
