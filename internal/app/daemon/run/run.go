@@ -121,10 +121,11 @@ func (s Test) Run() error {
 		s.validateInputLines(t.InputLines)
 
 		result, err := c.ExecuteTest(context.Background(), &pb.ExecuteTestRequest{
-			SessionID:   sessionID,
-			InputPlugin: t.InputPlugin,
-			InputLines:  t.InputLines,
-			Events:      b,
+			SessionID:      sessionID,
+			InputPlugin:    t.InputPlugin,
+			InputLines:     t.InputLines,
+			Events:         b,
+			ExpectedEvents: int32(len(t.ExpectedEvents)),
 		})
 		if err != nil {
 			return err

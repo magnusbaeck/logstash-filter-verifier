@@ -9,6 +9,7 @@ require (
 	github.com/bmatcuk/doublestar/v2 v2.0.4
 	github.com/breml/logstash-config v0.4.4
 	github.com/go-playground/overalls v0.0.0-20191218162659-7df9f728c018
+	github.com/golang/protobuf v1.5.2
 	github.com/hashicorp/packer v1.4.4
 	github.com/hpcloud/tail v1.0.0
 	github.com/imkira/go-observer v1.0.3
@@ -31,9 +32,10 @@ require (
 	github.com/yookoala/realpath v1.0.0 // indirect
 	golang.org/x/mod v0.4.2 // indirect
 	golang.org/x/sys v0.0.0-20210124154548-22da62e12c0c // indirect
+	golang.org/x/xerrors v0.0.0-20200804184101-5ec99f83aff1 // indirect
 	google.golang.org/grpc v1.34.0
 	google.golang.org/grpc/cmd/protoc-gen-go-grpc v1.0.1
-	google.golang.org/protobuf v1.25.0
+	google.golang.org/protobuf v1.26.0
 	gopkg.in/VividCortex/ewma.v1 v1.1.1 // indirect
 	gopkg.in/cheggaaa/pb.v2 v2.0.7
 	gopkg.in/fatih/color.v1 v1.7.0 // indirect

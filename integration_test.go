@@ -118,6 +118,9 @@ func TestIntegration(t *testing.T) {
 			name: "basic_pipeline",
 		},
 		{
+			name: "drop_and_split",
+		},
+		{
 			name: "conditional_output",
 		},
 		{

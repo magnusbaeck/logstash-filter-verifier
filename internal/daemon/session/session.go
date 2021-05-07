@@ -157,7 +157,7 @@ func (s *Session) createOutputPipelines(outputs []string) ([]pipeline.Pipeline, 
 
 // ExecuteTest runs a test case set against the Logstash configuration, that has
 // been loaded previously with SetupTest.
-func (s *Session) ExecuteTest(inputPlugin string, inputLines []string, inEvents []map[string]interface{}) error {
+func (s *Session) ExecuteTest(inputPlugin string, inputLines []string, inEvents []map[string]interface{}, expectedEvents int) error {
 	s.testexec++
 	pipelineName := fmt.Sprintf("lfv_input_%d", s.testexec)
 	inputDir := filepath.Join(s.sessionDir, "lfv_inputs", strconv.Itoa(s.testexec))
@@ -194,7 +194,7 @@ func (s *Session) ExecuteTest(inputPlugin string, inputLines []string, inEvents 
 		pipeline.Ordered = "true"
 	}
 	pipelines := append(s.pipelines, pipeline)
-	err = s.logstashController.ExecuteTest(pipelines, len(inputLines))
+	err = s.logstashController.ExecuteTest(pipelines, expectedEvents)
 	if err != nil {
 		return err
 	}

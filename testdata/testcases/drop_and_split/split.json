@@ -1,0 +1,31 @@
+{
+  "fields": {
+  },
+  "ignore": [
+    "@timestamp"
+  ],
+  "input_plugin": "stdin",
+  "testcases": [
+    {
+      "input": [
+        "normal input",
+        "split this input\ninto multiple events",
+        "normal input again"
+      ],
+      "expected": [
+        {
+          "message": "normal input"
+        },
+        {
+          "message": "split this input"
+        },
+        {
+          "message": "into multiple events"
+        },
+        {
+          "message": "normal input again"
+        }
+      ]
+    }
+  ]
+}
