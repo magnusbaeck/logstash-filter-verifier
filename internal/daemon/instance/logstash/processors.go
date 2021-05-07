@@ -30,11 +30,7 @@ func (i *instance) stdoutProcessor(stdout io.ReadCloser) {
 			continue
 		}
 
-		err := i.controller.ReceiveEvent(scanner.Text())
-		if err != nil {
-			// Shutdown signal received in waitForState
-			break
-		}
+		i.controller.ReceiveEvent(scanner.Text())
 	}
 	if err := scanner.Err(); err != nil {
 		i.log.Error("reading standard output:", err)

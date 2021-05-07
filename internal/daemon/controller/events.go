@@ -9,6 +9,7 @@ import (
 type events struct {
 	events            []string
 	receivedUniqueIDs map[string]struct{}
+	completeFirstTime bool
 	expected          int
 	mutex             *sync.Mutex
 }
@@ -30,11 +31,16 @@ func (e *events) append(event string) {
 	e.receivedUniqueIDs[id] = struct{}{}
 }
 
-func (e *events) isComplete() bool {
+func (e *events) isCompleteFirstTime() bool {
 	e.mutex.Lock()
 	defer e.mutex.Unlock()
 
-	return e.expected == len(e.receivedUniqueIDs)
+	if e.expected == len(e.receivedUniqueIDs) && !e.completeFirstTime {
+		e.completeFirstTime = true
+		return true
+	}
+
+	return false
 }
 
 func (e *events) reset(expected int) {
@@ -44,6 +50,7 @@ func (e *events) reset(expected int) {
 	e.expected = expected
 	e.events = make([]string, 0, 100)
 	e.receivedUniqueIDs = make(map[string]struct{}, 100)
+	e.completeFirstTime = false
 }
 
 func (e *events) get() []string {
