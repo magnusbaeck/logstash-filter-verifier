@@ -13,6 +13,7 @@ import (
 	"github.com/pkg/errors"
 	"gopkg.in/yaml.v2"
 
+	"github.com/magnusbaeck/logstash-filter-verifier/v2/internal/daemon/filtermock"
 	"github.com/magnusbaeck/logstash-filter-verifier/v2/internal/daemon/logstashconfig"
 )
 
@@ -118,7 +119,7 @@ func (a Archive) Validate() error {
 	return nil
 }
 
-func (a Archive) Zip() ([]byte, error) {
+func (a Archive) ZipWithPreprocessor(preprocess func([]byte) ([]byte, error)) ([]byte, error) {
 	buf := new(bytes.Buffer)
 	w := zip.NewWriter(buf)
 
@@ -161,6 +162,12 @@ func (a Archive) Zip() ([]byte, error) {
 			if err != nil {
 				return nil, err
 			}
+
+			body, err = preprocess(body)
+			if err != nil {
+				return nil, err
+			}
+
 			_, err = f.Write(body)
 			if err != nil {
 				return nil, err
@@ -174,4 +181,23 @@ func (a Archive) Zip() ([]byte, error) {
 	}
 
 	return buf.Bytes(), nil
+}
+
+func NoopPreprocessor(body []byte) ([]byte, error) {
+	return body, nil
+}
+
+func ApplyMocksPreprocessor(m filtermock.Mocks) func(body []byte) ([]byte, error) {
+	return func(body []byte) ([]byte, error) {
+		configFile := logstashconfig.File{
+			Body: body,
+		}
+
+		err := configFile.ApplyMocks(m)
+		if err != nil {
+			return body, err
+		}
+
+		return configFile.Body, nil
+	}
 }

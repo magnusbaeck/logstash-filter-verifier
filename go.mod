@@ -7,7 +7,7 @@ require (
 	github.com/ahmetb/govvv v0.3.0
 	github.com/axw/gocov v1.0.0
 	github.com/bmatcuk/doublestar/v2 v2.0.4
-	github.com/breml/logstash-config v0.4.4
+	github.com/breml/logstash-config v0.4.5
 	github.com/go-playground/overalls v0.0.0-20191218162659-7df9f728c018
 	github.com/hashicorp/packer v1.4.4
 	github.com/hpcloud/tail v1.0.0

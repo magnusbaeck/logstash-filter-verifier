@@ -113,6 +113,8 @@ func TestIntegration(t *testing.T) {
 		// optional integration tests require additional logstash plugins,
 		// which are not provided by a default installation.
 		optional bool
+
+		filterMock string
 	}{
 		{
 			name: "basic_pipeline",
@@ -133,6 +135,11 @@ func TestIntegration(t *testing.T) {
 		{
 			name:     "codec_optional_test",
 			optional: true,
+		},
+		{
+			name: "filtermock",
+
+			filterMock: "testdata/mocks/filtermock.yml",
 		},
 		{
 			name: "special_chars",
@@ -156,6 +163,7 @@ func TestIntegration(t *testing.T) {
 				"testdata/"+tc.name+".yml",
 				"testdata/"+tc.name,
 				"testdata/testcases/"+tc.name,
+				tc.filterMock,
 				"@metadata",
 				tc.debug,
 			)

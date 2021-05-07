@@ -161,7 +161,7 @@ func TestZip(t *testing.T) {
 				return
 			}
 
-			b, err := a.Zip()
+			b, err := a.ZipWithPreprocessor(pipeline.NoopPreprocessor)
 			is.True(err != nil == test.wantZipBytesErr) // Zip error
 
 			if test.wantZipBytesErr {

@@ -12,6 +12,7 @@ import (
 	"github.com/breml/logstash-config/ast/astutil"
 	"github.com/pkg/errors"
 
+	"github.com/magnusbaeck/logstash-filter-verifier/v2/internal/daemon/filtermock"
 	"github.com/magnusbaeck/logstash-filter-verifier/v2/internal/daemon/idgen"
 )
 
@@ -188,4 +189,19 @@ func (v *validator) walk(c *astutil.Cursor) {
 	if v.pluginType == ast.Output && c.Plugin().Name() != "pipeline" {
 		v.outputs++
 	}
+}
+
+func (f *File) ApplyMocks(m filtermock.Mocks) error {
+	err := f.parse()
+	if err != nil {
+		return err
+	}
+
+	for i := 0; i < len(f.config.Filter); i++ {
+		f.config.Filter[i].BranchOrPlugins = astutil.ApplyPlugins(f.config.Filter[i].BranchOrPlugins, m.Walk)
+	}
+
+	f.Body = []byte(f.config.String())
+
+	return nil
 }

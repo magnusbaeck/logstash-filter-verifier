@@ -20,6 +20,7 @@ import (
 	"google.golang.org/grpc"
 
 	pb "github.com/magnusbaeck/logstash-filter-verifier/v2/internal/daemon/api/grpc"
+	"github.com/magnusbaeck/logstash-filter-verifier/v2/internal/daemon/filtermock"
 	"github.com/magnusbaeck/logstash-filter-verifier/v2/internal/daemon/pipeline"
 	"github.com/magnusbaeck/logstash-filter-verifier/v2/internal/logging"
 	"github.com/magnusbaeck/logstash-filter-verifier/v2/internal/logstash"
@@ -32,13 +33,14 @@ type Test struct {
 	pipeline     string
 	pipelineBase string
 	testcasePath string
+	filterMock   string
 	metadataKey  string
 	debug        bool
 
 	log logging.Logger
 }
 
-func New(socket string, log logging.Logger, pipeline, pipelineBase, testcasePath string, metadataKey string, debug bool) (Test, error) {
+func New(socket string, log logging.Logger, pipeline, pipelineBase, testcasePath, filterMock, metadataKey string, debug bool) (Test, error) {
 	if !path.IsAbs(pipelineBase) {
 		cwd, err := os.Getwd()
 		if err != nil {
@@ -51,6 +53,7 @@ func New(socket string, log logging.Logger, pipeline, pipelineBase, testcasePath
 		pipeline:     pipeline,
 		pipelineBase: pipelineBase,
 		testcasePath: testcasePath,
+		filterMock:   filterMock,
 		metadataKey:  metadataKey,
 		debug:        debug,
 		log:          log,
@@ -69,7 +72,17 @@ func (s Test) Run() error {
 		return err
 	}
 
-	b, err := a.Zip()
+	m, err := filtermock.FromFile(s.filterMock)
+	if err != nil {
+		return err
+	}
+
+	preprocessor := pipeline.NoopPreprocessor
+	if len(m) > 0 {
+		preprocessor = pipeline.ApplyMocksPreprocessor(m)
+	}
+
+	b, err := a.ZipWithPreprocessor(preprocessor)
 	if err != nil {
 		return err
 	}
