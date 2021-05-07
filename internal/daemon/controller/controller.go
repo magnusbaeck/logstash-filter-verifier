@@ -201,7 +201,7 @@ func (c *Controller) ReceiveEvent(event string) error {
 
 		// The last event might be sent through multiple outputs, therefore we give
 		// a little headroom for more events with the same ID to arrive.
-		time.Sleep(100 * time.Millisecond)
+		time.Sleep(200 * time.Millisecond)
 
 		c.stateMachine.executeCommand(commandTestComplete)
 	}
