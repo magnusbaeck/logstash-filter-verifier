@@ -25,6 +25,8 @@ import (
 	lfvobserver "github.com/magnusbaeck/logstash-filter-verifier/v2/internal/observer"
 )
 
+const DummyEventInputIndicator = "__lfv_dummy_event"
+
 // TestCaseSet contains the configuration of a Logstash filter test case.
 // Most of the fields are supplied by the user via a JSON file or YAML file.
 type TestCaseSet struct {
@@ -195,7 +197,7 @@ func New(reader io.Reader, configType string) (*TestCaseSet, error) {
 	for _, tc := range tcs.TestCases {
 		// Add event, if there are no input lines.
 		if len(tc.InputLines) == 0 {
-			tc.InputLines = []string{""}
+			tc.InputLines = []string{DummyEventInputIndicator}
 		}
 		tcs.InputLines = append(tcs.InputLines, tc.InputLines...)
 		tcs.ExpectedEvents = append(tcs.ExpectedEvents, tc.ExpectedEvents...)
