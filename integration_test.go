@@ -121,6 +121,9 @@ func TestIntegration(t *testing.T) {
 			name: "conditional_output",
 		},
 		{
+			name: "multiple_parallel_outputs",
+		},
+		{
 			name: "pipeline_to_pipeline",
 		},
 		{
