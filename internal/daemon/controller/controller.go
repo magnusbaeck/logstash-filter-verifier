@@ -135,6 +135,10 @@ func (c *Controller) GetResults() ([]string, error) {
 		return nil, err
 	}
 
+	// The last event might be sent through multiple outputs, therefore we give
+	// a little headroom for more events with the same ID to arrive.
+	time.Sleep(50 * time.Millisecond)
+
 	return c.receivedEvents.get(), nil
 }
 
@@ -190,19 +194,16 @@ func (c *Controller) writePipelines(pipelines ...pipeline.Pipeline) error {
 	return nil
 }
 
-func (c *Controller) ReceiveEvent(event string) error {
+func (c *Controller) ReceiveEvent(event string) {
 	c.receivedEvents.append(event)
 
-	if c.receivedEvents.isComplete() {
-		err := c.stateMachine.waitForState(stateRunningTest)
-		if err != nil {
-			return err
-		}
+	if c.receivedEvents.isCompleteFirstTime() {
+		go func() {
+			_ = c.stateMachine.waitForState(stateRunningTest)
 
-		c.stateMachine.executeCommand(commandTestComplete)
+			c.stateMachine.executeCommand(commandTestComplete)
+		}()
 	}
-
-	return nil
 }
 
 func (c *Controller) PipelinesReady(pipelines ...string) {

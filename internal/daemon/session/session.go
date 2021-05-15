@@ -19,6 +19,7 @@ import (
 	"github.com/magnusbaeck/logstash-filter-verifier/v2/internal/daemon/pool"
 	"github.com/magnusbaeck/logstash-filter-verifier/v2/internal/daemon/template"
 	"github.com/magnusbaeck/logstash-filter-verifier/v2/internal/logging"
+	"github.com/magnusbaeck/logstash-filter-verifier/v2/internal/testcase"
 )
 
 type Session struct {
@@ -157,7 +158,7 @@ func (s *Session) createOutputPipelines(outputs []string) ([]pipeline.Pipeline, 
 
 // ExecuteTest runs a test case set against the Logstash configuration, that has
 // been loaded previously with SetupTest.
-func (s *Session) ExecuteTest(inputPlugin string, inputLines []string, inEvents []map[string]interface{}) error {
+func (s *Session) ExecuteTest(inputPlugin string, inputLines []string, inEvents []map[string]interface{}, expectedEvents int) error {
 	s.testexec++
 	pipelineName := fmt.Sprintf("lfv_input_%d", s.testexec)
 	inputDir := filepath.Join(s.sessionDir, "lfv_inputs", strconv.Itoa(s.testexec))
@@ -180,7 +181,7 @@ func (s *Session) ExecuteTest(inputPlugin string, inputLines []string, inEvents 
 	}
 
 	pipelineFilename := filepath.Join(inputDir, "input.conf")
-	err = createInput(pipelineFilename, fieldsFilename, inputPluginName, inputLines, inputCodec, false)
+	err = createInput(pipelineFilename, fieldsFilename, inputPluginName, inputLines, inputCodec)
 	if err != nil {
 		return err
 	}
@@ -194,7 +195,7 @@ func (s *Session) ExecuteTest(inputPlugin string, inputLines []string, inEvents 
 		pipeline.Ordered = "true"
 	}
 	pipelines := append(s.pipelines, pipeline)
-	err = s.logstashController.ExecuteTest(pipelines, len(inputLines))
+	err = s.logstashController.ExecuteTest(pipelines, expectedEvents)
 	if err != nil {
 		return err
 	}
@@ -222,12 +223,7 @@ func prepareFields(fieldsFilename string, inEvents []map[string]interface{}) err
 	return nil
 }
 
-func createInput(pipelineFilename string, fieldsFilename string, inputPluginName string, inputLines []string, inputCodec string, removeMessageField bool) error {
-	removeGeneratorFields := `"host", "sequence"`
-	if removeMessageField {
-		removeGeneratorFields += `, "message"`
-	}
-
+func createInput(pipelineFilename string, fieldsFilename string, inputPluginName string, inputLines []string, inputCodec string) error {
 	for i := range inputLines {
 		var err error
 		inputLine, err := astutil.Quote(inputLines[i], ast.DoubleQuoted)
@@ -238,17 +234,17 @@ func createInput(pipelineFilename string, fieldsFilename string, inputPluginName
 	}
 
 	templateData := struct {
-		InputPluginName       string
-		InputLines            string
-		InputCodec            string
-		FieldsFilename        string
-		RemoveGeneratorFields string
+		InputPluginName          string
+		InputLines               string
+		InputCodec               string
+		FieldsFilename           string
+		DummyEventInputIndicator string
 	}{
-		InputPluginName:       inputPluginName,
-		InputLines:            strings.Join(inputLines, ", "),
-		InputCodec:            inputCodec,
-		FieldsFilename:        fieldsFilename,
-		RemoveGeneratorFields: removeGeneratorFields,
+		InputPluginName:          inputPluginName,
+		InputLines:               strings.Join(inputLines, ", "),
+		InputCodec:               inputCodec,
+		FieldsFilename:           fieldsFilename,
+		DummyEventInputIndicator: testcase.DummyEventInputIndicator,
 	}
 	err := template.ToFile(pipelineFilename, inputGenerator, templateData, 0600)
 	if err != nil {

@@ -3,6 +3,7 @@ package run
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"net"
 	"os"
 	"path"
@@ -134,19 +135,22 @@ func (s Test) Run() error {
 		s.validateInputLines(t.InputLines)
 
 		result, err := c.ExecuteTest(context.Background(), &pb.ExecuteTestRequest{
-			SessionID:   sessionID,
-			InputPlugin: t.InputPlugin,
-			InputLines:  t.InputLines,
-			Events:      b,
+			SessionID:      sessionID,
+			InputPlugin:    t.InputPlugin,
+			InputLines:     t.InputLines,
+			Events:         b,
+			ExpectedEvents: int32(len(t.ExpectedEvents)),
 		})
 		if err != nil {
 			return err
 		}
 
-		results, err := s.postProcessResults(result.Results, t.ExportMetadata)
+		results, seenOutputs, err := s.postProcessResults(result.Results, t)
 		if err != nil {
 			return err
 		}
+
+		verifySeenOutputs(t, seenOutputs, liveObserver)
 
 		var events []logstash.Event
 		for _, line := range results {
@@ -201,15 +205,35 @@ func (s Test) validateInputLines(lines []string) {
 	}
 }
 
-func (s Test) postProcessResults(results []string, exportMetadata bool) ([]string, error) {
+func (s Test) postProcessResults(results []string, t testcase.TestCaseSet) ([]string, map[int][]string, error) {
 	var err error
 
 	sort.Slice(results, func(i, j int) bool {
 		return gjson.Get(results[i], `__lfv_id`).Int() < gjson.Get(results[j], `__lfv_id`).Int()
 	})
 
-	for i := range results {
-		if exportMetadata {
+	lastID := "n/a"
+	testcase := -1
+	seenOutputs := make(map[int][]string, len(results))
+	for i := 0; i < len(results); i++ {
+		// Collect expected outputs
+		id := gjson.Get(results[i], "__lfv_id").String()
+		if id != lastID {
+			testcase++
+		}
+
+		seenOutputs[testcase] = append(seenOutputs[testcase], gjson.Get(results[i], "__lfv_metadata.__lfv_out_passed").String())
+
+		if id == lastID {
+			// Remove duplicate event, processed by different output
+			results = append(results[:i], results[i+1:]...)
+			i--
+			continue
+		}
+		lastID = id
+
+		// Export metadata
+		if t.ExportMetadata {
 			metadata := gjson.Get(results[i], "__lfv_metadata")
 			if metadata.Exists() && metadata.IsObject() {
 				md := make(map[string]json.RawMessage, len(metadata.Map()))
@@ -222,14 +246,14 @@ func (s Test) postProcessResults(results []string, exportMetadata bool) ([]strin
 				if len(md) > 0 {
 					results[i], err = sjson.Set(results[i], s.metadataKey, md)
 					if err != nil {
-						return nil, err
+						return nil, nil, err
 					}
 				}
 			}
 		}
 		results[i], err = sjson.Delete(results[i], "__lfv_metadata")
 		if err != nil {
-			return nil, err
+			return nil, nil, err
 		}
 
 		// No cleanup if debug is set
@@ -239,7 +263,7 @@ func (s Test) postProcessResults(results []string, exportMetadata bool) ([]strin
 
 		results[i], err = sjson.Delete(results[i], "__lfv_id")
 		if err != nil {
-			return nil, err
+			return nil, nil, err
 		}
 
 		tags := []string{}
@@ -257,9 +281,46 @@ func (s Test) postProcessResults(results []string, exportMetadata bool) ([]strin
 			results[i], err = sjson.Set(results[i], "tags", tags)
 		}
 		if err != nil {
-			return nil, err
+			return nil, nil, err
 		}
 	}
 
-	return results, nil
+	return results, seenOutputs, nil
+}
+
+func verifySeenOutputs(tcs testcase.TestCaseSet, seenOutputs map[int][]string, liveObserver observer.Property) {
+	for i := 0; i < len(tcs.TestCases); i++ {
+		if len(tcs.TestCases[i].ExpectedOutputs) == 0 {
+			continue
+		}
+
+		sort.Strings(tcs.TestCases[i].ExpectedOutputs)
+		sort.Strings(seenOutputs[i])
+
+		comparisonResult := lfvobserver.ComparisonResult{
+			Status:     true,
+			Name:       fmt.Sprintf("Comparing Logstash outputs of message %d of %d", i+1, len(tcs.TestCases)),
+			Path:       filepath.Base(tcs.File),
+			EventIndex: i,
+		}
+
+		if !equal(tcs.TestCases[i].ExpectedOutputs, seenOutputs[i]) {
+			comparisonResult.Status = false
+			comparisonResult.Explain = fmt.Sprintf("Expected Logstash outputs: %v\nActually seen Logstash outputs: %v", tcs.TestCases[i].ExpectedOutputs, seenOutputs[i])
+		}
+
+		liveObserver.Update(comparisonResult)
+	}
+}
+
+func equal(a, b []string) bool {
+	if len(a) != len(b) {
+		return false
+	}
+	for i, v := range a {
+		if v != b[i] {
+			return false
+		}
+	}
+	return true
 }

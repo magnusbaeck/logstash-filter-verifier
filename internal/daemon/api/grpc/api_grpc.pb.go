@@ -11,7 +11,6 @@ import (
 
 // This is a compile-time assertion to ensure that this generated file
 // is compatible with the grpc package it is being compiled against.
-// Requires gRPC-Go v1.32.0 or later.
 const _ = grpc.SupportPackageIsVersion7
 
 // ControlClient is the client API for Control service.
@@ -105,7 +104,7 @@ type UnsafeControlServer interface {
 }
 
 func RegisterControlServer(s grpc.ServiceRegistrar, srv ControlServer) {
-	s.RegisterService(&Control_ServiceDesc, srv)
+	s.RegisterService(&_Control_serviceDesc, srv)
 }
 
 func _Control_Shutdown_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
@@ -180,10 +179,7 @@ func _Control_TeardownTest_Handler(srv interface{}, ctx context.Context, dec fun
 	return interceptor(ctx, in, info, handler)
 }
 
-// Control_ServiceDesc is the grpc.ServiceDesc for Control service.
-// It's only intended for direct use with grpc.RegisterService,
-// and not to be introspected or modified (even as a copy)
-var Control_ServiceDesc = grpc.ServiceDesc{
+var _Control_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "grpc.Control",
 	HandlerType: (*ControlServer)(nil),
 	Methods: []grpc.MethodDesc{

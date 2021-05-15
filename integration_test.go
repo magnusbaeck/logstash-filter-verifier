@@ -120,7 +120,13 @@ func TestIntegration(t *testing.T) {
 			name: "basic_pipeline",
 		},
 		{
+			name: "drop_and_split",
+		},
+		{
 			name: "conditional_output",
+		},
+		{
+			name: "multiple_parallel_outputs",
 		},
 		{
 			name: "pipeline_to_pipeline",
@@ -143,6 +149,9 @@ func TestIntegration(t *testing.T) {
 		},
 		{
 			name: "special_chars",
+		},
+		{
+			name: "testcases_event",
 		},
 	}
 

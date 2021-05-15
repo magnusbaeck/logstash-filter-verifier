@@ -25,6 +25,8 @@ import (
 	lfvobserver "github.com/magnusbaeck/logstash-filter-verifier/v2/internal/observer"
 )
 
+const DummyEventInputIndicator = "__lfv_dummy_event"
+
 // TestCaseSet contains the configuration of a Logstash filter test case.
 // Most of the fields are supplied by the user via a JSON file or YAML file.
 type TestCaseSet struct {
@@ -111,6 +113,17 @@ type TestCase struct {
 	// process.
 	ExpectedEvents []logstash.Event `json:"expected" yaml:"expected"`
 
+	// The unique ID of the output plugins in the tested configuration, where
+	// the event leaves Logstash. (optional)
+	// If no value is present or the list is empty, this criteria is not verified.
+	// If a value is present, the event is expected to be processed by
+	// the exact list of expected outputs.
+	// By listing multiple output plugins it is possible to test Logstash
+	// configurations with multiple (conditional) outputs:
+	// e.g. save the events to elasticsearch and, if the threshold is above x,
+	// additionally send an email.
+	ExpectedOutputs []string `json:"expected_outputs" yaml:"expected_outputs"`
+
 	// Description contains an optional description of the test case
 	// which will be printed while the tests are executed.
 	Description string `json:"description" yaml:"description"`
@@ -195,7 +208,7 @@ func New(reader io.Reader, configType string) (*TestCaseSet, error) {
 	for _, tc := range tcs.TestCases {
 		// Add event, if there are no input lines.
 		if len(tc.InputLines) == 0 {
-			tc.InputLines = []string{""}
+			tc.InputLines = []string{DummyEventInputIndicator}
 		}
 		tcs.InputLines = append(tcs.InputLines, tc.InputLines...)
 		tcs.ExpectedEvents = append(tcs.ExpectedEvents, tc.ExpectedEvents...)

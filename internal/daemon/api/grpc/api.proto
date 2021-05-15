@@ -30,6 +30,7 @@ message ExecuteTestRequest {
   string input_plugin = 2;
   repeated string inputLines = 3;
   bytes events = 4;
+  int32 expectedEvents = 5;
 }
 
 message ExecuteTestResponse {
