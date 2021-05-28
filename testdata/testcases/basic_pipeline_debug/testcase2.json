@@ -19,6 +19,7 @@
             "hidden_field": "hidden value"
           },
           "__lfv_id": "0",
+          "__lfv_out_passed": "stdout",
           "first": "1",
           "message": "",
           "second": "2",
