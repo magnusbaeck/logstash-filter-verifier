@@ -15,6 +15,7 @@
       "expected": [
         {
           "__lfv_id": "0",
+          "__lfv_out_passed": "stdout",
           "message": "test case message",
           "tags": [
             "__lfv_in_passed",
@@ -26,6 +27,7 @@
         },
         {
           "__lfv_id": "1",
+          "__lfv_out_passed": "stdout",
           "message": "test case message 2",
           "tags": [
             "__lfv_in_passed",

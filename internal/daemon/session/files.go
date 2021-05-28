@@ -9,7 +9,7 @@ const outputPipeline = `input {
 filter {
   mutate {
     add_tag => [ "__lfv_out_{{ .PipelineOrigName }}_passed" ]
-    add_field => { "[@metadata][__lfv_out_passed]" => "{{ .PipelineOrigName }}" }
+    add_field => { "[__lfv_out_passed]" => "{{ .PipelineOrigName }}" }
   }
 }
 

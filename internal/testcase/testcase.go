@@ -82,6 +82,12 @@ type TestCaseSet struct {
 	// with the expected result of the testcase as well. (default: false)
 	ExportMetadata bool `json:"export_metadata" yaml:"export_metadata"`
 
+	// ExportOutputs controls if the ID of the output, a particular event has
+	// emitted by, is kept in the event or not.
+	// If this is enabled, the expected event needs to contain a field named
+	// __lfv_out_passed which contains the the ID of the Logstash output.
+	ExportOutputs bool `json:"export_outputs" yaml:"export_outputs"`
+
 	// TestCases is a slice of test cases, which include at minimum
 	// a pair of an input and an expected event
 	// Optionally other information regarding the test case
@@ -112,17 +118,6 @@ type TestCase struct {
 	// compared to the actual events produced by the Logstash
 	// process.
 	ExpectedEvents []logstash.Event `json:"expected" yaml:"expected"`
-
-	// The unique ID of the output plugins in the tested configuration, where
-	// the event leaves Logstash. (optional)
-	// If no value is present or the list is empty, this criteria is not verified.
-	// If a value is present, the event is expected to be processed by
-	// the exact list of expected outputs.
-	// By listing multiple output plugins it is possible to test Logstash
-	// configurations with multiple (conditional) outputs:
-	// e.g. save the events to elasticsearch and, if the threshold is above x,
-	// additionally send an email.
-	ExpectedOutputs []string `json:"expected_outputs" yaml:"expected_outputs"`
 
 	// Description contains an optional description of the test case
 	// which will be printed while the tests are executed.

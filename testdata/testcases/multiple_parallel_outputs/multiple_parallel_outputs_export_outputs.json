@@ -1,3 +1,4 @@
+
 {
   "fields": {
   },
@@ -5,6 +6,7 @@
     "@timestamp"
   ],
   "input_plugin": "stdin",
+  "export_outputs": true,
   "testcases": [
     {
       "input": [
@@ -12,6 +14,7 @@
       ],
       "expected": [
         {
+          "__lfv_out_passed": "stage1_stdout",
           "message": "one output",
           "tags": [ "stage1" ]
         }
@@ -23,10 +26,12 @@
       ],
       "expected": [
         {
+          "__lfv_out_passed": "stage1_file",
           "message": "multiple outputs",
           "tags": [ "stage1" ]
         },
         {
+          "__lfv_out_passed": "stage1_stdout",
           "message": "multiple outputs",
           "tags": [ "stage1" ]
         }
@@ -38,10 +43,12 @@
       ],
       "expected": [
         {
+          "__lfv_out_passed": "stage1_stdout",
           "message": "stage2",
           "tags": [ "stage1" ]
         },
         {
+          "__lfv_out_passed": "stage2_file",
           "message": "stage2",
           "tags": [ "stage1", "stage2" ]
         }
@@ -53,14 +60,17 @@
       ],
       "expected": [
         {
+          "__lfv_out_passed": "stage1_file",
           "message": "multiple outputs and stage2",
           "tags": [ "stage1" ]
         },
         {
+          "__lfv_out_passed": "stage1_stdout",
           "message": "multiple outputs and stage2",
           "tags": [ "stage1" ]
         },
         {
+          "__lfv_out_passed": "stage2_file",
           "message": "multiple outputs and stage2",
           "tags": [ "stage1", "stage2" ]
         }
