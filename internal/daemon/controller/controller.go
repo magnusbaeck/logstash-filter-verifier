@@ -130,6 +130,9 @@ func (c *Controller) ExecuteTest(pipelines pipeline.Pipelines, expectedEvents in
 }
 
 func (c *Controller) GetResults() ([]string, error) {
+	// Check if complete right away for the special case, where no event is expected.
+	c.checkComplete()
+
 	err := c.stateMachine.waitForState(stateReadyForTest)
 	if err != nil {
 		return nil, err
@@ -197,6 +200,10 @@ func (c *Controller) writePipelines(pipelines ...pipeline.Pipeline) error {
 func (c *Controller) ReceiveEvent(event string) {
 	c.receivedEvents.append(event)
 
+	c.checkComplete()
+}
+
+func (c *Controller) checkComplete() {
 	if c.receivedEvents.isCompleteFirstTime() {
 		go func() {
 			_ = c.stateMachine.waitForState(stateRunningTest)
