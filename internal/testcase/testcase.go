@@ -76,7 +76,7 @@ type TestCaseSet struct {
 	ExpectedEvents []logstash.Event `json:"expected" yaml:"expected"`
 
 	// ExportMetadata controls if the metadata of the event processed
-	// by Logstash is returned The metadata is contained in the field
+	// by Logstash is returned. The metadata is contained in the field
 	// `[@metadata]` in the Logstash event.
 	// If the metadata is exported, the respective fields are compared
 	// with the expected result of the testcase as well. (default: false)
