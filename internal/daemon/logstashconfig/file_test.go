@@ -1,6 +1,7 @@
 package logstashconfig_test
 
 import (
+	"fmt"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -212,19 +213,31 @@ output { stdout { id => testid } file { id => file } pipeline { id => pipeline }
 	}
 
 	for _, test := range cases {
-		t.Run(test.name, func(t *testing.T) {
+		t.Run(fmt.Sprintf("validate-%s", test.name), func(t *testing.T) {
 			f := logstashconfig.File{
 				Name: "filename.conf",
 				Body: []byte(test.config),
 			}
 
-			inputs, outputs, err := f.Validate()
+			inputs, outputs, err := f.Validate(false)
 			compareErr(t, test.wantErr, err)
 			if test.wantInputs != inputs {
 				t.Errorf("expected %d inputs, got %d", test.wantInputs, inputs)
 			}
 			if test.wantOutputs != outputs {
 				t.Errorf("expected %d outputs, got %d", test.wantOutputs, outputs)
+			}
+		})
+
+		t.Run(fmt.Sprintf("validate-with-fix-%s", test.name), func(t *testing.T) {
+			f := logstashconfig.File{
+				Name: "filename.conf",
+				Body: []byte(test.config),
+			}
+
+			_, _, err := f.Validate(true)
+			if err != nil {
+				t.Errorf("expected no error, got: %v", err)
 			}
 		})
 	}

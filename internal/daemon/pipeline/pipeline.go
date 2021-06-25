@@ -74,7 +74,7 @@ func processNestedKeys(pipelines Pipelines) {
 	}
 }
 
-func (a Archive) Validate() error {
+func (a Archive) Validate(addMissingID bool) error {
 	var inputs, outputs int
 	for _, pipeline := range a.Pipelines {
 		files, err := doublestar.Glob(filepath.Join(a.BasePath, pipeline.Config))
@@ -103,7 +103,7 @@ func (a Archive) Validate() error {
 				Body: body,
 			}
 
-			in, out, err := configFile.Validate()
+			in, out, err := configFile.Validate(addMissingID)
 			if err != nil {
 				return err
 			}

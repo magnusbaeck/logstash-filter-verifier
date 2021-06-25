@@ -30,6 +30,8 @@ func makeDaemonRunCmd() *cobra.Command {
 	_ = viper.BindPFlag("debug", cmd.Flags().Lookup("debug"))
 	cmd.Flags().String("metadata-key", "@metadata", "Key under which the content of the `@metadata` field is exposed in the returned events.")
 	_ = viper.BindPFlag("metadata-key", cmd.Flags().Lookup("metadata-key"))
+	cmd.Flags().Bool("add-missing-id", false, "add implicit id for the plugins in the Logstash config if they are missing")
+	_ = viper.BindPFlag("add-missing-id", cmd.Flags().Lookup("add-missing-id"))
 
 	return cmd
 }
@@ -44,12 +46,13 @@ func runDaemonRun(_ *cobra.Command, args []string) error {
 	filterMock := viper.GetString("filter-mock")
 	debug := viper.GetBool("debug")
 	metadataKey := viper.GetString("metadata-key")
+	addMissingID := viper.GetBool("add-missing-id")
 
 	if pipeline != "" && logstashConfig != "" {
 		return errors.New("--pipeline and --logstash-config flags are mutual exclusive")
 	}
 
-	t, err := run.New(socket, log, pipeline, pipelineBase, logstashConfig, testcaseDir, filterMock, metadataKey, debug)
+	t, err := run.New(socket, log, pipeline, pipelineBase, logstashConfig, testcaseDir, filterMock, metadataKey, debug, addMissingID)
 	if err != nil {
 		return err
 	}

@@ -143,13 +143,15 @@ func (o *outputPipelineReplacer) walk(c *astutil.Cursor) {
 	c.Replace(ast.NewPlugin("pipeline", ast.NewArrayAttribute("send_to", ast.NewStringAttribute("", outputName, ast.DoubleQuoted))))
 }
 
-func (f *File) Validate() (inputs int, outputs int, err error) {
+func (f *File) Validate(addMissingID bool) (inputs int, outputs int, err error) {
 	err = f.parse()
 	if err != nil {
 		return 0, 0, err
 	}
 
-	v := validator{}
+	v := validator{
+		addMissingID: addMissingID,
+	}
 
 	for i := range f.config.Input {
 		v.pluginType = ast.Input
@@ -171,23 +173,34 @@ func (f *File) Validate() (inputs int, outputs int, err error) {
 }
 
 type validator struct {
-	noIDs      []string
-	pluginType ast.PluginType
-	inputs     int
-	outputs    int
+	noIDs        []string
+	pluginType   ast.PluginType
+	inputs       int
+	outputs      int
+	count        int
+	addMissingID bool
 }
 
 func (v *validator) walk(c *astutil.Cursor) {
-	_, err := c.Plugin().ID()
-	if err != nil {
-		v.noIDs = append(v.noIDs, c.Plugin().Name())
-	}
+	v.count++
 
 	if v.pluginType == ast.Input && c.Plugin().Name() != "pipeline" {
 		v.inputs++
 	}
 	if v.pluginType == ast.Output && c.Plugin().Name() != "pipeline" {
 		v.outputs++
+	}
+
+	_, err := c.Plugin().ID()
+	if err != nil {
+		if v.addMissingID {
+			plugin := c.Plugin()
+			plugin.Attributes = append(plugin.Attributes, ast.NewStringAttribute("id", fmt.Sprintf("%s-%d", c.Plugin().Name(), v.count), ast.DoubleQuoted))
+
+			c.Replace(plugin)
+		} else {
+			v.noIDs = append(v.noIDs, c.Plugin().Name())
+		}
 	}
 }
 

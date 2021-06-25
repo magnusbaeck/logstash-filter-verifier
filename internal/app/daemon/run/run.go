@@ -39,11 +39,12 @@ type Test struct {
 	filterMock     string
 	metadataKey    string
 	debug          bool
+	addMissingID   bool
 
 	log logging.Logger
 }
 
-func New(socket string, log logging.Logger, pipeline, pipelineBase, logstashConfig, testcasePath, filterMock, metadataKey string, debug bool) (Test, error) {
+func New(socket string, log logging.Logger, pipeline, pipelineBase, logstashConfig, testcasePath, filterMock, metadataKey string, debug, addMissingID bool) (Test, error) {
 	if !path.IsAbs(pipelineBase) {
 		cwd, err := os.Getwd()
 		if err != nil {
@@ -60,6 +61,7 @@ func New(socket string, log logging.Logger, pipeline, pipelineBase, logstashConf
 		filterMock:     filterMock,
 		metadataKey:    metadataKey,
 		debug:          debug,
+		addMissingID:   addMissingID,
 		log:            log,
 	}, nil
 }
@@ -82,7 +84,7 @@ func (s Test) Run() error {
 	}
 
 	// TODO: ensure, that IDs are also unique for the whole set of pipelines
-	err = a.Validate()
+	err = a.Validate(s.addMissingID)
 	if err != nil {
 		return err
 	}

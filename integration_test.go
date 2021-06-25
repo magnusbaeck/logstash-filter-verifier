@@ -115,11 +115,13 @@ func TestIntegration(t *testing.T) {
 		optional bool
 
 		withoutPipeline bool
+		addMissingID    bool
 
 		filterMock string
 	}{
 		{
-			name: "basic_pipeline",
+			name:         "basic_pipeline",
+			addMissingID: true,
 		},
 		{
 			name:            "basic_logstash_config_dir",
@@ -196,6 +198,7 @@ func TestIntegration(t *testing.T) {
 				tc.filterMock,
 				"@metadata",
 				tc.debug,
+				tc.addMissingID,
 			)
 			is.NoErr(err)
 

@@ -89,8 +89,11 @@ func TestValidate(t *testing.T) {
 			a, err := pipeline.New(test.pipeline, test.basePath)
 			is.NoErr(err)
 
-			err = a.Validate()
+			err = a.Validate(false)
 			is.True(err != nil == test.wantValidateErr) // Validate error
+
+			err = a.Validate(true)
+			is.NoErr(err)
 		})
 	}
 }
