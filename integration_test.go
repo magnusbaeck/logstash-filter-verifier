@@ -114,10 +114,20 @@ func TestIntegration(t *testing.T) {
 		// which are not provided by a default installation.
 		optional bool
 
+		withoutPipeline bool
+
 		filterMock string
 	}{
 		{
 			name: "basic_pipeline",
+		},
+		{
+			name:            "basic_logstash_config_dir",
+			withoutPipeline: true,
+		},
+		{
+			name:            "basic_logstash_config_file.conf",
+			withoutPipeline: true,
 		},
 		{
 			name: "drop_and_split",
@@ -166,11 +176,22 @@ func TestIntegration(t *testing.T) {
 			if tc.optional && os.Getenv("INTEGRATION_TEST_OPTIONAL") != "1" {
 				t.Skipf("optional integration test %q skipped, enable with env var `INTEGRATION_TEST_OPTIONAL=1`", tc.name)
 			}
+
+			pipeline := "testdata/" + tc.name + ".yml"
+			pipelineBaseDir := "testdata/" + tc.name
+			logstashConfig := ""
+			if tc.withoutPipeline {
+				pipeline = ""
+				pipelineBaseDir = ""
+				logstashConfig = "testdata/" + tc.name
+			}
+
 			client, err := run.New(
 				filepath.Join(tempdir, "integration_test.socket"),
 				log,
-				"testdata/"+tc.name+".yml",
-				"testdata/"+tc.name,
+				pipeline,
+				pipelineBaseDir,
+				logstashConfig,
 				"testdata/testcases/"+tc.name,
 				tc.filterMock,
 				"@metadata",

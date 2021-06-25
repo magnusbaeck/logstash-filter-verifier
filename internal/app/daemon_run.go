@@ -1,6 +1,7 @@
 package app
 
 import (
+	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
@@ -19,6 +20,8 @@ func makeDaemonRunCmd() *cobra.Command {
 	_ = viper.BindPFlag("pipeline", cmd.Flags().Lookup("pipeline"))
 	cmd.Flags().String("pipeline-base", "", "base directory for relative paths in the pipelines.yml")
 	_ = viper.BindPFlag("pipeline-base", cmd.Flags().Lookup("pipeline-base"))
+	cmd.Flags().String("logstash-config", "", "path of the Logstash config for use, if no pipelines.yml exists (mutual exclusive with --pipeline flag).")
+	_ = viper.BindPFlag("logstash-config", cmd.Flags().Lookup("logstash-config"))
 	cmd.Flags().StringP("testcase-dir", "t", "", "directory containing the test case files")
 	_ = viper.BindPFlag("testcase-dir", cmd.Flags().Lookup("testcase-dir"))
 	cmd.Flags().String("filter-mock", "", "path to a yaml file containing the definition for the filter mocks.")
@@ -36,12 +39,17 @@ func runDaemonRun(_ *cobra.Command, args []string) error {
 	log := viper.Get("logger").(logging.Logger)
 	pipeline := viper.GetString("pipeline")
 	pipelineBase := viper.GetString("pipeline-base")
+	logstashConfig := viper.GetString("logstash-config")
 	testcaseDir := viper.GetString("testcase-dir")
 	filterMock := viper.GetString("filter-mock")
 	debug := viper.GetBool("debug")
 	metadataKey := viper.GetString("metadata-key")
 
-	t, err := run.New(socket, log, pipeline, pipelineBase, testcaseDir, filterMock, metadataKey, debug)
+	if pipeline != "" && logstashConfig != "" {
+		return errors.New("--pipeline and --logstash-config flags are mutual exclusive")
+	}
+
+	t, err := run.New(socket, log, pipeline, pipelineBase, logstashConfig, testcaseDir, filterMock, metadataKey, debug)
 	if err != nil {
 		return err
 	}

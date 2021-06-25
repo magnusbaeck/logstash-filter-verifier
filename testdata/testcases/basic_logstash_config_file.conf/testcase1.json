@@ -1,0 +1,33 @@
+{
+  "fields": {
+    "type": "syslog"
+  },
+  "ignore": [
+    "@timestamp"
+  ],
+  "input_plugin": "stdin",
+  "testcases": [
+    {
+      "input": [
+        "test case message",
+        "test case message 2"
+      ],
+      "expected": [
+        {
+          "message": "test case message",
+          "tags": [
+            "sut_passed"
+          ],
+          "type": "syslog"
+        },
+        {
+          "message": "test case message 2",
+          "tags": [
+            "sut_passed"
+          ],
+          "type": "syslog"
+        }
+      ]
+    }
+  ]
+}

@@ -3,6 +3,7 @@ package run
 import (
 	"context"
 	"encoding/json"
+	"io/ioutil"
 	"net"
 	"os"
 	"path"
@@ -18,6 +19,7 @@ import (
 	"github.com/tidwall/gjson"
 	"github.com/tidwall/sjson"
 	"google.golang.org/grpc"
+	"gopkg.in/yaml.v2"
 
 	pb "github.com/magnusbaeck/logstash-filter-verifier/v2/internal/daemon/api/grpc"
 	"github.com/magnusbaeck/logstash-filter-verifier/v2/internal/daemon/filtermock"
@@ -29,18 +31,19 @@ import (
 )
 
 type Test struct {
-	socket       string
-	pipeline     string
-	pipelineBase string
-	testcasePath string
-	filterMock   string
-	metadataKey  string
-	debug        bool
+	socket         string
+	pipeline       string
+	pipelineBase   string
+	logstashConfig string
+	testcasePath   string
+	filterMock     string
+	metadataKey    string
+	debug          bool
 
 	log logging.Logger
 }
 
-func New(socket string, log logging.Logger, pipeline, pipelineBase, testcasePath, filterMock, metadataKey string, debug bool) (Test, error) {
+func New(socket string, log logging.Logger, pipeline, pipelineBase, logstashConfig, testcasePath, filterMock, metadataKey string, debug bool) (Test, error) {
 	if !path.IsAbs(pipelineBase) {
 		cwd, err := os.Getwd()
 		if err != nil {
@@ -49,18 +52,30 @@ func New(socket string, log logging.Logger, pipeline, pipelineBase, testcasePath
 		pipelineBase = filepath.Join(cwd, pipelineBase)
 	}
 	return Test{
-		socket:       socket,
-		pipeline:     pipeline,
-		pipelineBase: pipelineBase,
-		testcasePath: testcasePath,
-		filterMock:   filterMock,
-		metadataKey:  metadataKey,
-		debug:        debug,
-		log:          log,
+		socket:         socket,
+		pipeline:       pipeline,
+		pipelineBase:   pipelineBase,
+		logstashConfig: logstashConfig,
+		testcasePath:   testcasePath,
+		filterMock:     filterMock,
+		metadataKey:    metadataKey,
+		debug:          debug,
+		log:            log,
 	}, nil
 }
 
 func (s Test) Run() error {
+	if s.logstashConfig != "" {
+		pipelineFile, err := s.createImplicitPipeline()
+		if err != nil {
+			return err
+		}
+		defer os.RemoveAll(filepath.Dir(pipelineFile))
+
+		s.pipeline = pipelineFile
+		s.pipelineBase = ""
+	}
+
 	a, err := pipeline.New(s.pipeline, s.pipelineBase)
 	if err != nil {
 		return err
@@ -189,6 +204,43 @@ func (s Test) Run() error {
 	}
 
 	return nil
+}
+
+func (s Test) createImplicitPipeline() (string, error) {
+	fi, err := os.Stat(s.logstashConfig)
+	if err != nil {
+		return "", errors.Wrap(err, "failed to read logstash config")
+	}
+
+	pipelineBaseDir, err := ioutil.TempDir("", "lfv-pipeline-*")
+	if err != nil {
+		return "", errors.Wrap(err, "failed to create temporary directory for implicit pipeline")
+	}
+
+	if fi.IsDir() {
+		s.logstashConfig = filepath.Join(s.logstashConfig, "*")
+	}
+
+	pipelines := pipeline.Pipelines{
+		pipeline.Pipeline{
+			ID:      "lfv_implicit",
+			Config:  s.logstashConfig,
+			Workers: 1,
+		},
+	}
+
+	body, err := yaml.Marshal(pipelines)
+	if err != nil {
+		return "", err
+	}
+
+	pipelineFile := filepath.Join(pipelineBaseDir, "pipelines.yml")
+	err = ioutil.WriteFile(pipelineFile, body, 0600)
+	if err != nil {
+		return "", errors.Wrap(err, "failed to write implicit pipelines.yml file")
+	}
+
+	return pipelineFile, nil
 }
 
 func (s Test) validateInputLines(lines []string) {
