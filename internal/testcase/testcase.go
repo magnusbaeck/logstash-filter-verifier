@@ -89,9 +89,8 @@ type TestCaseSet struct {
 	ExportOutputs bool `json:"export_outputs" yaml:"export_outputs"`
 
 	// TestCases is a slice of test cases, which include at minimum
-	// a pair of an input and an expected event
-	// Optionally other information regarding the test case
-	// may be supplied.
+	// a pair of an input and an expected event.
+	// Optionally other information regarding the test case may be supplied.
 	TestCases []TestCase `json:"testcases" yaml:"testcases"`
 
 	// Events contains the fields for each event. This fields is filled
