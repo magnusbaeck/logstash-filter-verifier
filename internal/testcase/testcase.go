@@ -111,7 +111,7 @@ type TestCase struct {
 
 	// Local fields, only added to the events of this test case.
 	// These fields overwrite global fields.
-	Event logstash.FieldSet `json:"event" yaml:"event"`
+	InputFields logstash.FieldSet `json:"fields" yaml:"fields"`
 
 	// ExpectedEvents contains a slice of expected events to be
 	// compared to the actual events produced by the Logstash
@@ -211,7 +211,7 @@ func New(reader io.Reader, configType string) (*TestCaseSet, error) {
 			// Global Fields first.
 			tcs.Events = append(tcs.Events, tcs.InputFields)
 			// Merge with test case fields, eventually overwriting global fields.
-			for k, v := range tc.Event {
+			for k, v := range tc.InputFields {
 				tcs.Events[len(tcs.Events)-1][k] = v
 			}
 		}
