@@ -235,7 +235,7 @@ This command will run this test case file through Logstash Filter
 Verifier (replace all "path/to" with the actual paths to the files,
 obviously):
 
-    $ path/to/logstash-filter-verifier path/to/syslog.json path/to/filters
+    $ path/to/logstash-filter-verifier standalone path/to/syslog.json path/to/filters
 
 If the test is successful, Logstash Filter Verifier will terminate
 with a zero exit code and (almost) no output. If the test fails it'll
@@ -276,7 +276,7 @@ if ([fields][type] == "openlog") {
 
 But, in order to test the behavior with LFV you have to give it like so:
 
-```json
+```none
 {
   "fields": {
     "[fields][type]": "openlog"
@@ -390,7 +390,7 @@ have been added:
   There is out of the box support to let Logstash Filter Verifier export
   the values in the (otherwise hidden) `@metadata` field of the event.
   This allows to write test cases, which take the values in the `@metadata`
-  field into account.
+  field into account. (see `export_metadata` in test case file reference)
 * **Pipeline configuration**:  
   Logstash Filter Verifier in Daemon mode accepts complete Logstash pipelines
   as configuration. This includes the localization of the Logstash configuration
@@ -413,6 +413,38 @@ have been added:
   these plugins can be replaced with mocks. In particular the [mutate](https://www.elastic.co/guide/en/logstash/current/plugins-filters-mutate.html)
   and the [translate](https://www.elastic.co/guide/en/logstash/current/plugins-filters-translate.html)
   filters have proven to be helpful as replacements.
+
+In order to execute a test case in daemon mode, first the daemon needs to be
+started (e.g. in its own terminal or shell):
+
+    $ path/to/logstash-filter-verifier daemon start
+
+Next, a single test case run can be launched with (in second terminal/shell):
+
+    $ path/to/logstash-filter-verifier daemon run --pipeline path/to/pipelines.yml --pipeline-base base/path/of/logstash-configuration --testcase-dir path/to/testcases
+
+The flag `--pipeline-base` is required, if the `pipelines.yml` file does use
+relative paths for the actual logstash pipeline configuration.
+
+If the Logstash configuration under test does not contain `id` attributes for
+all plugins, the `--add-missing-id` flag instructs Logstash Filter Verifier to
+add the missing `id` attributes on the fly.
+
+As an example, we can execute the `basic_pipeline` test case from this
+repository.
+
+Let us assume, the following setup:
+
+* The logstash filter verifier binary is available at `/usr/local/bin/logstash-fitler-verifier`.
+* This repository is available at `/tmp/logstash-filter-verifier` (e.g. with `git clone https://github.com/magnusbaeck/logstash-filter-verifier `).
+
+The command to run the `basic_pipeline` example would look like this (the daemon
+needs to be started beforehand):
+
+    $ /usr/local/bin/logstash-fitler-verifier daemon run --pipeline /tmp/logstash-filter-verifier/testdata/basic_pipeline.yml --pipeline-base /tmp/logstash-filter-verifier/testdata/basic_pipeline --testcase-dir /tmp/logstash-filter-verifier/testdata/testcases/basic_pipeline --add-missing-id
+
+More examples (e.g. multiple pipelines and filter mock) can be found in the
+`testcases/` folder of this repository.
 
 
 ## Test case file reference
@@ -586,7 +618,7 @@ code in the JVM so it took several seconds. To avoid this you can use
 the `--logstash-version` flag to tell Logstash Filter Verifier which
 version of Logstash it should expect. Example:
 
-    logstash-filter-verifier ... --logstash-version 2.4.0
+    logstash-filter-verifier standalone ... --logstash-version 2.4.0
 
 
 #### Daemon mode
