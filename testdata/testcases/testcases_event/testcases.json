@@ -9,7 +9,7 @@
   },
   "testcases": [
     {
-      "event": {
+      "fields": {
         "string": "string value",
         "number": 123,
         "bool": true,

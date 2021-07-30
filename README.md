@@ -513,7 +513,7 @@ Additional fields:
   event needs to contain a field named `_lfv_out_passed` which contains the ID
   of the Logstash output.
 * `testcases`:
-  * `event`: Local fields, only added to the events of this test case. These
+  * `fields`: Local fields, only added to the events of this test case. These
     fields overwrite global fields.
 
 Ignored / obsolete fields:
