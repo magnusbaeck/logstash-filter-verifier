@@ -1,7 +1,7 @@
 # Logstash Filter Verifier
 
 ![build](https://github.com/magnusbaeck/logstash-filter-verifier/actions/workflows/test.yml/badge.svg?event=push)
-[![GoReportCard](http://goreportcard.com/badge/magnusbaeck/logstash-filter-verifier)](http://goreportcard.com/report/magnusbaeck/logstash-filter-verifier)
+[![GoReportCard](https://goreportcard.com/badge/github.com/magnusbaeck/logstash-filter-verifier)](https://goreportcard.com/report/github.com/magnusbaeck/logstash-filter-verifier)
 [![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](https://raw.githubusercontent.com/magnusbaeck/logstash-filter-verifier/master/LICENSE)
 
 * [Introduction](#introduction)
