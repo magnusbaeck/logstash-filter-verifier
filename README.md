@@ -4,32 +4,38 @@
 [![GoReportCard](https://goreportcard.com/badge/github.com/magnusbaeck/logstash-filter-verifier)](https://goreportcard.com/report/github.com/magnusbaeck/logstash-filter-verifier)
 [![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](https://raw.githubusercontent.com/magnusbaeck/logstash-filter-verifier/master/LICENSE)
 
+
+XXX TOC needs further updates
+
 * [Introduction](#introduction)
 * [Installing](#installing)
-* [Standalone and Daemon mode (since Version 2.0)](#standalone-and-daemon-mode-since-version-20)
+* [Running](#running)
+  * [Standalone](#standalone)
+  * [Daemon](#daemon)
 * [Examples](#examples)
   * [Syslog messages](#syslog-messages)
   * [Beats messages](#beats-messages)
   * [JSON messages](#json-messages)
-  * [Version 2.0 (Daemon mode only)](#version-20-daemon-mode-only)
-* [Test case file reference](#test-case-file-reference)
-  * [Standalone mode / Logstash Filter Verifier before version 2.0](#standalone-mode--logstash-filter-verifier-before-version-20)
   * [Daemon mode](#daemon-mode)
+* [Test case file reference](#test-case-file-reference)
+  * [Standalone mode and daemon mode](#standalone-mode-and-daemon-mode)
+  * [Daemon mode only](#daemon-mode-only)
     * [Plugin mock](#plugin-mock)
 * [Migrating to the current test case file format](#migrating-to-the-current-test-case-file-format)
 * [Notes](#notes)
-  * [The \-\-sockets flag](#the---sockets-flag)
-  * [The \-\-logstash\-arg flag](#the---logstash-arg-flag)
+  * [The `--sockets` flag (standalone mode)](#the-sockets-flag-standalone-mode)
+  * [The `--logstash-arg` flag](#the-logstash-arg-flag)
   * [Logstash compatibility](#logstash-compatibility)
     * [Standalone mode](#standalone-mode)
     * [Daemon mode](#daemon-mode)
   * [Windows compatibility](#windows-compatibility)
-  * [Plugin ID (Daemon mode)](#plugin-id-daemon-mode)
+  * [Plugin ID (daemon mode only)](#plugin-id-daemon-mode-only)
   * [Logstash Plugins](#logstash-plugins)
+    * [Clone (Filter)](#clone-filter)
   * [@metadata field](#metadata-field)
 * [Development](#development)
   * [Dependencies](#dependencies)
-  * [Run Integration Tests](#run-integration-tests)
+  * [Running Integration Tests](#running-integration-tests)
 * [Known limitations and future work](#known-limitations-and-future-work)
 * [License](#license)
 
@@ -105,37 +111,92 @@ command:
     $ make install PREFIX=$HOME
 
 
-## Standalone and Daemon mode (since Version 2.0)
+## Running
 
-Since version 2.0, there are two different modes, Logstash Filter Verifier
-can be operated in.
+Since version 2.0 there are two different modes that Logstash Filter
+Verifier can operate in. The program is invoked slightly differently
+in each case and the daemon mode provides a few additional features.
 
-1. **Standalone**: In this mode, for each test run a fresh instance of Logstash
-   is started in the background by Logstash Filter Verifier. If a user wants to
-   frequently execute test cases, this might be slow and tedious.  
-   This has been to only mode available in versions prior to 2.0.
-2. **Daemon**: In this mode, Logstash Filter Verifier is executed twice in
-   parallel (preferably in two different shells). One instance is the daemon.
-   The daemon starts and controls the Logstash instances (there might be
-   multiple). This daemon process is normally left running for the time the user
-   is working on the Logstash configuration and testing it with Logstash Filter
-   Verifier.  
-   For each execution of the test cases, another instance Logstash Filter
-   Verifier is started (client). The client collects the current state of the
-   Logstash configuration as well as the test cases and passes them to the
-   daemon. The daemon reloads the configuration in one of the running Logstash
-   instances, executes the test cases and returns the result back to the client.
-   The client shows the results to the user and exits, while the daemon
-   continues to run and waits for the next client to submit a test execution
-   job.
+Most flags are shared between the execution modes and regardless of
+mode the program expects two key inputs:
 
+* The path to the directory containing the
+  [test case files](#test-case-file-reference) that define what and
+  how to test.
+* The path to the Logstash configuration to test.
+
+### Standalone
+
+In this mode, each run of Logstash Filter Verifier starts a fresh
+instance of Logstash to run the tests. If a user wants to frequently
+execute test cases this might be slow and tedious. Up until Logstash
+Filter Verifier 2.0 this was the only mode available.
+
+Here's an example of how to run Logstash Filter Verifier in standalone
+mode:
+
+    $ path/to/logstash-filter-verifier standalone path/to/testcases path/to/filters
+
+### Daemon
+
+In daemon mode, Logstash Filter Verifier is run in two concurrent instances
+(preferably in two different shells). The first instance is the daemon,
+which starts and supervises the Logstash instance or instances that carry
+out the tests. The daemon is normally left running for the time the user is
+working on the Logstash configuration and testing it with Logstash Filter
+Verifier. The daemon is started with the `daemon start` subcommand:
+
+    $ path/to/logstash-filter-verifier daemon start
+
+For each test run, another instance of Logstash Filter Verifier, the
+client, is started. The client collects the current state of the
+Logstash configuration as well as the test cases and passes them to
+the daemon. The daemon reloads the configuration in one of the running
+Logstash instances, executes the test cases and returns the result
+back to the client. The client shows the results to the user and
+exits, while the daemon continues to run and waits for the next client
+to submit a test execution job. Example:
+
+    $ path/to/logstash-filter-verifier daemon run --pipeline path/to/pipelines.yml --pipeline-base base/path/of/logstash-configuration --testcase-dir path/to/testcases
+
+The flag `--pipeline-base` is required if the `pipelines.yml` file uses
+relative paths for the actual Logstash pipeline configuration.
+
+If the Logstash configuration under test does not contain `id` attributes
+for all plugins, the `--add-missing-id` flag instructs Logstash Filter
+Verifier to add the missing `id` attributes on the fly.
+
+As opposed to the standalone mode, when running in daemon mode the
+Logstash pipeline configuration under test _must_ include at least one
+input and one output plugin. Any `add_field`, `codec`, and `tags`
+options from those input plugins will be taken into account during
+tests, and each testcase file must contain an `input_plugin` property
+that corresponds to the `id` option of the input plugin from which the
+event should enter the system. For example, if you receive syslog
+messages from a tcp input plugin,
+```
+input {
+  tcp {
+    id => "syslog"
+    port = 514
+    tags => ["syslog"]
+    codec => "lines"
+  }
+}
+```
+the corresponding testcase YAML file needs to begin with
+```yaml
+input_plugin: syslog
+testcases:
+  - input: ...
+```
+to get associated with the correct input plugin.
 
 ## Examples
 
 The examples that follow build upon each other and do not only show
 how to use Logstash Filter Verifier to test that particular kind of
 log. They also highlight how to deal with different features in logs.
-
 
 ### Syslog messages
 
@@ -384,82 +445,35 @@ There are a few points to be made here:
   run, we ignore that field with the `ignore` property.
 
 
-### Version 2.0 (Daemon mode only)
+### Daemon mode
 
-With version 2.0 of Logstash Filter Verifier (Daemon mode) some new features
-have been added:
+The source repository contains multiple examples of how to run complete
+Logstash pipelines with Logstash Filter Verifier running in the daemon mode.
 
-* **Export of @metadata**:  
-  There is out of the box support to let Logstash Filter Verifier export
-  the values in the (otherwise hidden) `@metadata` field of the event.
-  This allows to write test cases, which take the values in the `@metadata`
-  field into account. (see `export_metadata` in test case file reference)
-* **Pipeline configuration**:  
-  Logstash Filter Verifier in Daemon mode accepts complete Logstash pipelines
-  as configuration. This includes the localization of the Logstash configuration
-  files through the paths provided in the `pipelines.yml` file and replacing all
-  input and output filters with the respective parts to execute the tests.
-* **Multiple pipelines**  
-  The pipeline configuration may consist of multiple pipelines, that might be
-  linked ([pipeline to pipeline communication](https://www.elastic.co/guide/en/logstash/current/pipeline-to-pipeline.html))
-  or independent pipelines.
-* **Plugin mock**  
-  Plugin mock allows to replace (or remove) plugins in the Logstash
-  configuration under test, that do not work during or that would potentially
-  not produce the expected results test execution. Examples for such filter
-  plugins are mainly plugins, that perform some sort of call out to a third
-  party system, for example to look up data ([elasticsearch](https://www.elastic.co/guide/en/logstash/current/plugins-filters-elasticsearch.html),
-  [http](https://www.elastic.co/guide/en/logstash/current/plugins-filters-http.html),
-  [jdbc](https://www.elastic.co/guide/en/logstash/current/plugins-filters-jdbc_static.html),
-  [memcached](https://www.elastic.co/guide/en/logstash/current/plugins-filters-memcached.html)).
-  In order to to be able to produce reproducible results in the test cases,
-  these plugins can be replaced with mocks. In particular the [mutate](https://www.elastic.co/guide/en/logstash/current/plugins-filters-mutate.html)
-  and the [translate](https://www.elastic.co/guide/en/logstash/current/plugins-filters-translate.html)
-  filters have proven to be helpful as replacements.
-  Other use cases for mocks are:
-  * replace filters, that operate on environment variables, that need to be changed
-    between different test cases (see [#120](https://github.com/magnusbaeck/logstash-filter-verifier/issues/120)).
-  * replace pipeline input and output plugins in order to test pipelines in isolation.
+As an example, we can execute the `basic_pipeline` test case.
 
-In order to execute a test case in daemon mode, first the daemon needs to be
-started (e.g. in its own terminal or shell):
+Assuming that
 
-    $ path/to/logstash-filter-verifier daemon start
+* the logstash filter verifier binary is available at
+  `/usr/local/bin/logstash-filter-verifier`,
+* this repository is available at `/tmp/logstash-filter-verifier` (e.g. with
+  `git clone https://github.com/magnusbaeck/logstash-filter-verifier`), and that
+* the daemon has been started with `/usr/local/bin/logstash-fitler-verifier daemon start`,
 
-Next, a single test case run can be launched with (in second terminal/shell):
-
-    $ path/to/logstash-filter-verifier daemon run --pipeline path/to/pipelines.yml --pipeline-base base/path/of/logstash-configuration --testcase-dir path/to/testcases
-
-The flag `--pipeline-base` is required, if the `pipelines.yml` file does use
-relative paths for the actual logstash pipeline configuration.
-
-If the Logstash configuration under test does not contain `id` attributes for
-all plugins, the `--add-missing-id` flag instructs Logstash Filter Verifier to
-add the missing `id` attributes on the fly.
-
-As an example, we can execute the `basic_pipeline` test case from this
-repository.
-
-Let us assume, the following setup:
-
-* The logstash filter verifier binary is available at `/usr/local/bin/logstash-fitler-verifier`.
-* This repository is available at `/tmp/logstash-filter-verifier` (e.g. with `git clone https://github.com/magnusbaeck/logstash-filter-verifier `).
-
-The command to run the `basic_pipeline` example would look like this (the daemon
-needs to be started beforehand):
+the command to run the `basic_pipeline` example would look like this:
 
     $ /usr/local/bin/logstash-fitler-verifier daemon run --pipeline /tmp/logstash-filter-verifier/testdata/basic_pipeline.yml --pipeline-base /tmp/logstash-filter-verifier/testdata/basic_pipeline --testcase-dir /tmp/logstash-filter-verifier/testdata/testcases/basic_pipeline --add-missing-id
 
 More examples (e.g. multiple pipelines and plugin mock) can be found in the
-`testcases/` folder of this repository.
+`testcases/` directory of this repository.
 
 
 ## Test case file reference
 
-### Standalone mode / Logstash Filter Verifier before version 2.0
+### Standalone mode and daemon mode
 
-Test case files are JSON files containing a single object. That object
-may have the following properties:
+Test case files are JSON or YAML files containing a single
+object. That object may have the following fields:
 
 * `codec`: A string with the codec configuration of the input plugin used
   when executing the tests. This string will be included verbatim in the
@@ -500,10 +514,10 @@ may have the following properties:
     progress messages.
 
 
-### Daemon mode
+### Daemon mode only
 
-Test case files for the Daemon mode have the same fields as for Standalone mode
-with the following changes/additions
+Test case files for the daemon mode have the same fields as for standalone mode
+with the following changes/additions:
 
 Additional fields:
 
@@ -530,11 +544,11 @@ Ignored / obsolete fields:
 
 #### Plugin mock
 
-The plugin mock config file (yaml) consists of an array of plugin mock elements.
-Each plugin mock element consists for the plugin id that should be replaced as
-well as the Logstash configuration string that should be used as the
-replacement. This string might be empty. In this case, the mocked plugin is just
-removed from the Logstash configuration.
+The plugin mock config file is a YAML file containing a single document with
+an array of plugin mock elements. Each element contains the id of the plugin
+that should be replaced, and optionally the Logstash configuration string
+that should be used as the replacement. If no replacement is given,
+the mocked plugin is simply removed from the Logstash configuration.
 
 Example:
 
@@ -550,8 +564,13 @@ Example:
 ```
 
 Given the above plugin mock configuration, the plugin with the ID `removeme` is
-removed from the Logstash configuration. The plugin with the ID `mockme` is
+removed from the Logstash configuration, and the plugin with the ID `mockme` is
 replaced with the given Logstash configuration.
+
+Pass the path to the plugin mock config file to the `daemon run` subcommand via
+the `--plugin-mock` flag:
+
+    $ path/to/logstash-filter-verifier daemon run --plugin-mock mocks.yaml ...
 
 ## Migrating to the current test case file format
 
@@ -578,7 +597,7 @@ case file by hand afterwards.
 
 ## Notes
 
-### The `--sockets` flag (Standalone mode)
+### The `--sockets` flag (standalone mode)
 
 The command line flag `--sockets` allows to use unix domain sockets instead of
 stdin to send the input to Logstash. The advantage of this approach is, that
@@ -648,9 +667,9 @@ are a couple of known quirks that are easy to work around:
   tool to use.
 
 
-### Plugin ID (Daemon mode)
+### Plugin ID (daemon mode only)
 
-The Daemon mode of Logstash Filter Verifier expects each plugin in the Logstash
+The daemon mode of Logstash Filter Verifier expects each plugin in the Logstash
 configuration to have a unique [ID](https://www.elastic.co/guide/en/logstash/current/plugins-filters-mutate.html#plugins-filters-mutate-id).
 In order to test an existing Logstash configuration, which lacks these ID, there
 are two options:
@@ -708,12 +727,12 @@ removal of the above mentioned fields.
 For a fully working development environment, the following tooling needs to be
 present:
 
-* Go compiler
+* Go 1.21 or later
 * `make` command
 * Proto buffer compiler (`protobuf-compiler`)
 
 
-### Run Integration Tests
+### Running Integration Tests
 
 In order to run the integration tests, the following preparation is needed:
 

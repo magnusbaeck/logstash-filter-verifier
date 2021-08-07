@@ -3,6 +3,23 @@ Logstash Filter Verifier Change Log
 
 All timestamps are in the Europe/Stockholm timezone.
 
+2.0.0 (TBD)
+-----------
+
+  * There is out of the box support to let Logstash Filter Verifier export
+    the values in the (otherwise hidden) `@metadata` field of the event.
+    This makes it possible to write test cases that verify that these values,
+    which e.g. can be referenced in the configuration of output plugins,
+    contain the right values.
+  * Logstash Filter Verifier in daemon mode accepts complete Logstash
+    pipelines as configuration. This includes the localization of
+    the Logstash configuration files through the paths provided in
+    the `pipelines.yml` file and replacing all input and output filters
+    with the respective parts to execute the tests.
+  * Plugin mocking allows replacement or removal of certain filters when
+    the tests are run.
+  * Upgraded the Go compiler used for release binaries and CI to 1.22.4.
+
 
 1.6.2 (2020-11-21)
 ------------------
