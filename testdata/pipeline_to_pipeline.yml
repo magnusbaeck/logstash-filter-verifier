@@ -1,0 +1,4 @@
+- pipeline.id: first_stage
+  path.config: "first_stage/*.conf"
+- pipeline.id: second_stage
+  path.config: "second_stage/*.conf"

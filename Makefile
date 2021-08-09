@@ -17,7 +17,7 @@ OS_NAME := $(shell uname -s)
 endif
 
 # The Docker image to use when building release images.
-GOLANG_DOCKER_IMAGE := golang:1.15.5
+GOLANG_DOCKER_IMAGE := golang:1.16.7
 
 INSTALL := install
 
@@ -31,15 +31,18 @@ PROGRAM := logstash-filter-verifier
 # List of all GOOS_GOARCH combinations that we should build release
 # binaries for. See https://golang.org/doc/install/source#environment
 # for all available combinations.
-TARGETS := darwin_amd64 linux_386 linux_amd64 windows_386 windows_amd64
+TARGETS := darwin_amd64 linux_386 linux_amd64
 
 VERSION := $(shell git describe --tags --always)
 
-GOCOV         := $(GOBIN)/gocov$(EXEC_SUFFIX)
-GOCOV_HTML    := $(GOBIN)/gocov-html$(EXEC_SUFFIX)
-GOLANGCI_LINT := $(GOBIN)/golangci-lint$(EXEC_SUFFIX)
-GOVVV         := $(GOBIN)/govvv$(EXEC_SUFFIX)
-OVERALLS      := $(GOBIN)/overalls$(EXEC_SUFFIX)
+GOCOV              := $(GOBIN)/gocov$(EXEC_SUFFIX)
+GOCOV_HTML         := $(GOBIN)/gocov-html$(EXEC_SUFFIX)
+GOLANGCI_LINT      := $(GOBIN)/golangci-lint$(EXEC_SUFFIX)
+GOVVV              := $(GOBIN)/govvv$(EXEC_SUFFIX)
+OVERALLS           := $(GOBIN)/overalls$(EXEC_SUFFIX)
+PROTOC_GEN_GO      := $(GOBIN)/protoc-gen-go$(EXEC_SUFFIX)
+PROTOC_GEN_GO_GRPC := $(GOBIN)/protoc-gen-go-grpc$(EXEC_SUFFIX)
+MOQ                := $(GOBIN)/moq$(EXEC_SUFFIX)
 
 GOLANGCI_LINT_VERSION := v1.32.2
 
@@ -50,10 +53,10 @@ all: $(PROGRAM)$(EXEC_SUFFIX)
 .FORCE:
 
 $(GOCOV):
-	go get github.com/axw/gocov/gocov
+	go install github.com/axw/gocov/gocov
 
 $(GOCOV_HTML):
-	go get github.com/matm/gocov-html
+	go install github.com/matm/gocov-html
 
 $(GOLANGCI_LINT):
 	curl --silent --show-error --location \
@@ -61,15 +64,28 @@ $(GOLANGCI_LINT):
 		| sh -s -- -b $(dir $(GOLANGCI_LINT)) $(GOLANGCI_LINT_VERSION)
 
 $(GOVVV):
-	go get github.com/ahmetb/govvv
+	go install github.com/ahmetb/govvv
 
 $(OVERALLS):
-	go get github.com/go-playground/overalls
+	go install github.com/go-playground/overalls
+
+$(PROTOC_GEN_GO):
+	go install google.golang.org/protobuf/cmd/protoc-gen-go
+
+$(PROTOC_GEN_GO_GRPC):
+	go install google.golang.org/grpc/cmd/protoc-gen-go-grpc
+
+$(MOQ):
+	go install github.com/matryer/moq
 
 # The Go compiler is fast and pretty good about figuring out what to
 # build so we don't try to to outsmart it.
-$(PROGRAM)$(EXEC_SUFFIX): .FORCE $(GOVVV)
+$(PROGRAM)$(EXEC_SUFFIX): gogenerate .FORCE $(GOVVV)
 	govvv build -o $@
+
+.PHONY: gogenerate
+gogenerate: $(MOQ) $(PROTOC_GEN_GO) $(PROTOC_GEN_GO_GRPC)
+	go generate ./...
 
 .PHONY: check
 check: $(GOLANGCI_LINT)
@@ -81,7 +97,8 @@ checktidy:
 
 .PHONY: clean
 clean:
-	rm -f $(PROGRAM)$(EXEC_SUFFIX) $(GOCOV) $(GOCOV_HTML) $(GOLANGCI_LINT) $(GPM) $(OVERALLS)
+	rm -f $(PROGRAM)$(EXEC_SUFFIX)
+	rm -rf $(GOBIN)
 	rm -rf dist
 
 .PHONY: install

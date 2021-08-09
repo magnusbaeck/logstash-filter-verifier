@@ -1,0 +1,28 @@
+{
+  "fields": {
+    "first": "1",
+    "second": "2"
+  },
+  "ignore": [
+    "@timestamp"
+  ],
+  "input_plugin": "stdin",
+  "testcases": [
+    {
+      "input": [
+        ""
+      ],
+      "expected": [
+        {
+          "first": "1",
+          "message": "",
+          "second": "2",
+          "tags": [
+            "main2_passed",
+            "sut_passed"
+          ]
+        }
+      ]
+    }
+  ]
+}

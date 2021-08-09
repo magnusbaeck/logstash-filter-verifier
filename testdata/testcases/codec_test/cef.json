@@ -1,0 +1,29 @@
+{
+  "ignore": [
+    "@timestamp"
+  ],
+  "input_plugin": "cef",
+  "testcases": [
+    {
+      "input": [
+        "CEF:0|security|threatmanager|1.0|100|trojan successfully stopped|10|src=10.0.0.192 dst=12.121.122.82 spt=1232"
+      ],
+      "expected": [
+        {
+          "cefVersion": "0",
+          "destinationAddress": "12.121.122.82",
+          "deviceEventClassId": "100",
+          "deviceProduct": "threatmanager",
+          "deviceVendor": "security",
+          "deviceVersion": "1.0",
+          "input_codec": "cef",
+          "name": "trojan successfully stopped",
+          "severity": "10",
+          "sourceAddress": "10.0.0.192",
+          "sourcePort": "1232",
+          "tags": [ "input_codec_cef" ]
+        }
+      ]
+    }
+  ]
+}

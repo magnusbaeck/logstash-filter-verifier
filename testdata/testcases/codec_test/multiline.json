@@ -1,0 +1,26 @@
+{
+  "ignore": [
+    "@timestamp"
+  ],
+  "input_plugin": "multiline",
+  "testcases": [
+    {
+      "input": [
+        "foo\n  bar\n  baz\n",
+        "other foo\n  bar\n  baz\n"
+      ],
+      "expected": [
+        {
+          "input_codec": "multiline",
+          "message": "foo\n  bar\n  baz",
+          "tags": [ "multiline", "input_codec_multiline" ]
+        },
+        {
+          "input_codec": "multiline",
+          "message": "other foo\n  bar\n  baz",
+          "tags": [ "multiline", "input_codec_multiline" ]
+        }
+      ]
+    }
+  ]
+}

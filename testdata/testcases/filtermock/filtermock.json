@@ -1,0 +1,19 @@
+{
+  "ignore": [
+    "@timestamp"
+  ],
+  "input_plugin": "stdin",
+  "testcases": [
+    {
+      "input": [
+        "input"
+      ],
+      "expected": [
+        {
+          "message": "mocked",
+          "keepme": "visible in output"
+        }
+      ]
+    }
+  ]
+}
