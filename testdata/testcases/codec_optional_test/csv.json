@@ -1,0 +1,38 @@
+{
+  "ignore": [
+    "@timestamp"
+  ],
+  "input_plugin": "csv",
+  "testcases": [
+    {
+      "input": [
+        "foo,0,false",
+        "bar,1,true",
+        "baz,2,false"
+      ],
+      "expected": [
+        {
+          "bool_value": false,
+          "input_codec": "csv",
+          "int_value": 0,
+          "str_value": "foo",
+          "tags": [ "input_codec_csv" ]
+        },
+        {
+          "bool_value": true,
+          "input_codec": "csv",
+          "int_value": 1,
+          "str_value": "bar",
+          "tags": [ "input_codec_csv" ]
+        },
+        {
+          "bool_value": false,
+          "input_codec": "csv",
+          "int_value": 2,
+          "str_value": "baz",
+          "tags": [ "input_codec_csv" ]
+        }
+      ]
+    }
+  ]
+}

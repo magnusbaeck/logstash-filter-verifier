@@ -1,0 +1,26 @@
+{
+  "ignore": [
+    "@timestamp"
+  ],
+  "input_plugin": "plain",
+  "testcases": [
+    {
+      "input": [
+        "test case message",
+        "test case message 2"
+      ],
+      "expected": [
+        {
+          "input_codec": "plain",
+          "message": "test case message",
+          "tags": [ "input_codec_plain" ]
+        },
+        {
+          "input_codec": "plain",
+          "message": "test case message 2",
+          "tags": [ "input_codec_plain" ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,23 +1,47 @@
-module github.com/magnusbaeck/logstash-filter-verifier
+module github.com/magnusbaeck/logstash-filter-verifier/v2
 
-go 1.13
+go 1.16
 
 require (
 	github.com/Masterminds/semver/v3 v3.0.1
 	github.com/ahmetb/govvv v0.3.0
-	github.com/alecthomas/kingpin v2.2.6+incompatible
-	github.com/alecthomas/template v0.0.0-20190718012654-fb15b899a751 // indirect
-	github.com/alecthomas/units v0.0.0-20190924025748-f65c72e2690d // indirect
 	github.com/axw/gocov v1.0.0
-	github.com/breml/logstash-config v0.1.0
+	github.com/bmatcuk/doublestar/v2 v2.0.4
+	github.com/breml/logstash-config v0.4.5
 	github.com/go-playground/overalls v0.0.0-20191218162659-7df9f728c018
+	github.com/golang/protobuf v1.5.2
 	github.com/hashicorp/packer v1.4.4
+	github.com/hpcloud/tail v1.0.0
 	github.com/imkira/go-observer v1.0.3
-	github.com/matm/gocov-html v0.0.0-20191111163307-9ee104d84c82
+	github.com/matm/gocov-html v0.0.0-20200509184451-71874e2e203b
+	github.com/matoous/go-nanoid v1.5.0
+	github.com/matryer/is v1.4.0
+	github.com/matryer/moq v0.2.1
+	github.com/mattn/go-colorable v0.1.4 // indirect
+	github.com/mattn/go-isatty v0.0.11 // indirect
 	github.com/mattn/go-shellwords v1.0.6
+	github.com/mholt/archiver/v3 v3.5.0
 	github.com/mikefarah/yaml/v2 v2.4.0
 	github.com/op/go-logging v0.0.0-20160315200505-970db520ece7
-	github.com/stretchr/testify v1.4.0
+	github.com/pkg/errors v0.9.1
+	github.com/spf13/cobra v1.1.1
+	github.com/spf13/viper v1.7.1
+	github.com/stretchr/testify v1.5.1
+	github.com/tidwall/gjson v1.6.8
+	github.com/tidwall/sjson v1.1.5
 	github.com/yookoala/realpath v1.0.0 // indirect
+	golang.org/x/mod v0.4.2 // indirect
+	golang.org/x/sys v0.0.0-20210124154548-22da62e12c0c // indirect
+	golang.org/x/xerrors v0.0.0-20200804184101-5ec99f83aff1 // indirect
+	google.golang.org/grpc v1.34.0
+	google.golang.org/grpc/cmd/protoc-gen-go-grpc v1.0.1
+	google.golang.org/protobuf v1.26.0
+	gopkg.in/VividCortex/ewma.v1 v1.1.1 // indirect
+	gopkg.in/cheggaaa/pb.v2 v2.0.7
+	gopkg.in/fatih/color.v1 v1.7.0 // indirect
 	gopkg.in/go-playground/assert.v1 v1.2.1 // indirect
+	gopkg.in/mattn/go-colorable.v0 v0.1.0 // indirect
+	gopkg.in/mattn/go-isatty.v0 v0.0.4 // indirect
+	gopkg.in/mattn/go-runewidth.v0 v0.0.4 // indirect
+	gopkg.in/yaml.v2 v2.2.8
 )

@@ -1,0 +1,21 @@
+{
+  "ignore": [
+    "@timestamp"
+  ],
+  "input_plugin": "edn",
+  "testcases": [
+    {
+      "input": [
+        "{:test \"foo\", :value 0}"
+      ],
+      "expected": [
+        {
+          "input_codec": "edn",
+          "test": "foo",
+          "tags": [ "input_codec_edn" ],
+          "value": 0
+        }
+      ]
+    }
+  ]
+}

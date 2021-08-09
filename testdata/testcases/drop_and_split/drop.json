@@ -1,0 +1,25 @@
+{
+  "fields": {
+  },
+  "ignore": [
+    "@timestamp"
+  ],
+  "input_plugin": "stdin",
+  "testcases": [
+    {
+      "input": [
+        "normal input",
+        "drop this input",
+        "normal input again"
+      ],
+      "expected": [
+        {
+          "message": "normal input"
+        },
+        {
+          "message": "normal input again"
+        }
+      ]
+    }
+  ]
+}

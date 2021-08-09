@@ -1,0 +1,17 @@
+{
+  "fields": {
+  },
+  "ignore": [
+    "@timestamp"
+  ],
+  "input_plugin": "stdin",
+  "testcases": [
+    {
+      "input": [
+        "drop this input",
+        "drop this input"
+      ],
+      "expected": []
+    }
+  ]
+}

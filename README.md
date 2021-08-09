@@ -1,21 +1,32 @@
 # Logstash Filter Verifier
 
-[![Travis](https://travis-ci.org/magnusbaeck/logstash-filter-verifier.svg?branch=master)](https://travis-ci.org/magnusbaeck/logstash-filter-verifier)
-[![GoReportCard](http://goreportcard.com/badge/magnusbaeck/logstash-filter-verifier)](http://goreportcard.com/report/magnusbaeck/logstash-filter-verifier)
+![build](https://github.com/magnusbaeck/logstash-filter-verifier/actions/workflows/test.yml/badge.svg?event=push)
+[![GoReportCard](https://goreportcard.com/badge/github.com/magnusbaeck/logstash-filter-verifier)](https://goreportcard.com/report/github.com/magnusbaeck/logstash-filter-verifier)
 [![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](https://raw.githubusercontent.com/magnusbaeck/logstash-filter-verifier/master/LICENSE)
 
 * [Introduction](#introduction)
 * [Installing](#installing)
+* [Standalone and Daemon mode (since Version 2.0)](#standalone-and-daemon-mode-since-version-20)
 * [Examples](#examples)
   * [Syslog messages](#syslog-messages)
+  * [Beats messages](#beats-messages)
   * [JSON messages](#json-messages)
+  * [Version 2.0 (Daemon mode only)](#version-20-daemon-mode-only)
 * [Test case file reference](#test-case-file-reference)
+  * [Standalone mode / Logstash Filter Verifier before version 2.0](#standalone-mode--logstash-filter-verifier-before-version-20)
+  * [Daemon mode](#daemon-mode)
+    * [Filter mock](#filter-mock)
 * [Migrating to the current test case file format](#migrating-to-the-current-test-case-file-format)
 * [Notes](#notes)
   * [The \-\-sockets flag](#the---sockets-flag)
   * [The \-\-logstash\-arg flag](#the---logstash-arg-flag)
   * [Logstash compatibility](#logstash-compatibility)
+    * [Standalone mode](#standalone-mode)
+    * [Daemon mode](#daemon-mode)
   * [Windows compatibility](#windows-compatibility)
+  * [Plugin ID (Daemon mode)](#plugin-id-daemon-mode)
+* [Development](#development)
+  * [Dependencies](#dependencies)
 * [Known limitations and future work](#known-limitations-and-future-work)
 * [License](#license)
 
@@ -89,6 +100,31 @@ modifying the PREFIX variable. For example, to install it in $HOME/bin
 command:
 
     $ make install PREFIX=$HOME
+
+
+## Standalone and Daemon mode (since Version 2.0)
+
+Since version 2.0, there are two different modes, Logstash Filter Verifier
+can be operated in.
+
+1. **Standalone**: In this mode, for each test run a fresh instance of Logstash
+   is started in the background by Logstash Filter Verifier. If a user wants to
+   frequently execute test cases, this might be slow and tedious.  
+   This has been to only mode available in versions prior to 2.0.
+2. **Daemon**: In this mode, Logstash Filter Verifier is executed twice in
+   parallel (preferably in two different shells). One instance is the daemon.
+   The daemon starts and controls the Logstash instances (there might be
+   multiple). This daemon process is normally left running for the time the user
+   is working on the Logstash configuration and testing it with Logstash Filter
+   Verifier.  
+   For each execution of the test cases, another instance Logstash Filter
+   Verifier is started (client). The client collects the current state of the
+   Logstash configuration as well as the test cases and passes them to the
+   daemon. The daemon reloads the configuration in one of the running Logstash
+   instances, executes the test cases and returns the result back to the client.
+   The client shows the results to the user and exits, while the daemon
+   continues to run and waits for the next client to submit a test execution
+   job.
 
 
 ## Examples
@@ -199,7 +235,7 @@ This command will run this test case file through Logstash Filter
 Verifier (replace all "path/to" with the actual paths to the files,
 obviously):
 
-    $ path/to/logstash-filter-verifier path/to/syslog.json path/to/filters
+    $ path/to/logstash-filter-verifier standalone path/to/syslog.json path/to/filters
 
 If the test is successful, Logstash Filter Verifier will terminate
 with a zero exit code and (almost) no output. If the test fails it'll
@@ -213,6 +249,48 @@ reading the actual event. Hence we don't need to include it in the
 expected event either. Additional fields can be ignored with the
 `ignore` array property in the test case file (see details below).
 
+### Beats messages
+
+In [Beats](https://www.elastic.co/guide/en/beats/libbeat/current/beats-reference.html)
+you can also specify fields to control the behavior of the Logstash pipeline.  
+An example in Beats config might look like this:
+
+```yaml
+- input_type: log
+  paths: ["/var/log/work/*.log"]
+  fields:
+    type: openlog
+- input_type: log
+  paths: ["/var/log/trace/*.trc"]
+  fields:
+    type: trace
+```
+
+The Logstash configuration would then look like this to check the
+given field:
+
+```none
+if ([fields][type] == "openlog") {
+   Do something for type openlog
+```
+
+But, in order to test the behavior with LFV you have to give it like so:
+
+```none
+{
+  "fields": {
+    "[fields][type]": "openlog"
+  },
+```
+
+The reason is, that Beats is inserting by default declared fields under a
+root element `fields`, while the LFV is just considering it as a configuration
+option.  
+Alternatively you can tell Beats to insert the configured fields on root:
+
+```yaml
+fields_under_root: true
+```
 
 ### JSON messages
 
@@ -230,6 +308,7 @@ should mimic on the Logstash Filter Verifier side too. Use `codec` for
 that:
 
 Sample with JSON format:
+
 ```json
 {
   "fields": {
@@ -257,6 +336,7 @@ Sample with JSON format:
 ```
 
 Sample with YAML format:
+
 ```yaml
 fields:
   type: "app"
@@ -301,7 +381,75 @@ There are a few points to be made here:
   run, we ignore that field with the `ignore` property.
 
 
+### Version 2.0 (Daemon mode only)
+
+With version 2.0 of Logstash Filter Verifier (Daemon mode) some new features
+have been added:
+
+* **Export of @metadata**:  
+  There is out of the box support to let Logstash Filter Verifier export
+  the values in the (otherwise hidden) `@metadata` field of the event.
+  This allows to write test cases, which take the values in the `@metadata`
+  field into account. (see `export_metadata` in test case file reference)
+* **Pipeline configuration**:  
+  Logstash Filter Verifier in Daemon mode accepts complete Logstash pipelines
+  as configuration. This includes the localization of the Logstash configuration
+  files through the paths provided in the `pipelines.yml` file and replacing all
+  input and output filters with the respective parts to execute the tests.
+* **Multiple pipelines**  
+  The pipeline configuration may consist of multiple pipelines, that might be
+  linked ([pipeline to pipeline communication](https://www.elastic.co/guide/en/logstash/current/pipeline-to-pipeline.html))
+  or independent pipelines.
+* **Filter mock**  
+  Filter mock allows to replace (or remove) filter plugins in the Logstash
+  configuration under test, that do not work during or that would potentially
+  not produce the expected results test execution. Examples for such filter
+  plugins are mainly plugins, that perform some sort of call out to a third
+  party system, for example to look up data ([elasticsearch](https://www.elastic.co/guide/en/logstash/current/plugins-filters-elasticsearch.html),
+  [http](https://www.elastic.co/guide/en/logstash/current/plugins-filters-http.html),
+  [jdbc](https://www.elastic.co/guide/en/logstash/current/plugins-filters-jdbc_static.html),
+  [memcached](https://www.elastic.co/guide/en/logstash/current/plugins-filters-memcached.html)).
+  In order to to be able to produce reproducible results in the test cases,
+  these plugins can be replaced with mocks. In particular the [mutate](https://www.elastic.co/guide/en/logstash/current/plugins-filters-mutate.html)
+  and the [translate](https://www.elastic.co/guide/en/logstash/current/plugins-filters-translate.html)
+  filters have proven to be helpful as replacements.
+
+In order to execute a test case in daemon mode, first the daemon needs to be
+started (e.g. in its own terminal or shell):
+
+    $ path/to/logstash-filter-verifier daemon start
+
+Next, a single test case run can be launched with (in second terminal/shell):
+
+    $ path/to/logstash-filter-verifier daemon run --pipeline path/to/pipelines.yml --pipeline-base base/path/of/logstash-configuration --testcase-dir path/to/testcases
+
+The flag `--pipeline-base` is required, if the `pipelines.yml` file does use
+relative paths for the actual logstash pipeline configuration.
+
+If the Logstash configuration under test does not contain `id` attributes for
+all plugins, the `--add-missing-id` flag instructs Logstash Filter Verifier to
+add the missing `id` attributes on the fly.
+
+As an example, we can execute the `basic_pipeline` test case from this
+repository.
+
+Let us assume, the following setup:
+
+* The logstash filter verifier binary is available at `/usr/local/bin/logstash-fitler-verifier`.
+* This repository is available at `/tmp/logstash-filter-verifier` (e.g. with `git clone https://github.com/magnusbaeck/logstash-filter-verifier `).
+
+The command to run the `basic_pipeline` example would look like this (the daemon
+needs to be started beforehand):
+
+    $ /usr/local/bin/logstash-fitler-verifier daemon run --pipeline /tmp/logstash-filter-verifier/testdata/basic_pipeline.yml --pipeline-base /tmp/logstash-filter-verifier/testdata/basic_pipeline --testcase-dir /tmp/logstash-filter-verifier/testdata/testcases/basic_pipeline --add-missing-id
+
+More examples (e.g. multiple pipelines and filter mock) can be found in the
+`testcases/` folder of this repository.
+
+
 ## Test case file reference
+
+### Standalone mode / Logstash Filter Verifier before version 2.0
 
 Test case files are JSON files containing a single object. That object
 may have the following properties:
@@ -345,6 +493,59 @@ may have the following properties:
     progress messages.
 
 
+### Daemon mode
+
+Test case files for the Daemon mode have the same fields as for Standalone mode
+with the following changes/additions
+
+Additional fields:
+
+* `input_plugin`: The unique [ID](https://www.elastic.co/guide/en/logstash/7.10/plugins-inputs-file.html#plugins-inputs-file-id)
+  of the input plugin in the tested configuration, where the test input is
+  coming from. This is necessary, if a setup with multiple inputs is tested,
+  which either have different codecs or are part of different pipelines.
+* `export_metadata`: Controls if the metadata of the event processed by Logstash
+  is returned. The metadata is contained in the field `[@metadata]` in the
+  Logstash event. If the metadata is exported, the respective fields are
+  compared with the expected result of the testcase as well. (default: false)
+* `export_outputs`: Controls if the ID of the output, a particular event has
+  emitted by, is kept in the event or not. If this is enabled, the expected
+  event needs to contain a field named `_lfv_out_passed` which contains the ID
+  of the Logstash output.
+* `testcases`:
+  * `fields`: Local fields, only added to the events of this test case. These
+    fields overwrite global fields.
+
+Ignored / obsolete fields:
+
+* `codec`
+
+
+#### Filter mock
+
+The filter mock config file (yaml) consists of an array of filter mock elements.
+Each filter mock element consists for the plugin id that should be replaced as
+well as the Logstash configuration string that should be used as the
+replacement. This string might be empty. In this case, the mocked filter is just
+removed from the Logstash configuration.
+
+Example:
+
+```yaml
+- id: removeme
+- id: mockme
+  filter: |
+    mutate {
+      replace => {
+        "[message]" => "mocked"
+      }
+    }
+```
+
+Given the above filter mock configuration, the plugin with the ID `removeme` is
+removed from the Logstash configuration. The plugin with the ID `mockme` is
+replaced with the given Logstash configuration.
+
 ## Migrating to the current test case file format
 
 Originally the `input` and `expected` configuration keys were at the
@@ -370,7 +571,7 @@ case file by hand afterwards.
 
 ## Notes
 
-### The `--sockets` flag
+### The `--sockets` flag (Standalone mode)
 
 The command line flag `--sockets` allows to use unix domain sockets instead of
 stdin to send the input to Logstash. The advantage of this approach is, that
@@ -404,6 +605,8 @@ to be provided to Logstash Filter Verifier:
 
 ### Logstash compatibility
 
+#### Standalone mode
+
 Different versions of Logstash behave slightly differently and changes
 in Logstash may require changes in Logstash Filter Verifier. Upon
 startup, the program will attempt to auto-detect the version of
@@ -415,7 +618,14 @@ code in the JVM so it took several seconds. To avoid this you can use
 the `--logstash-version` flag to tell Logstash Filter Verifier which
 version of Logstash it should expect. Example:
 
-    logstash-filter-verifier ... --logstash-version 2.4.0
+    logstash-filter-verifier standalone ... --logstash-version 2.4.0
+
+
+#### Daemon mode
+
+In order to use Logstash Filter Verifier in Daemon mode, at least Logstash
+version 6.7.x is required. Older versions of Logstash are not supported and do
+not work with Daemon mode.
 
 
 ### Windows compatibility
@@ -431,6 +641,34 @@ are a couple of known quirks that are easy to work around:
   tool to use.
 
 
+### Plugin ID (Daemon mode)
+
+The Daemon mode of Logstash Filter Verifier expects each plugin in the Logstash
+configuration to have a unique [ID](https://www.elastic.co/guide/en/logstash/current/plugins-filters-mutate.html#plugins-filters-mutate-id).
+In order to test an existing Logstash configuration, which lacks these ID, there
+are two options:
+
+1. Permanently add the missing ID to the configuration. This can either be done
+   by hand or with the help of [`mustache`](https://github.com/breml/logstash-config).
+
+       mustache lint --auto-fix-id <Logstash config files>
+
+2. Let Logstash Filter Verifier add the ID temporarily just for the execution
+   of the test cases by adding the flag `--add-missing-id`.
+
+
+## Development
+
+### Dependencies
+
+For a fully working development environment, the following tooling needs to be
+present:
+
+* Go compiler
+* `make` command
+* Proto buffer compiler (`protobuf-compiler`)
+
+
 ## Known limitations and future work
 
 * Some log formats don't include all timestamp components. For
@@ -440,6 +678,6 @@ are a couple of known quirks that are easy to work around:
 
 ## License
 
-This software is copyright 2015–2020 by Magnus Bäck <<magnus@noun.se>>
-and licensed under the Apache 2.0 license. See the LICENSE file for the full
-license text.
+This software is copyright 2015–2021 by Magnus Bäck <<magnus@noun.se>> and
+other contributors and licensed under the Apache 2.0 license. See the LICENSE
+file for the full license text.

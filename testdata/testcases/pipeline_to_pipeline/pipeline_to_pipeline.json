@@ -1,0 +1,24 @@
+{
+  "fields": {
+  },
+  "ignore": [
+    "@timestamp"
+  ],
+  "input_plugin": "stage1_input",
+  "testcases": [
+    {
+      "input": [
+        "test case message"
+      ],
+      "expected": [
+        {
+          "message": "test case message",
+          "tags": [
+            "mutate_stage_1_passed",
+            "mutate_stage_2_passed"
+          ]
+        }
+      ]
+    }
+  ]
+}

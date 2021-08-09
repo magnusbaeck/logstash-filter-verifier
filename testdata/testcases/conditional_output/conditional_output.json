@@ -1,0 +1,30 @@
+{
+  "fields": {
+  },
+  "ignore": [
+    "@timestamp"
+  ],
+  "input_plugin": "stdin",
+  "testcases": [
+    {
+      "input": [
+        "stdout",
+        "file"
+      ],
+      "expected": [
+        {
+          "message": "stdout",
+          "tags": [
+            "conditional_output_filter"
+          ]
+        },
+        {
+          "message": "file",
+          "tags": [
+            "conditional_output_filter"
+          ]
+        }
+      ]
+    }
+  ]
+}

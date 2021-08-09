@@ -1,0 +1,70 @@
+{
+  "fields": {
+  },
+  "ignore": [
+    "@timestamp"
+  ],
+  "input_plugin": "stdin",
+  "testcases": [
+    {
+      "input": [
+        "one output"
+      ],
+      "expected": [
+        {
+          "message": "one output",
+          "tags": [ "stage1" ]
+        }
+      ]
+    },
+    {
+      "input": [
+        "multiple outputs"
+      ],
+      "expected": [
+        {
+          "message": "multiple outputs",
+          "tags": [ "stage1" ]
+        },
+        {
+          "message": "multiple outputs",
+          "tags": [ "stage1" ]
+        }
+      ]
+    },
+    {
+      "input": [
+        "stage2"
+      ],
+      "expected": [
+        {
+          "message": "stage2",
+          "tags": [ "stage1" ]
+        },
+        {
+          "message": "stage2",
+          "tags": [ "stage1", "stage2" ]
+        }
+      ]
+    },
+    {
+      "input": [
+        "multiple outputs and stage2"
+      ],
+      "expected": [
+        {
+          "message": "multiple outputs and stage2",
+          "tags": [ "stage1" ]
+        },
+        {
+          "message": "multiple outputs and stage2",
+          "tags": [ "stage1" ]
+        },
+        {
+          "message": "multiple outputs and stage2",
+          "tags": [ "stage1", "stage2" ]
+        }
+      ]
+    }
+  ]
+}
