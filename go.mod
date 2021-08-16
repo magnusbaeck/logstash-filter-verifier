@@ -7,7 +7,7 @@ require (
 	github.com/ahmetb/govvv v0.3.0
 	github.com/axw/gocov v1.0.0
 	github.com/bmatcuk/doublestar/v2 v2.0.4
-	github.com/breml/logstash-config v0.4.5
+	github.com/breml/logstash-config v0.5.1
 	github.com/go-playground/overalls v0.0.0-20191218162659-7df9f728c018
 	github.com/golang/protobuf v1.5.2
 	github.com/hashicorp/packer v1.4.4
@@ -24,7 +24,7 @@ require (
 	github.com/mikefarah/yaml/v2 v2.4.0
 	github.com/op/go-logging v0.0.0-20160315200505-970db520ece7
 	github.com/pkg/errors v0.9.1
-	github.com/spf13/cobra v1.1.1
+	github.com/spf13/cobra v1.1.3
 	github.com/spf13/viper v1.7.1
 	github.com/stretchr/testify v1.5.1
 	github.com/tidwall/gjson v1.6.8
@@ -43,5 +43,5 @@ require (
 	gopkg.in/mattn/go-colorable.v0 v0.1.0 // indirect
 	gopkg.in/mattn/go-isatty.v0 v0.0.4 // indirect
 	gopkg.in/mattn/go-runewidth.v0 v0.0.4 // indirect
-	gopkg.in/yaml.v2 v2.2.8
+	gopkg.in/yaml.v2 v2.4.0
 )
