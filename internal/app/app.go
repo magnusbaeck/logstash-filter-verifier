@@ -35,7 +35,6 @@ func Execute(version string, stdout, stderr io.Writer) int {
 	// Setup default values
 	viper.SetDefault("loglevel", "WARNING")
 	viper.SetDefault("socket", "/tmp/logstash-filter-verifier.sock")
-	viper.SetDefault("pipeline", "/etc/logstash/pipelines.yml")
 	viper.SetDefault("logstash.path", "/usr/share/logstash/bin/logstash")
 	viper.SetDefault("inflight-shutdown-timeout", 10*time.Second)
 	viper.SetDefault("shutdown-timeout", 3*time.Second)

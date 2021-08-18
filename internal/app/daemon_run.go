@@ -16,7 +16,7 @@ func makeDaemonRunCmd() *cobra.Command {
 		RunE:  runDaemonRun,
 	}
 
-	cmd.Flags().StringP("pipeline", "p", "", "location of the pipelines.yml file to be processed")
+	cmd.Flags().StringP("pipeline", "p", "", "location of the pipelines.yml file to be processed (e.g. /etc/logstash/pipelines.yml)")
 	_ = viper.BindPFlag("pipeline", cmd.Flags().Lookup("pipeline"))
 	cmd.Flags().String("pipeline-base", "", "base directory for relative paths in the pipelines.yml")
 	_ = viper.BindPFlag("pipeline-base", cmd.Flags().Lookup("pipeline-base"))
