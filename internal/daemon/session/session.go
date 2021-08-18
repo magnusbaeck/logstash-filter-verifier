@@ -87,7 +87,9 @@ func (s *Session) setupTest(pipelines pipeline.Pipelines, configFiles []logstash
 		if err != nil {
 			return err
 		}
-		s.inputPluginCodecs = inputCodecs
+		for id, codec := range inputCodecs {
+			s.inputPluginCodecs[id] = codec
+		}
 
 		outputs, err := configFile.ReplaceOutputs()
 		if err != nil {
