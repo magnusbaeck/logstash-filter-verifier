@@ -13,8 +13,8 @@ import (
 	"github.com/pkg/errors"
 	"gopkg.in/yaml.v2"
 
-	"github.com/magnusbaeck/logstash-filter-verifier/v2/internal/daemon/filtermock"
 	"github.com/magnusbaeck/logstash-filter-verifier/v2/internal/daemon/logstashconfig"
+	"github.com/magnusbaeck/logstash-filter-verifier/v2/internal/daemon/pluginmock"
 )
 
 type Archive struct {
@@ -74,7 +74,7 @@ func processNestedKeys(pipelines Pipelines) {
 	}
 }
 
-func (a Archive) Validate(addMissingID bool) error {
+func (a Archive) Validate(preprocess func([]byte) ([]byte, error), addMissingID bool) error {
 	var inputs, outputs int
 	for _, pipeline := range a.Pipelines {
 		if strings.HasSuffix(pipeline.Config, "/") {
@@ -108,6 +108,11 @@ func (a Archive) Validate(addMissingID bool) error {
 			}
 
 			body, err := ioutil.ReadFile(file)
+			if err != nil {
+				return err
+			}
+
+			body, err = preprocess(body)
 			if err != nil {
 				return err
 			}
@@ -215,7 +220,7 @@ func NoopPreprocessor(body []byte) ([]byte, error) {
 	return body, nil
 }
 
-func ApplyMocksPreprocessor(m filtermock.Mocks) func(body []byte) ([]byte, error) {
+func ApplyMocksPreprocessor(m pluginmock.Mocks) func(body []byte) ([]byte, error) {
 	return func(body []byte) ([]byte, error) {
 		configFile := logstashconfig.File{
 			Body: body,
