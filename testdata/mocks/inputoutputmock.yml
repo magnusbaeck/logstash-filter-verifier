@@ -1,0 +1,8 @@
+---
+
+- id: input
+  mock: |
+    stdin {}
+- id: output
+  mock: |
+    stdout {}

@@ -21,8 +21,8 @@ import (
 	"gopkg.in/yaml.v2"
 
 	pb "github.com/magnusbaeck/logstash-filter-verifier/v2/internal/daemon/api/grpc"
-	"github.com/magnusbaeck/logstash-filter-verifier/v2/internal/daemon/filtermock"
 	"github.com/magnusbaeck/logstash-filter-verifier/v2/internal/daemon/pipeline"
+	"github.com/magnusbaeck/logstash-filter-verifier/v2/internal/daemon/pluginmock"
 	"github.com/magnusbaeck/logstash-filter-verifier/v2/internal/logging"
 	"github.com/magnusbaeck/logstash-filter-verifier/v2/internal/logstash"
 	lfvobserver "github.com/magnusbaeck/logstash-filter-verifier/v2/internal/observer"
@@ -35,7 +35,7 @@ type Test struct {
 	pipelineBase   string
 	logstashConfig string
 	testcasePath   string
-	filterMock     string
+	pluginMock     string
 	metadataKey    string
 	debug          bool
 	addMissingID   bool
@@ -43,7 +43,7 @@ type Test struct {
 	log logging.Logger
 }
 
-func New(socket string, log logging.Logger, pipeline, pipelineBase, logstashConfig, testcasePath, filterMock, metadataKey string, debug, addMissingID bool) (Test, error) {
+func New(socket string, log logging.Logger, pipeline, pipelineBase, logstashConfig, testcasePath, pluginMock, metadataKey string, debug, addMissingID bool) (Test, error) {
 	if pipelineBase == "" {
 		absPipeline, err := filepath.Abs(pipeline)
 		if err != nil {
@@ -64,7 +64,7 @@ func New(socket string, log logging.Logger, pipeline, pipelineBase, logstashConf
 		pipelineBase:   pipelineBase,
 		logstashConfig: logstashConfig,
 		testcasePath:   testcasePath,
-		filterMock:     filterMock,
+		pluginMock:     pluginMock,
 		metadataKey:    metadataKey,
 		debug:          debug,
 		addMissingID:   addMissingID,
@@ -89,13 +89,7 @@ func (s Test) Run() error {
 		return err
 	}
 
-	// TODO: ensure, that IDs are also unique for the whole set of pipelines
-	err = a.Validate(s.addMissingID)
-	if err != nil {
-		return err
-	}
-
-	m, err := filtermock.FromFile(s.filterMock)
+	m, err := pluginmock.FromFile(s.pluginMock)
 	if err != nil {
 		return err
 	}
@@ -103,6 +97,12 @@ func (s Test) Run() error {
 	preprocessor := pipeline.NoopPreprocessor
 	if len(m) > 0 {
 		preprocessor = pipeline.ApplyMocksPreprocessor(m)
+	}
+
+	// TODO: ensure, that IDs are also unique for the whole set of pipelines
+	err = a.Validate(preprocessor, s.addMissingID)
+	if err != nil {
+		return err
 	}
 
 	b, err := a.ZipWithPreprocessor(preprocessor)
