@@ -6,7 +6,6 @@ import (
 	"io/ioutil"
 	"net"
 	"os"
-	"path"
 	"path/filepath"
 	"sort"
 	"strings"
@@ -45,7 +44,14 @@ type Test struct {
 }
 
 func New(socket string, log logging.Logger, pipeline, pipelineBase, logstashConfig, testcasePath, filterMock, metadataKey string, debug, addMissingID bool) (Test, error) {
-	if !path.IsAbs(pipelineBase) {
+	if pipelineBase == "" {
+		absPipeline, err := filepath.Abs(pipeline)
+		if err != nil {
+			return Test{}, err
+		}
+		pipelineBase = filepath.Dir(absPipeline)
+	}
+	if !filepath.IsAbs(pipelineBase) {
 		cwd, err := os.Getwd()
 		if err != nil {
 			return Test{}, err

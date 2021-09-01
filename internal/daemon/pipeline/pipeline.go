@@ -77,7 +77,11 @@ func processNestedKeys(pipelines Pipelines) {
 func (a Archive) Validate(addMissingID bool) error {
 	var inputs, outputs int
 	for _, pipeline := range a.Pipelines {
-		files, err := doublestar.Glob(filepath.Join(a.BasePath, pipeline.Config))
+		configFilepath := filepath.Join(a.BasePath, pipeline.Config)
+		if filepath.IsAbs(pipeline.Config) {
+			configFilepath = pipeline.Config
+		}
+		files, err := doublestar.Glob(configFilepath)
 		if err != nil {
 			return err
 		}
@@ -137,7 +141,11 @@ func (a Archive) ZipWithPreprocessor(preprocess func([]byte) ([]byte, error)) ([
 	}
 
 	for _, pipeline := range a.Pipelines {
-		files, err := doublestar.Glob(filepath.Join(a.BasePath, pipeline.Config))
+		configFilepath := filepath.Join(a.BasePath, pipeline.Config)
+		if filepath.IsAbs(pipeline.Config) {
+			configFilepath = pipeline.Config
+		}
+		files, err := doublestar.Glob(configFilepath)
 		if err != nil {
 			return nil, err
 		}
