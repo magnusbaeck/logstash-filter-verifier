@@ -1,2 +1,2 @@
-- pipeline.id: main
+- pipeline.id: main-debug
   path.config: "main/**/*.conf"
