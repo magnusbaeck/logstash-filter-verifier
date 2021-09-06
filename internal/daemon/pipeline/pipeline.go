@@ -77,6 +77,9 @@ func processNestedKeys(pipelines Pipelines) {
 func (a Archive) Validate(addMissingID bool) error {
 	var inputs, outputs int
 	for _, pipeline := range a.Pipelines {
+		if strings.HasSuffix(pipeline.Config, "/") {
+			pipeline.Config += "*"
+		}
 		configFilepath := filepath.Join(a.BasePath, pipeline.Config)
 		if filepath.IsAbs(pipeline.Config) {
 			configFilepath = pipeline.Config
@@ -86,6 +89,13 @@ func (a Archive) Validate(addMissingID bool) error {
 			return err
 		}
 		for _, file := range files {
+			fi, err := os.Stat(file)
+			if err != nil {
+				return err
+			}
+			if fi.IsDir() {
+				continue
+			}
 			var relFile string
 			if path.IsAbs(a.BasePath) {
 				relFile = strings.TrimPrefix(file, a.BasePath)
@@ -141,6 +151,9 @@ func (a Archive) ZipWithPreprocessor(preprocess func([]byte) ([]byte, error)) ([
 	}
 
 	for _, pipeline := range a.Pipelines {
+		if strings.HasSuffix(pipeline.Config, "/") {
+			pipeline.Config += "*"
+		}
 		configFilepath := filepath.Join(a.BasePath, pipeline.Config)
 		if filepath.IsAbs(pipeline.Config) {
 			configFilepath = pipeline.Config
@@ -150,6 +163,13 @@ func (a Archive) ZipWithPreprocessor(preprocess func([]byte) ([]byte, error)) ([
 			return nil, err
 		}
 		for _, file := range files {
+			fi, err := os.Stat(file)
+			if err != nil {
+				return nil, err
+			}
+			if fi.IsDir() {
+				continue
+			}
 			var relFile string
 			if path.IsAbs(a.BasePath) {
 				relFile = strings.TrimPrefix(file, a.BasePath)
