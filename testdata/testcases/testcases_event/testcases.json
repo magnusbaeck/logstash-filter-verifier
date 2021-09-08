@@ -13,7 +13,14 @@
         "string": "string value",
         "number": 123,
         "bool": true,
-        "overwritten_field": "event"
+        "overwritten_field": "event",
+        "parent": {
+          "key": "parent_key_value",
+          "child": {
+            "key": "parent_child_key_value"
+          }
+        },
+        "[logstash_parent][key]": "logstash_parent_key_value"
       },
       "expected": [
         {
@@ -21,7 +28,16 @@
           "number": 123,
           "bool": true,
           "global_field": "global",
-          "overwritten_field": "event"
+          "overwritten_field": "event",
+          "parent": {
+            "key": "parent_key_value",
+            "child": {
+              "key": "parent_child_key_value"
+            }
+          },
+          "logstash_parent": {
+            "key": "logstash_parent_key_value"
+          }
         }
       ]
     }

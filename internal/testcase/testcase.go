@@ -134,6 +134,9 @@ var (
 func (tcs *TestCaseSet) convertBracketFields() error {
 	// Convert fields in input fields
 	tcs.InputFields = parseAllBracketProperties(tcs.InputFields)
+	for i := range tcs.TestCases {
+		tcs.TestCases[i].InputFields = parseAllBracketProperties(tcs.TestCases[i].InputFields)
+	}
 
 	// Convert fields in expected events
 	for i, expected := range tcs.ExpectedEvents {
@@ -193,12 +196,21 @@ func New(reader io.Reader, configType string) (*TestCaseSet, error) {
 	if err = tcs.InputFields.IsValid(); err != nil {
 		return nil, err
 	}
+
+	// Convert bracket fields
+	if err := tcs.convertBracketFields(); err != nil {
+		return nil, err
+	}
+
 	tcs.IgnoredFields = append(tcs.IgnoredFields, defaultIgnoredFields...)
 	sort.Strings(tcs.IgnoredFields)
+
 	tcs.descriptions = make([]string, len(tcs.ExpectedEvents))
+
 	for range tcs.InputLines {
 		tcs.Events = append(tcs.Events, tcs.InputFields)
 	}
+
 	for _, tc := range tcs.TestCases {
 		// Add event, if there are no input lines.
 		if len(tc.InputLines) == 0 {
@@ -218,11 +230,6 @@ func New(reader io.Reader, configType string) (*TestCaseSet, error) {
 		for range tc.ExpectedEvents {
 			tcs.descriptions = append(tcs.descriptions, tc.Description)
 		}
-	}
-
-	// Convert bracket fields
-	if err := tcs.convertBracketFields(); err != nil {
-		return nil, err
 	}
 
 	log.Debugf("Current TestCaseSet after converting fields: %+v", tcs)
