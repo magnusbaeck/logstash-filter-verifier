@@ -143,13 +143,16 @@ func (o *outputPipelineReplacer) walk(c *astutil.Cursor) {
 	c.Replace(ast.NewPlugin("pipeline", ast.NewArrayAttribute("send_to", ast.NewStringAttribute("", outputName, ast.DoubleQuoted))))
 }
 
-func (f *File) Validate(addMissingID bool) (inputs int, outputs int, err error) {
+func (f *File) Validate(addMissingID bool) (inputs map[string]int, outputs map[string]int, err error) {
 	err = f.parse()
 	if err != nil {
-		return 0, 0, err
+		return nil, nil, err
 	}
 
 	v := validator{
+		pluginIDs:    map[string]int{},
+		inputs:       map[string]int{},
+		outputs:      map[string]int{},
 		addMissingID: addMissingID,
 	}
 
@@ -167,16 +170,24 @@ func (f *File) Validate(addMissingID bool) (inputs int, outputs int, err error) 
 	}
 
 	if len(v.noIDs) > 0 {
-		return 0, 0, errors.Errorf("%q no IDs found for %v", f.Name, v.noIDs)
+		return nil, nil, errors.Errorf("%q no IDs found for %v", f.Name, v.noIDs)
 	}
+
+	for id, count := range v.pluginIDs {
+		if count != 1 {
+			return nil, nil, errors.Errorf("plugin id must be unique, but %q appeared %d times", id, count)
+		}
+	}
+
 	return v.inputs, v.outputs, nil
 }
 
 type validator struct {
 	noIDs        []string
 	pluginType   ast.PluginType
-	inputs       int
-	outputs      int
+	pluginIDs    map[string]int
+	inputs       map[string]int
+	outputs      map[string]int
 	count        int
 	addMissingID bool
 }
@@ -184,23 +195,28 @@ type validator struct {
 func (v *validator) walk(c *astutil.Cursor) {
 	v.count++
 
-	if v.pluginType == ast.Input && c.Plugin().Name() != "pipeline" {
-		v.inputs++
-	}
-	if v.pluginType == ast.Output && c.Plugin().Name() != "pipeline" {
-		v.outputs++
-	}
+	name := c.Plugin().Name()
 
-	_, err := c.Plugin().ID()
+	id, err := c.Plugin().ID()
 	if err != nil {
 		if v.addMissingID {
 			plugin := c.Plugin()
-			plugin.Attributes = append(plugin.Attributes, ast.NewStringAttribute("id", fmt.Sprintf("%s-%d", c.Plugin().Name(), v.count), ast.DoubleQuoted))
+			id = fmt.Sprintf("%s-%d", name, v.count)
+			plugin.Attributes = append(plugin.Attributes, ast.NewStringAttribute("id", id, ast.DoubleQuoted))
 
 			c.Replace(plugin)
 		} else {
-			v.noIDs = append(v.noIDs, c.Plugin().Name())
+			v.noIDs = append(v.noIDs, name)
+			return
 		}
+	}
+
+	v.pluginIDs[id]++
+	if v.pluginType == ast.Input && name != "pipeline" {
+		v.inputs[id]++
+	}
+	if v.pluginType == ast.Output && name != "pipeline" {
+		v.outputs[id]++
 	}
 }
 

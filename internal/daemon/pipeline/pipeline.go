@@ -74,8 +74,9 @@ func processNestedKeys(pipelines Pipelines) {
 	}
 }
 
-func (a Archive) Validate(preprocess func([]byte) ([]byte, error), addMissingID bool) error {
-	var inputs, outputs int
+func (a Archive) Validate(preprocess func([]byte) ([]byte, error), addMissingID bool) (map[string]int, error) {
+	inputs := map[string]int{}
+	outputs := map[string]int{}
 	for _, pipeline := range a.Pipelines {
 		if strings.HasSuffix(pipeline.Config, "/") {
 			pipeline.Config += "*"
@@ -86,12 +87,12 @@ func (a Archive) Validate(preprocess func([]byte) ([]byte, error), addMissingID 
 		}
 		files, err := doublestar.Glob(configFilepath)
 		if err != nil {
-			return err
+			return nil, err
 		}
 		for _, file := range files {
 			fi, err := os.Stat(file)
 			if err != nil {
-				return err
+				return nil, err
 			}
 			if fi.IsDir() {
 				continue
@@ -102,19 +103,19 @@ func (a Archive) Validate(preprocess func([]byte) ([]byte, error), addMissingID 
 			} else {
 				cwd, err := os.Getwd()
 				if err != nil {
-					return err
+					return nil, err
 				}
 				relFile = strings.TrimPrefix(file, filepath.Join(cwd, a.BasePath))
 			}
 
 			body, err := ioutil.ReadFile(file)
 			if err != nil {
-				return err
+				return nil, err
 			}
 
 			body, err = preprocess(body)
 			if err != nil {
-				return err
+				return nil, err
 			}
 
 			configFile := logstashconfig.File{
@@ -124,18 +125,23 @@ func (a Archive) Validate(preprocess func([]byte) ([]byte, error), addMissingID 
 
 			in, out, err := configFile.Validate(addMissingID)
 			if err != nil {
-				return err
+				return nil, err
 			}
-			inputs += in
-			outputs += out
+
+			for id, count := range in {
+				inputs[id] += count
+			}
+			for id, count := range out {
+				outputs[id] += count
+			}
 		}
 	}
 
-	if inputs == 0 || outputs == 0 {
-		return errors.Errorf("expect the Logstash config to have at least 1 input and 1 output, got %d inputs and %d outputs", inputs, outputs)
+	if len(inputs) == 0 || len(outputs) == 0 {
+		return nil, errors.Errorf("expect the Logstash config to have at least 1 input and 1 output, got %d inputs and %d outputs", len(inputs), len(outputs))
 	}
 
-	return nil
+	return inputs, nil
 }
 
 func (a Archive) ZipWithPreprocessor(preprocess func([]byte) ([]byte, error)) ([]byte, error) {

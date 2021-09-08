@@ -177,8 +177,9 @@ func TestReplaceOutputsWithoutID(t *testing.T) {
 
 func TestValidate(t *testing.T) {
 	cases := []struct {
-		name   string
-		config string
+		name            string
+		config          string
+		nonFixableError bool
 
 		wantErr     error
 		wantInputs  int
@@ -203,12 +204,21 @@ output { stdout { } }`,
 		},
 		{
 			name: "successful validate - with pipeline input and output",
-			config: `input { stdin { id => stdin } file { id => file } pipeline { id => pipeline } }
+			config: `input { stdin { id => stdin } file { id => file_in } pipeline { id => pipeline_in } }
 filter { mutate { id => mutate } }
-output { stdout { id => testid } file { id => file } pipeline { id => pipeline } }`,
+output { stdout { id => testid } file { id => file_out } pipeline { id => pipeline_out } }`,
 
 			wantInputs:  2,
 			wantOutputs: 2,
+		},
+		{
+			name: "error duplicate plugin id",
+			config: `input { stdin { id => name } }
+filter { mutate { id => name } }
+output { stdout { id => name } }`,
+			nonFixableError: true,
+
+			wantErr: errors.Errorf(`plugin id must be unique, but "name" appeared 3 times`),
 		},
 	}
 
@@ -221,25 +231,27 @@ output { stdout { id => testid } file { id => file } pipeline { id => pipeline }
 
 			inputs, outputs, err := f.Validate(false)
 			compareErr(t, test.wantErr, err)
-			if test.wantInputs != inputs {
-				t.Errorf("expected %d inputs, got %d", test.wantInputs, inputs)
+			if test.wantInputs != len(inputs) {
+				t.Errorf("expected %d inputs, got %d", test.wantInputs, len(inputs))
 			}
-			if test.wantOutputs != outputs {
-				t.Errorf("expected %d outputs, got %d", test.wantOutputs, outputs)
+			if test.wantOutputs != len(outputs) {
+				t.Errorf("expected %d outputs, got %d", test.wantOutputs, len(outputs))
 			}
 		})
 
-		t.Run(fmt.Sprintf("validate-with-fix-%s", test.name), func(t *testing.T) {
-			f := logstashconfig.File{
-				Name: "filename.conf",
-				Body: []byte(test.config),
-			}
+		if !test.nonFixableError {
+			t.Run(fmt.Sprintf("validate-with-fix-%s", test.name), func(t *testing.T) {
+				f := logstashconfig.File{
+					Name: "filename.conf",
+					Body: []byte(test.config),
+				}
 
-			_, _, err := f.Validate(true)
-			if err != nil {
-				t.Errorf("expected no error, got: %v", err)
-			}
-		})
+				_, _, err := f.Validate(true)
+				if err != nil {
+					t.Errorf("expected no error, got: %v", err)
+				}
+			})
+		}
 	}
 }
 
