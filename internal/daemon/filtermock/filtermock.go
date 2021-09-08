@@ -94,7 +94,7 @@ func (m Mocks) Walk(c *astutil.Cursor) {
 			c.Delete()
 			return
 		}
-		replacement.Attributes = append(replacement.Attributes, ast.NewStringAttribute("id", id, ast.Bareword))
+		replacement.Attributes = append(replacement.Attributes, ast.NewStringAttribute("id", id, ast.DoubleQuoted))
 		c.Replace(replacement)
 	}
 }

@@ -55,7 +55,7 @@ func TestReplaceInputs(t *testing.T) {
 
 			wantConfig: `input {
   pipeline {
-    address => __lfv_input_prefix_testid
+    address => "__lfv_input_prefix_testid"
   }
 }
 `,
