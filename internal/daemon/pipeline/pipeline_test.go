@@ -131,6 +131,13 @@ func TestZip(t *testing.T) {
 			wantFiles: 2,
 		},
 		{
+			name:     "success basic pipeline dir name",
+			pipeline: "testdata/pipelines_basic_dir_name.yml",
+			basePath: "testdata/",
+
+			wantFiles: 2,
+		},
+		{
 			name:     "success advanced pipeline",
 			pipeline: "testdata/pipelines_advanced.yml",
 			basePath: "testdata/",
