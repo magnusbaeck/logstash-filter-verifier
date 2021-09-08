@@ -88,7 +88,7 @@ func (r replaceInputsWalker) replaceInputs(c *astutil.Cursor) {
 	}
 
 	var attrs []ast.Attribute
-	attrs = append(attrs, ast.NewStringAttribute("address", fmt.Sprintf("%s_%s_%s", "__lfv_input", r.idPrefix, id), ast.Bareword))
+	attrs = append(attrs, ast.NewStringAttribute("address", fmt.Sprintf("%s_%s_%s", "__lfv_input", r.idPrefix, id), ast.DoubleQuoted))
 
 	for _, attr := range c.Plugin().Attributes {
 		if attr == nil {
