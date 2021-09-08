@@ -56,29 +56,37 @@ func TestValidate(t *testing.T) {
 		pipeline string
 		basePath string
 
+		wantInputs      int
 		wantValidateErr bool
 	}{
 		{
 			name:     "success basic pipeline",
 			pipeline: "testdata/pipelines_basic.yml",
 			basePath: "testdata/",
+
+			wantInputs: 1,
 		},
 		{
 			name:     "success basic pipeline with absolute base path",
 			pipeline: "testdata/pipelines_basic_base_path.yml",
 			basePath: wd,
+
+			wantInputs: 1,
 		},
 		{
 			name:     "error invalid config",
 			pipeline: "testdata/pipelines_invalid_config.yml",
 			basePath: "testdata/",
 
+			wantInputs:      1,
 			wantValidateErr: true,
 		},
 		{
 			name:     "success basic pipeline with nested keys",
 			pipeline: "testdata/pipelines_basic_nested_keys.yml",
 			basePath: "testdata/",
+
+			wantInputs: 1,
 		},
 	}
 
@@ -89,11 +97,13 @@ func TestValidate(t *testing.T) {
 			a, err := pipeline.New(test.pipeline, test.basePath)
 			is.NoErr(err)
 
-			err = a.Validate(pipeline.NoopPreprocessor, false)
+			_, err = a.Validate(pipeline.NoopPreprocessor, false)
 			is.True(err != nil == test.wantValidateErr) // Validate error
 
-			err = a.Validate(pipeline.NoopPreprocessor, true)
+			inputs, err := a.Validate(pipeline.NoopPreprocessor, true)
+
 			is.NoErr(err)
+			is.Equal(test.wantInputs, len(inputs))
 		})
 	}
 }

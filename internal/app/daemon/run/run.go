@@ -101,7 +101,7 @@ func (s Test) Run() (err error) {
 	}
 
 	// TODO: ensure, that IDs are also unique for the whole set of pipelines
-	err = a.Validate(preprocessor, s.addMissingID)
+	inputs, err := a.Validate(preprocessor, s.addMissingID)
 	if err != nil {
 		return err
 	}
@@ -114,6 +114,11 @@ func (s Test) Run() (err error) {
 	tests, err := testcase.DiscoverTests(s.testcasePath)
 	if err != nil {
 		return err
+	}
+	for _, test := range tests {
+		if _, ok := inputs[test.InputPlugin]; !ok {
+			return errors.Errorf("input plugin %q defined in test case but not present in Logstash config", test.InputPlugin)
+		}
 	}
 
 	s.log.Debugf("socket to daemon %q", s.socket)
