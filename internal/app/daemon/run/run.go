@@ -101,12 +101,7 @@ func (s Test) Run() (err error) {
 	}
 
 	// TODO: ensure, that IDs are also unique for the whole set of pipelines
-	inputs, err := a.Validate(preprocessor, s.addMissingID)
-	if err != nil {
-		return err
-	}
-
-	b, err := a.ZipWithPreprocessor(preprocessor)
+	b, inputs, err := a.ZipWithPreprocessor(s.addMissingID, preprocessor)
 	if err != nil {
 		return err
 	}
