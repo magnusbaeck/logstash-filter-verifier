@@ -3,6 +3,7 @@ package run
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"net"
 	"os"
@@ -72,7 +73,7 @@ func New(socket string, log logging.Logger, pipeline, pipelineBase, logstashConf
 	}, nil
 }
 
-func (s Test) Run() error {
+func (s Test) Run() (err error) {
 	if s.logstashConfig != "" {
 		pipelineFile, err := s.createImplicitPipeline()
 		if err != nil {
@@ -110,6 +111,11 @@ func (s Test) Run() error {
 		return err
 	}
 
+	tests, err := testcase.DiscoverTests(s.testcasePath)
+	if err != nil {
+		return err
+	}
+
 	s.log.Debugf("socket to daemon %q", s.socket)
 	conn, err := grpc.Dial(
 		s.socket,
@@ -134,10 +140,15 @@ func (s Test) Run() error {
 	}
 	sessionID := result.SessionID
 
-	tests, err := testcase.DiscoverTests(s.testcasePath)
-	if err != nil {
-		return err
-	}
+	defer func() {
+		_, teardownErr := c.TeardownTest(context.Background(), &pb.TeardownTestRequest{
+			SessionID: sessionID,
+			Stats:     false,
+		})
+		if teardownErr != nil {
+			err = fmt.Errorf("failed to teardown connection: %v, root cause: %v", teardownErr, err)
+		}
+	}()
 
 	observers := make([]lfvobserver.Interface, 0)
 	liveObserver := observer.NewProperty(lfvobserver.TestExecutionStart{})
@@ -189,14 +200,6 @@ func (s Test) Run() error {
 		if !ok {
 			testsPassed = false
 		}
-	}
-
-	_, err = c.TeardownTest(context.Background(), &pb.TeardownTestRequest{
-		SessionID: sessionID,
-		Stats:     false,
-	})
-	if err != nil {
-		return err
 	}
 
 	liveObserver.Update(lfvobserver.TestExecutionEnd{})
