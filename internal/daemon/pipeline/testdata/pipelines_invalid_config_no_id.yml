@@ -1,0 +1,4 @@
+---
+
+- pipeline.id: main
+  path.config: "invalid/no_id.conf"

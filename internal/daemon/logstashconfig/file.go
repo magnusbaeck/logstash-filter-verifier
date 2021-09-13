@@ -84,7 +84,7 @@ func (r replaceInputsWalker) replaceInputs(c *astutil.Cursor) {
 
 	id, err := c.Plugin().ID()
 	if err != nil {
-		panic(err)
+		id = idgen.New()
 	}
 
 	var attrs []ast.Attribute
@@ -177,6 +177,10 @@ func (f *File) Validate(addMissingID bool) (inputs map[string]int, outputs map[s
 		if count != 1 {
 			return nil, nil, errors.Errorf("plugin id must be unique, but %q appeared %d times", id, count)
 		}
+	}
+
+	if addMissingID {
+		f.Body = []byte(f.config.String())
 	}
 
 	return v.inputs, v.outputs, nil

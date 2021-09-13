@@ -91,7 +91,10 @@ func FromFile(filename string) (Mocks, error) {
 type Mocks map[string]*ast.Plugin
 
 func (m Mocks) Walk(c *astutil.Cursor) {
-	id, _ := c.Plugin().ID()
+	id, err := c.Plugin().ID()
+	if err != nil {
+		return
+	}
 
 	if replacement, ok := m[id]; ok {
 		if replacement == nil {
