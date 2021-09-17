@@ -81,7 +81,7 @@ Many Linux distributions make some version of the Go compiler easily
 installable, but otherwise you can [download and install the latest
 version](https://golang.org/dl/). The source code is written to use
 [Go modules](https://github.com/golang/go/wiki/Modules) for dependency
-management and it seems you need at least Go 1.13.
+management. You need at least least Go 1.16.x.
 
 To just build an executable file you don't need anything but the Go
 compiler; just clone the Logstash Filter Verifier repository and run
