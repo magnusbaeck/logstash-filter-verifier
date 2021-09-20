@@ -462,6 +462,8 @@ func TestConvertBracketFields(t *testing.T) {
 			"type":                "test",
 			"[log][file][path]":   "/tmp/file.log",
 			"[log][origin][file]": "test.java",
+			"[log][special_field.name-with some+spice]": "value",
+			"[@metadata][field]":                        "value",
 		},
 		Codec: "json_lines",
 		InputLines: []string{
@@ -487,6 +489,10 @@ func TestConvertBracketFields(t *testing.T) {
 				"origin": map[string]interface{}{
 					"file": "test.java",
 				},
+				"special_field.name-with some+spice": "value",
+			},
+			"@metadata": map[string]interface{}{
+				"field": "value",
 			},
 		},
 		Codec: "json_lines",

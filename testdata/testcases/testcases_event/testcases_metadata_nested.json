@@ -1,0 +1,24 @@
+{
+  "ignore": [
+    "@timestamp"
+  ],
+  "input_plugin": "stdin",
+  "export_metadata": true,
+  "testcases": [
+    {
+      "fields": {
+        "@metadata": {
+          "testcase": "value"
+        }
+      },
+      "expected": [
+        {
+          "@metadata": {
+            "filter": "value",
+            "testcase": "value"
+          }
+        }
+      ]
+    }
+  ]
+}
