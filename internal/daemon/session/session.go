@@ -258,11 +258,7 @@ func createInput(pipelineFilename string, fieldsFilename string, inputPluginName
 
 // GetResults returns the returned events from Logstash.
 func (s *Session) GetResults() ([]string, error) {
-	results, err := s.logstashController.GetResults()
-	if err != nil {
-		return nil, err
-	}
-	return results, nil
+	return s.logstashController.GetResults()
 }
 
 // GetStats returns the statistics for a test suite.
