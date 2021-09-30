@@ -352,7 +352,7 @@ func (tcs *TestCaseSet) Compare(events []logstash.Event, diffCommand []string, l
 			return false, err
 		}
 		expectedFilePath := filepath.Join(resultDir, "expected")
-		if err = marshalToFile(sortedEvents[i], expectedFilePath); err != nil {
+		if err = marshalToFile(sortedExpectedEvents[i], expectedFilePath); err != nil {
 			return false, err
 		}
 
