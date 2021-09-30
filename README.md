@@ -15,7 +15,7 @@
 * [Test case file reference](#test-case-file-reference)
   * [Standalone mode / Logstash Filter Verifier before version 2.0](#standalone-mode--logstash-filter-verifier-before-version-20)
   * [Daemon mode](#daemon-mode)
-    * [Filter mock](#filter-mock)
+    * [Plugin mock](#plugin-mock)
 * [Migrating to the current test case file format](#migrating-to-the-current-test-case-file-format)
 * [Notes](#notes)
   * [The \-\-sockets flag](#the---sockets-flag)
@@ -81,7 +81,7 @@ Many Linux distributions make some version of the Go compiler easily
 installable, but otherwise you can [download and install the latest
 version](https://golang.org/dl/). The source code is written to use
 [Go modules](https://github.com/golang/go/wiki/Modules) for dependency
-management and it seems you need at least Go 1.13.
+management. You need at least least Go 1.16.x.
 
 To just build an executable file you don't need anything but the Go
 compiler; just clone the Logstash Filter Verifier repository and run
@@ -400,8 +400,8 @@ have been added:
   The pipeline configuration may consist of multiple pipelines, that might be
   linked ([pipeline to pipeline communication](https://www.elastic.co/guide/en/logstash/current/pipeline-to-pipeline.html))
   or independent pipelines.
-* **Filter mock**  
-  Filter mock allows to replace (or remove) filter plugins in the Logstash
+* **Plugin mock**  
+  Plugin mock allows to replace (or remove) plugins in the Logstash
   configuration under test, that do not work during or that would potentially
   not produce the expected results test execution. Examples for such filter
   plugins are mainly plugins, that perform some sort of call out to a third
@@ -413,6 +413,8 @@ have been added:
   these plugins can be replaced with mocks. In particular the [mutate](https://www.elastic.co/guide/en/logstash/current/plugins-filters-mutate.html)
   and the [translate](https://www.elastic.co/guide/en/logstash/current/plugins-filters-translate.html)
   filters have proven to be helpful as replacements.
+  An other use case for mocks is to replace pipeline input and output plugins
+  in order to test pipelines in isolation.
 
 In order to execute a test case in daemon mode, first the daemon needs to be
 started (e.g. in its own terminal or shell):
@@ -443,7 +445,7 @@ needs to be started beforehand):
 
     $ /usr/local/bin/logstash-fitler-verifier daemon run --pipeline /tmp/logstash-filter-verifier/testdata/basic_pipeline.yml --pipeline-base /tmp/logstash-filter-verifier/testdata/basic_pipeline --testcase-dir /tmp/logstash-filter-verifier/testdata/testcases/basic_pipeline --add-missing-id
 
-More examples (e.g. multiple pipelines and filter mock) can be found in the
+More examples (e.g. multiple pipelines and plugin mock) can be found in the
 `testcases/` folder of this repository.
 
 
@@ -521,12 +523,12 @@ Ignored / obsolete fields:
 * `codec`
 
 
-#### Filter mock
+#### Plugin mock
 
-The filter mock config file (yaml) consists of an array of filter mock elements.
-Each filter mock element consists for the plugin id that should be replaced as
+The plugin mock config file (yaml) consists of an array of plugin mock elements.
+Each plugin mock element consists for the plugin id that should be replaced as
 well as the Logstash configuration string that should be used as the
-replacement. This string might be empty. In this case, the mocked filter is just
+replacement. This string might be empty. In this case, the mocked plugin is just
 removed from the Logstash configuration.
 
 Example:
@@ -534,7 +536,7 @@ Example:
 ```yaml
 - id: removeme
 - id: mockme
-  filter: |
+  mock: |
     mutate {
       replace => {
         "[message]" => "mocked"
@@ -542,7 +544,7 @@ Example:
     }
 ```
 
-Given the above filter mock configuration, the plugin with the ID `removeme` is
+Given the above plugin mock configuration, the plugin with the ID `removeme` is
 removed from the Logstash configuration. The plugin with the ID `mockme` is
 replaced with the given Logstash configuration.
 

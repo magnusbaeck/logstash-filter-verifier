@@ -135,7 +135,7 @@ func (c *Controller) GetResults() ([]string, error) {
 
 	err := c.stateMachine.waitForState(stateReadyForTest)
 	if err != nil {
-		return nil, err
+		return c.receivedEvents.get(), err
 	}
 
 	// The last event might be sent through multiple outputs, therefore we give

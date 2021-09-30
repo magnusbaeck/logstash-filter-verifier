@@ -48,56 +48,6 @@ func TestNew(t *testing.T) {
 	}
 }
 
-func TestValidate(t *testing.T) {
-	wd, _ := os.Getwd()
-
-	cases := []struct {
-		name     string
-		pipeline string
-		basePath string
-
-		wantValidateErr bool
-	}{
-		{
-			name:     "success basic pipeline",
-			pipeline: "testdata/pipelines_basic.yml",
-			basePath: "testdata/",
-		},
-		{
-			name:     "success basic pipeline with absolute base path",
-			pipeline: "testdata/pipelines_basic_base_path.yml",
-			basePath: wd,
-		},
-		{
-			name:     "error invalid config",
-			pipeline: "testdata/pipelines_invalid_config.yml",
-			basePath: "testdata/",
-
-			wantValidateErr: true,
-		},
-		{
-			name:     "success basic pipeline with nested keys",
-			pipeline: "testdata/pipelines_basic_nested_keys.yml",
-			basePath: "testdata/",
-		},
-	}
-
-	for _, test := range cases {
-		t.Run(test.name, func(t *testing.T) {
-			is := is.New(t)
-
-			a, err := pipeline.New(test.pipeline, test.basePath)
-			is.NoErr(err)
-
-			err = a.Validate(false)
-			is.True(err != nil == test.wantValidateErr) // Validate error
-
-			err = a.Validate(true)
-			is.NoErr(err)
-		})
-	}
-}
-
 func TestZip(t *testing.T) {
 	wd, _ := os.Getwd()
 
@@ -131,6 +81,20 @@ func TestZip(t *testing.T) {
 			wantFiles: 2,
 		},
 		{
+			name:     "success basic pipeline dir name",
+			pipeline: "testdata/pipelines_basic_dir_name.yml",
+			basePath: "testdata/",
+
+			wantFiles: 2,
+		},
+		{
+			name:     "success basic pipeline with nested keys",
+			pipeline: "testdata/pipelines_basic_nested_keys.yml",
+			basePath: "testdata/",
+
+			wantFiles: 2,
+		},
+		{
 			name:     "success advanced pipeline",
 			pipeline: "testdata/pipelines_advanced.yml",
 			basePath: "testdata/",
@@ -151,6 +115,27 @@ func TestZip(t *testing.T) {
 
 			wantNewArchiveErr: true,
 		},
+		{
+			name:     "error invalid config",
+			pipeline: "testdata/pipelines_invalid_config_no_id.yml",
+			basePath: "testdata/",
+
+			wantZipBytesErr: true,
+		},
+		{
+			name:     "error invalid config - no input",
+			pipeline: "testdata/pipelines_invalid_config_no_input.yml",
+			basePath: "testdata/",
+
+			wantZipBytesErr: true,
+		},
+		{
+			name:     "error invalid config - no output",
+			pipeline: "testdata/pipelines_invalid_config_no_output.yml",
+			basePath: "testdata/",
+
+			wantZipBytesErr: true,
+		},
 	}
 
 	for _, test := range cases {
@@ -164,7 +149,7 @@ func TestZip(t *testing.T) {
 				return
 			}
 
-			b, err := a.ZipWithPreprocessor(pipeline.NoopPreprocessor)
+			b, _, err := a.ZipWithPreprocessor(false, pipeline.NoopPreprocessor)
 			is.True(err != nil == test.wantZipBytesErr) // Zip error
 
 			if test.wantZipBytesErr {

@@ -16,7 +16,7 @@ func makeDaemonRunCmd() *cobra.Command {
 		RunE:  runDaemonRun,
 	}
 
-	cmd.Flags().StringP("pipeline", "p", "", "location of the pipelines.yml file to be processed")
+	cmd.Flags().StringP("pipeline", "p", "", "location of the pipelines.yml file to be processed (e.g. /etc/logstash/pipelines.yml)")
 	_ = viper.BindPFlag("pipeline", cmd.Flags().Lookup("pipeline"))
 	cmd.Flags().String("pipeline-base", "", "base directory for relative paths in the pipelines.yml")
 	_ = viper.BindPFlag("pipeline-base", cmd.Flags().Lookup("pipeline-base"))
@@ -24,8 +24,8 @@ func makeDaemonRunCmd() *cobra.Command {
 	_ = viper.BindPFlag("logstash-config", cmd.Flags().Lookup("logstash-config"))
 	cmd.Flags().StringP("testcase-dir", "t", "", "directory containing the test case files")
 	_ = viper.BindPFlag("testcase-dir", cmd.Flags().Lookup("testcase-dir"))
-	cmd.Flags().String("filter-mock", "", "path to a yaml file containing the definition for the filter mocks.")
-	_ = viper.BindPFlag("filter-mock", cmd.Flags().Lookup("filter-mock"))
+	cmd.Flags().String("plugin-mock", "", "path to a yaml file containing the definition for the plugin mocks.")
+	_ = viper.BindPFlag("plugin-mock", cmd.Flags().Lookup("plugin-mock"))
 	cmd.Flags().Bool("debug", false, "enable debug mode; e.g. prevents stripping '__lfv' data from Logstash events")
 	_ = viper.BindPFlag("debug", cmd.Flags().Lookup("debug"))
 	cmd.Flags().String("metadata-key", "@metadata", "Key under which the content of the `@metadata` field is exposed in the returned events.")
@@ -43,7 +43,7 @@ func runDaemonRun(_ *cobra.Command, args []string) error {
 	pipelineBase := viper.GetString("pipeline-base")
 	logstashConfig := viper.GetString("logstash-config")
 	testcaseDir := viper.GetString("testcase-dir")
-	filterMock := viper.GetString("filter-mock")
+	pluginMock := viper.GetString("plugin-mock")
 	debug := viper.GetBool("debug")
 	metadataKey := viper.GetString("metadata-key")
 	addMissingID := viper.GetBool("add-missing-id")
@@ -52,7 +52,7 @@ func runDaemonRun(_ *cobra.Command, args []string) error {
 		return errors.New("--pipeline and --logstash-config flags are mutual exclusive")
 	}
 
-	t, err := run.New(socket, log, pipeline, pipelineBase, logstashConfig, testcaseDir, filterMock, metadataKey, debug, addMissingID)
+	t, err := run.New(socket, log, pipeline, pipelineBase, logstashConfig, testcaseDir, pluginMock, metadataKey, debug, addMissingID)
 	if err != nil {
 		return err
 	}

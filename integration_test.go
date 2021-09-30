@@ -77,7 +77,7 @@ func TestIntegration(t *testing.T) {
 	version, err := standalonelogstash.DetectVersion(logstashPath, os.Environ())
 	is.NoErr(err)
 
-	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 120*time.Second)
 	defer cancel()
 
 	go func() {
@@ -117,7 +117,7 @@ func TestIntegration(t *testing.T) {
 		withoutPipeline bool
 		addMissingID    bool
 
-		filterMock string
+		pluginMock string
 	}{
 		{
 			name:         "basic_pipeline",
@@ -157,7 +157,12 @@ func TestIntegration(t *testing.T) {
 		{
 			name: "filtermock",
 
-			filterMock: "testdata/mocks/filtermock.yml",
+			pluginMock: "testdata/mocks/filtermock.yml",
+		},
+		{
+			name: "inputoutputmock",
+
+			pluginMock: "testdata/mocks/inputoutputmock.yml",
 		},
 		{
 			name: "special_chars",
@@ -195,7 +200,7 @@ func TestIntegration(t *testing.T) {
 				pipelineBaseDir,
 				logstashConfig,
 				"testdata/testcases/"+tc.name,
-				tc.filterMock,
+				tc.pluginMock,
 				"@metadata",
 				tc.debug,
 				tc.addMissingID,

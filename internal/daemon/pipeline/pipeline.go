@@ -13,8 +13,8 @@ import (
 	"github.com/pkg/errors"
 	"gopkg.in/yaml.v2"
 
-	"github.com/magnusbaeck/logstash-filter-verifier/v2/internal/daemon/filtermock"
 	"github.com/magnusbaeck/logstash-filter-verifier/v2/internal/daemon/logstashconfig"
+	"github.com/magnusbaeck/logstash-filter-verifier/v2/internal/daemon/pluginmock"
 )
 
 type Archive struct {
@@ -74,28 +74,69 @@ func processNestedKeys(pipelines Pipelines) {
 	}
 }
 
-func (a Archive) Validate(addMissingID bool) error {
-	var inputs, outputs int
+func (a Archive) ZipWithPreprocessor(addMissingID bool, preprocess func([]byte) ([]byte, error)) (data []byte, inputs map[string]int, err error) {
+	buf := new(bytes.Buffer)
+	w := zip.NewWriter(buf)
+
+	f, err := w.Create("pipelines.yml")
+	if err != nil {
+		return nil, nil, err
+	}
+	body, err := ioutil.ReadFile(a.File)
+	if err != nil {
+		return nil, nil, err
+	}
+	_, err = f.Write(body)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	inputs = map[string]int{}
+	outputs := map[string]int{}
 	for _, pipeline := range a.Pipelines {
-		files, err := doublestar.Glob(filepath.Join(a.BasePath, pipeline.Config))
+		if strings.HasSuffix(pipeline.Config, "/") {
+			pipeline.Config += "*"
+		}
+		configFilepath := filepath.Join(a.BasePath, pipeline.Config)
+		if filepath.IsAbs(pipeline.Config) {
+			configFilepath = pipeline.Config
+		}
+		files, err := doublestar.Glob(configFilepath)
 		if err != nil {
-			return err
+			return nil, nil, err
 		}
 		for _, file := range files {
+			fi, err := os.Stat(file)
+			if err != nil {
+				return nil, nil, err
+			}
+			if fi.IsDir() {
+				continue
+			}
 			var relFile string
 			if path.IsAbs(a.BasePath) {
 				relFile = strings.TrimPrefix(file, a.BasePath)
 			} else {
 				cwd, err := os.Getwd()
 				if err != nil {
-					return err
+					return nil, nil, err
 				}
 				relFile = strings.TrimPrefix(file, filepath.Join(cwd, a.BasePath))
 			}
 
+			f, err := w.Create(relFile)
+			if err != nil {
+				return nil, nil, err
+			}
+
 			body, err := ioutil.ReadFile(file)
 			if err != nil {
-				return err
+				return nil, nil, err
+			}
+
+			body, err = preprocess(body)
+			if err != nil {
+				return nil, nil, err
 			}
 
 			configFile := logstashconfig.File{
@@ -105,89 +146,40 @@ func (a Archive) Validate(addMissingID bool) error {
 
 			in, out, err := configFile.Validate(addMissingID)
 			if err != nil {
-				return err
-			}
-			inputs += in
-			outputs += out
-		}
-	}
-
-	if inputs == 0 || outputs == 0 {
-		return errors.Errorf("expect the Logstash config to have at least 1 input and 1 output, got %d inputs and %d outputs", inputs, outputs)
-	}
-
-	return nil
-}
-
-func (a Archive) ZipWithPreprocessor(preprocess func([]byte) ([]byte, error)) ([]byte, error) {
-	buf := new(bytes.Buffer)
-	w := zip.NewWriter(buf)
-
-	f, err := w.Create("pipelines.yml")
-	if err != nil {
-		return nil, err
-	}
-	body, err := ioutil.ReadFile(a.File)
-	if err != nil {
-		return nil, err
-	}
-	_, err = f.Write(body)
-	if err != nil {
-		return nil, err
-	}
-
-	for _, pipeline := range a.Pipelines {
-		files, err := doublestar.Glob(filepath.Join(a.BasePath, pipeline.Config))
-		if err != nil {
-			return nil, err
-		}
-		for _, file := range files {
-			var relFile string
-			if path.IsAbs(a.BasePath) {
-				relFile = strings.TrimPrefix(file, a.BasePath)
-			} else {
-				cwd, err := os.Getwd()
-				if err != nil {
-					return nil, err
-				}
-				relFile = strings.TrimPrefix(file, filepath.Join(cwd, a.BasePath))
+				return nil, nil, err
 			}
 
-			f, err := w.Create(relFile)
-			if err != nil {
-				return nil, err
+			for id, count := range in {
+				inputs[id] += count
 			}
-
-			body, err := ioutil.ReadFile(file)
-			if err != nil {
-				return nil, err
-			}
-
-			body, err = preprocess(body)
-			if err != nil {
-				return nil, err
+			for id, count := range out {
+				outputs[id] += count
 			}
 
 			_, err = f.Write(body)
 			if err != nil {
-				return nil, err
+				return nil, nil, err
 			}
 		}
 	}
 
 	err = w.Close()
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
-	return buf.Bytes(), nil
+	if len(inputs) == 0 || len(outputs) == 0 {
+		return nil, nil, errors.Errorf("expect the Logstash config to have at least 1 input and 1 output, got %d inputs and %d outputs", len(inputs), len(outputs))
+	}
+
+	return buf.Bytes(), inputs, nil
 }
 
 func NoopPreprocessor(body []byte) ([]byte, error) {
 	return body, nil
 }
 
-func ApplyMocksPreprocessor(m filtermock.Mocks) func(body []byte) ([]byte, error) {
+func ApplyMocksPreprocessor(m pluginmock.Mocks) func(body []byte) ([]byte, error) {
 	return func(body []byte) ([]byte, error) {
 		configFile := logstashconfig.File{
 			Body: body,

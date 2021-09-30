@@ -62,6 +62,8 @@ func serializeAsLogstashLiteral(k string, v interface{}) ([]string, []string, er
 			return []string{k}, []string{fmt.Sprintf("%v", v)}, nil
 		}
 		return []string{k}, []string{fmt.Sprintf("%f", v)}, nil
+	case int:
+		return []string{k}, []string{fmt.Sprintf("%d", v)}, nil
 	case string:
 		return []string{k}, []string{fmt.Sprintf("%q", v)}, nil
 	case []interface{}:

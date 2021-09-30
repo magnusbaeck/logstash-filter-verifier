@@ -17,7 +17,7 @@ OS_NAME := $(shell uname -s)
 endif
 
 # The Docker image to use when building release images.
-GOLANG_DOCKER_IMAGE := golang:1.16.7
+GOLANG_DOCKER_IMAGE := golang:1.16.8
 
 INSTALL := install
 

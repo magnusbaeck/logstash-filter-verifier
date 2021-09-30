@@ -83,6 +83,14 @@ func TestLogstashHash(t *testing.T) {
 			`{ "a" => 1234567890.123000 }`,
 			nil,
 		},
+		// Integers should work as well.
+		{
+			FieldSet{
+				"a": 1234,
+			},
+			`{ "a" => 1234 }`,
+			nil,
+		},
 		// Single string value is okay
 		{
 			FieldSet{

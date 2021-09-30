@@ -116,7 +116,8 @@ func extractPipelines(in string) []string {
 	}
 	pipelines := strings.Split(in[1:len(in)-1], ",")
 	for i := range pipelines {
-		pipelines[i] = strings.Trim(pipelines[i], " :")
+		pipelines[i] = strings.TrimLeft(pipelines[i], " :")
+		pipelines[i] = strings.Trim(pipelines[i], `"`)
 	}
 	return pipelines
 }

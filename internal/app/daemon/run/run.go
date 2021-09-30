@@ -3,10 +3,10 @@ package run
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"net"
 	"os"
-	"path"
 	"path/filepath"
 	"sort"
 	"strings"
@@ -22,8 +22,8 @@ import (
 	"gopkg.in/yaml.v2"
 
 	pb "github.com/magnusbaeck/logstash-filter-verifier/v2/internal/daemon/api/grpc"
-	"github.com/magnusbaeck/logstash-filter-verifier/v2/internal/daemon/filtermock"
 	"github.com/magnusbaeck/logstash-filter-verifier/v2/internal/daemon/pipeline"
+	"github.com/magnusbaeck/logstash-filter-verifier/v2/internal/daemon/pluginmock"
 	"github.com/magnusbaeck/logstash-filter-verifier/v2/internal/logging"
 	"github.com/magnusbaeck/logstash-filter-verifier/v2/internal/logstash"
 	lfvobserver "github.com/magnusbaeck/logstash-filter-verifier/v2/internal/observer"
@@ -36,7 +36,7 @@ type Test struct {
 	pipelineBase   string
 	logstashConfig string
 	testcasePath   string
-	filterMock     string
+	pluginMock     string
 	metadataKey    string
 	debug          bool
 	addMissingID   bool
@@ -44,8 +44,15 @@ type Test struct {
 	log logging.Logger
 }
 
-func New(socket string, log logging.Logger, pipeline, pipelineBase, logstashConfig, testcasePath, filterMock, metadataKey string, debug, addMissingID bool) (Test, error) {
-	if !path.IsAbs(pipelineBase) {
+func New(socket string, log logging.Logger, pipeline, pipelineBase, logstashConfig, testcasePath, pluginMock, metadataKey string, debug, addMissingID bool) (Test, error) {
+	if pipelineBase == "" {
+		absPipeline, err := filepath.Abs(pipeline)
+		if err != nil {
+			return Test{}, err
+		}
+		pipelineBase = filepath.Dir(absPipeline)
+	}
+	if !filepath.IsAbs(pipelineBase) {
 		cwd, err := os.Getwd()
 		if err != nil {
 			return Test{}, err
@@ -58,7 +65,7 @@ func New(socket string, log logging.Logger, pipeline, pipelineBase, logstashConf
 		pipelineBase:   pipelineBase,
 		logstashConfig: logstashConfig,
 		testcasePath:   testcasePath,
-		filterMock:     filterMock,
+		pluginMock:     pluginMock,
 		metadataKey:    metadataKey,
 		debug:          debug,
 		addMissingID:   addMissingID,
@@ -66,7 +73,7 @@ func New(socket string, log logging.Logger, pipeline, pipelineBase, logstashConf
 	}, nil
 }
 
-func (s Test) Run() error {
+func (s Test) Run() (err error) {
 	if s.logstashConfig != "" {
 		pipelineFile, err := s.createImplicitPipeline()
 		if err != nil {
@@ -83,13 +90,7 @@ func (s Test) Run() error {
 		return err
 	}
 
-	// TODO: ensure, that IDs are also unique for the whole set of pipelines
-	err = a.Validate(s.addMissingID)
-	if err != nil {
-		return err
-	}
-
-	m, err := filtermock.FromFile(s.filterMock)
+	m, err := pluginmock.FromFile(s.pluginMock)
 	if err != nil {
 		return err
 	}
@@ -99,9 +100,20 @@ func (s Test) Run() error {
 		preprocessor = pipeline.ApplyMocksPreprocessor(m)
 	}
 
-	b, err := a.ZipWithPreprocessor(preprocessor)
+	// TODO: ensure, that IDs are also unique for the whole set of pipelines
+	b, inputs, err := a.ZipWithPreprocessor(s.addMissingID, preprocessor)
 	if err != nil {
 		return err
+	}
+
+	tests, err := testcase.DiscoverTests(s.testcasePath)
+	if err != nil {
+		return err
+	}
+	for _, test := range tests {
+		if _, ok := inputs[test.InputPlugin]; !ok {
+			return errors.Errorf("input plugin %q defined in test case but not present in Logstash config", test.InputPlugin)
+		}
 	}
 
 	s.log.Debugf("socket to daemon %q", s.socket)
@@ -128,10 +140,15 @@ func (s Test) Run() error {
 	}
 	sessionID := result.SessionID
 
-	tests, err := testcase.DiscoverTests(s.testcasePath)
-	if err != nil {
-		return err
-	}
+	defer func() {
+		_, teardownErr := c.TeardownTest(context.Background(), &pb.TeardownTestRequest{
+			SessionID: sessionID,
+			Stats:     false,
+		})
+		if teardownErr != nil {
+			err = fmt.Errorf("failed to teardown connection: %v, root cause: %v", teardownErr, err)
+		}
+	}()
 
 	observers := make([]lfvobserver.Interface, 0)
 	liveObserver := observer.NewProperty(lfvobserver.TestExecutionStart{})
@@ -183,14 +200,6 @@ func (s Test) Run() error {
 		if !ok {
 			testsPassed = false
 		}
-	}
-
-	_, err = c.TeardownTest(context.Background(), &pb.TeardownTestRequest{
-		SessionID: sessionID,
-		Stats:     false,
-	})
-	if err != nil {
-		return err
 	}
 
 	liveObserver.Update(lfvobserver.TestExecutionEnd{})

@@ -87,7 +87,9 @@ func (s *Session) setupTest(pipelines pipeline.Pipelines, configFiles []logstash
 		if err != nil {
 			return err
 		}
-		s.inputPluginCodecs = inputCodecs
+		for id, codec := range inputCodecs {
+			s.inputPluginCodecs[id] = codec
+		}
 
 		outputs, err := configFile.ReplaceOutputs()
 		if err != nil {
@@ -256,11 +258,7 @@ func createInput(pipelineFilename string, fieldsFilename string, inputPluginName
 
 // GetResults returns the returned events from Logstash.
 func (s *Session) GetResults() ([]string, error) {
-	results, err := s.logstashController.GetResults()
-	if err != nil {
-		return nil, err
-	}
-	return results, nil
+	return s.logstashController.GetResults()
 }
 
 // GetStats returns the statistics for a test suite.

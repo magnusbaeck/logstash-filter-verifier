@@ -7,7 +7,7 @@ require (
 	github.com/ahmetb/govvv v0.3.0
 	github.com/axw/gocov v1.0.0
 	github.com/bmatcuk/doublestar/v2 v2.0.4
-	github.com/breml/logstash-config v0.4.5
+	github.com/breml/logstash-config v0.5.3
 	github.com/go-playground/overalls v0.0.0-20191218162659-7df9f728c018
 	github.com/golang/protobuf v1.5.2
 	github.com/hashicorp/packer v1.4.4
@@ -24,16 +24,13 @@ require (
 	github.com/mikefarah/yaml/v2 v2.4.0
 	github.com/op/go-logging v0.0.0-20160315200505-970db520ece7
 	github.com/pkg/errors v0.9.1
-	github.com/spf13/cobra v1.1.1
-	github.com/spf13/viper v1.7.1
-	github.com/stretchr/testify v1.5.1
+	github.com/spf13/cobra v1.2.1
+	github.com/spf13/viper v1.8.1
+	github.com/stretchr/testify v1.7.0
 	github.com/tidwall/gjson v1.6.8
 	github.com/tidwall/sjson v1.1.5
 	github.com/yookoala/realpath v1.0.0 // indirect
-	golang.org/x/mod v0.4.2 // indirect
-	golang.org/x/sys v0.0.0-20210124154548-22da62e12c0c // indirect
-	golang.org/x/xerrors v0.0.0-20200804184101-5ec99f83aff1 // indirect
-	google.golang.org/grpc v1.34.0
+	google.golang.org/grpc v1.38.0
 	google.golang.org/grpc/cmd/protoc-gen-go-grpc v1.0.1
 	google.golang.org/protobuf v1.26.0
 	gopkg.in/VividCortex/ewma.v1 v1.1.1 // indirect
@@ -43,5 +40,5 @@ require (
 	gopkg.in/mattn/go-colorable.v0 v0.1.0 // indirect
 	gopkg.in/mattn/go-isatty.v0 v0.0.4 // indirect
 	gopkg.in/mattn/go-runewidth.v0 v0.0.4 // indirect
-	gopkg.in/yaml.v2 v2.2.8
+	gopkg.in/yaml.v2 v2.4.0
 )
