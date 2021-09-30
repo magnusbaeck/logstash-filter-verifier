@@ -309,12 +309,12 @@ func (tcs *TestCaseSet) Compare(events []logstash.Event, diffCommand []string, l
 		return string(iText) < string(jText)
 	})
 
-	sortedEvents := make([]logstash.Event, len(tcs.ExpectedEvents))
-	copy(sortedEvents, tcs.ExpectedEvents)
+	sortedExpectedEvents := make([]logstash.Event, len(tcs.ExpectedEvents))
+	copy(sortedExpectedEvents, tcs.ExpectedEvents)
 
-	sort.Slice(sortedEvents, func(i, j int) bool {
-		iText, _ := json.Marshal(sortedEvents[i])
-		jText, _ := json.Marshal(sortedEvents[j])
+	sort.Slice(sortedExpectedEvents, func(i, j int) bool {
+		iText, _ := json.Marshal(sortedExpectedEvents[i])
+		jText, _ := json.Marshal(sortedExpectedEvents[j])
 		return string(iText) < string(jText)
 	})
 
