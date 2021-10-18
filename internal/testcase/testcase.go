@@ -273,10 +273,14 @@ func (tcs *TestCaseSet) Compare(events []logstash.Event, diffCommand []string, l
 	// Don't even attempt to do a deep comparison of the event
 	// lists unless their lengths are equal.
 	if len(tcs.ExpectedEvents) != len(events) {
+		eventsJSON, err := json.MarshalIndent(events, "", "  ")
+		if err != nil {
+			return false, err
+		}
 		comparisonResult := lfvobserver.ComparisonResult{
 			Status:     false,
 			Name:       "Compare actual event with expected event",
-			Explain:    fmt.Sprintf("Expected %d event(s), got %d instead.", len(tcs.ExpectedEvents), len(events)),
+			Explain:    fmt.Sprintf("Expected %d event(s), got %d instead.\nReceived events: %s", len(tcs.ExpectedEvents), len(events), string(eventsJSON)),
 			Path:       filepath.Base(tcs.File),
 			EventIndex: 0,
 		}
