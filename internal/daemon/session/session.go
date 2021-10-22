@@ -171,9 +171,6 @@ func (s *Session) ExecuteTest(inputPlugin string, inputLines []string, inEvents 
 	inputPluginName := fmt.Sprintf("%s_%s_%s", "__lfv_input", s.id, inputPlugin)
 	inputCodec, ok := s.inputPluginCodecs[inputPlugin]
 	if !ok {
-		if codec == "" {
-			codec = "plain"
-		}
 		inputCodec = fmt.Sprintf("codec => %s", codec)
 	}
 

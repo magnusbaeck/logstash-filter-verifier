@@ -9,7 +9,7 @@
     {
       "input": [
         "normal input",
-        "split this input|into multiple events",
+        "split this input\ninto multiple events",
         "normal input again"
       ],
       "expected": [
