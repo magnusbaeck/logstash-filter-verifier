@@ -1,0 +1,27 @@
+ignore:
+  - "@timestamp"
+input_plugin: edn_lines
+testcases:
+  - input:
+      - |
+        {:test "foo", :value 0}
+        {:test "bar", :value 1}
+        {:test "baz", :value 2}
+        {:test "foo2", :value 3}
+    expected:
+      - input_codec: edn_lines
+        test: "foo"
+        tags: [ "input_codec_edn_lines" ]
+        value: 0
+      - input_codec: "edn_lines"
+        test: "bar"
+        tags: [ "input_codec_edn_lines" ]
+        value: 1
+      - input_codec: "edn_lines"
+        test: "baz"
+        tags: [ "input_codec_edn_lines" ]
+        value: 2
+      - input_codec: "edn_lines"
+        test: "foo2"
+        tags: [ "input_codec_edn_lines" ]
+        value: 3
