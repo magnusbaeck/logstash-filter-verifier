@@ -188,6 +188,9 @@ func TestIntegration(t *testing.T) {
 		{
 			name: "issue_166",
 		},
+		{
+			name: "issue_147",
+		},
 	}
 
 	for _, tc := range cases {
