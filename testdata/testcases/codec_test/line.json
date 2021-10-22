@@ -6,8 +6,8 @@
   "testcases": [
     {
       "input": [
-        "test case message\n",
-        "test case message 2\n"
+        "test case message",
+        "test case message 2"
       ],
       "expected": [
         {

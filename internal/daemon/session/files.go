@@ -21,13 +21,17 @@ output {
 
 const inputGenerator = `
 input {
-  generator {
-    lines => [
-      {{ .InputLines }}
-    ]
+  file {
+    id => '__lfv_file_input'
+    path => "{{ .InputFilename }}"
     {{ .InputCodec }}
-    count => 1
-    threads => 1
+    mode => "read"
+    file_completed_action => "log"
+    file_completed_log_path => "{{ .InputFilename }}.log"
+    exit_after_read => true
+    {{ if .RandomDelimiter }}
+    delimiter => "xyTY1zS2mwJ9xuFCIkrPucLtiSuYIkXAmgCXB142"
+    {{ end }}
   }
 }
 
@@ -43,7 +47,7 @@ filter {
   mutate {
     # Remove fields "host", "sequence" and optionally "message", which are
     # automatically created by the generator input.
-    remove_field => [ "host", "sequence" ]
+    remove_field => [ "host", "path", "[@metadata][host]", "[@metadata][path]" ]
   }
 
   translate {

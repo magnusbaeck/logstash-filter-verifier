@@ -6,11 +6,10 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strconv"
 	"strings"
 
-	"github.com/breml/logstash-config/ast"
-	"github.com/breml/logstash-config/ast/astutil"
 	"github.com/pkg/errors"
 
 	"github.com/magnusbaeck/logstash-filter-verifier/v2/internal/daemon/idgen"
@@ -182,8 +181,18 @@ func (s *Session) ExecuteTest(inputPlugin string, inputLines []string, inEvents 
 		return err
 	}
 
+	input := []byte(strings.Join(inputLines, "\n"))
+	if len(input) == 0 || input[len(input)-1] != '\n' {
+		input = append(input, byte('\n'))
+	}
+	inputFilename := filepath.Join(inputDir, "input.lines")
+	err = os.WriteFile(inputFilename, input, 0600)
+	if err != nil {
+		return err
+	}
+
 	pipelineFilename := filepath.Join(inputDir, "input.conf")
-	err = createInput(pipelineFilename, fieldsFilename, inputPluginName, inputLines, inputCodec)
+	err = createInput(pipelineFilename, fieldsFilename, inputPluginName, inputFilename, inputCodec)
 	if err != nil {
 		return err
 	}
@@ -225,26 +234,25 @@ func prepareFields(fieldsFilename string, inEvents []map[string]interface{}) err
 	return nil
 }
 
-func createInput(pipelineFilename string, fieldsFilename string, inputPluginName string, inputLines []string, inputCodec string) error {
-	for i := range inputLines {
-		var err error
-		inputLine, err := astutil.Quote(inputLines[i], ast.DoubleQuoted)
-		if err != nil {
-			inputLine = astutil.QuoteWithEscape(inputLines[i], ast.SingleQuoted)
-		}
-		inputLines[i] = inputLine
-	}
+var delimitedCodecs = regexp.MustCompile("codec => ((edn|json)_lines|graphite|(multi)?line)")
 
+func createInput(pipelineFilename string, fieldsFilename string, inputPluginName string, inputFilename string, inputCodec string) error {
+	randomDelimiter := false
+	if delimitedCodecs.MatchString(inputCodec) {
+		randomDelimiter = true
+	}
 	templateData := struct {
 		InputPluginName          string
-		InputLines               string
+		InputFilename            string
 		InputCodec               string
+		RandomDelimiter          bool
 		FieldsFilename           string
 		DummyEventInputIndicator string
 	}{
 		InputPluginName:          inputPluginName,
-		InputLines:               strings.Join(inputLines, ", "),
+		InputFilename:            inputFilename,
 		InputCodec:               inputCodec,
+		RandomDelimiter:          randomDelimiter,
 		FieldsFilename:           fieldsFilename,
 		DummyEventInputIndicator: testcase.DummyEventInputIndicator,
 	}

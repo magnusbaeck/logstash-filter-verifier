@@ -6,7 +6,7 @@
   "testcases": [
     {
       "input": [
-        "message with \r \n \t \\ (special characters)",
+        "message with \t \\ (special characters)",
         "message with only \" (double quote)",
         "message with only ' (single quote)",
         "message with \" and ' (double and single quote)",
@@ -16,7 +16,7 @@
       ],
       "expected": [
         {
-          "message": "message with \r \n \t \\ (special characters)"
+          "message": "message with \t \\ (special characters)"
         },
         {
           "message": "message with only \" (double quote)"
@@ -25,7 +25,7 @@
           "message": "message with only ' (single quote)"
         },
         {
-          "message": "message with \" and \\' (double and single quote)"
+          "message": "message with \" and ' (double and single quote)"
         },
         {
           "message": "message with \\\" and ' (escaped double and single quote)"
