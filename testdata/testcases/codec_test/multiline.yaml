@@ -1,0 +1,22 @@
+# issue #147
+input_plugin: "multiline"
+fields:
+  test: true
+ignore:
+  - "@timestamp"
+testcases:
+  - input:
+      - |
+        This is message 1 and
+          this is message 1 also
+        This is message 2 and
+          this is message 2 also
+    expected:
+      - input_codec: "multiline"
+        message: "This is message 1 and\n  this is message 1 also"
+        tags: ["multiline", "input_codec_multiline"]
+        test: true
+      - input_codec: "multiline"
+        message: "This is message 2 and\n  this is message 2 also"
+        tags: ["multiline", "input_codec_multiline"]
+        test: true

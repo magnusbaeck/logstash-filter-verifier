@@ -176,7 +176,7 @@ func (s *Session) ExecuteTest(inputPlugin string, inputLines []string, inEvents 
 	}
 
 	fieldsFilename := filepath.Join(inputDir, "fields.json")
-	err = prepareFields(fieldsFilename, inEvents)
+	hasFields, err := prepareFields(fieldsFilename, inEvents)
 	if err != nil {
 		return err
 	}
@@ -192,7 +192,7 @@ func (s *Session) ExecuteTest(inputPlugin string, inputLines []string, inEvents 
 	}
 
 	pipelineFilename := filepath.Join(inputDir, "input.conf")
-	err = createInput(pipelineFilename, fieldsFilename, inputPluginName, inputFilename, inputCodec)
+	err = createInput(pipelineFilename, hasFields, fieldsFilename, inputPluginName, inputFilename, inputCodec)
 	if err != nil {
 		return err
 	}
@@ -214,29 +214,34 @@ func (s *Session) ExecuteTest(inputPlugin string, inputLines []string, inEvents 
 	return nil
 }
 
-func prepareFields(fieldsFilename string, inEvents []map[string]interface{}) error {
+func prepareFields(fieldsFilename string, inEvents []map[string]interface{}) (bool, error) {
+	hasFields := false
+
 	fields := make(map[string]map[string]interface{})
 
 	for i, event := range inEvents {
 		id := fmt.Sprintf("%d", i)
 		fields[id] = event
+		if len(event) > 0 {
+			hasFields = true
+		}
 	}
 
 	bfields, err := json.Marshal(fields)
 	if err != nil {
-		return err
+		return false, err
 	}
 	err = ioutil.WriteFile(fieldsFilename, bfields, 0600)
 	if err != nil {
-		return err
+		return false, err
 	}
 
-	return nil
+	return hasFields, nil
 }
 
 var delimitedCodecs = regexp.MustCompile("codec => ((edn|json)_lines|graphite|(multi)?line)")
 
-func createInput(pipelineFilename string, fieldsFilename string, inputPluginName string, inputFilename string, inputCodec string) error {
+func createInput(pipelineFilename string, hasFields bool, fieldsFilename string, inputPluginName string, inputFilename string, inputCodec string) error {
 	randomDelimiter := false
 	if delimitedCodecs.MatchString(inputCodec) {
 		randomDelimiter = true
@@ -246,6 +251,7 @@ func createInput(pipelineFilename string, fieldsFilename string, inputPluginName
 		InputFilename            string
 		InputCodec               string
 		RandomDelimiter          bool
+		HasFields                bool
 		FieldsFilename           string
 		DummyEventInputIndicator string
 	}{
@@ -253,6 +259,7 @@ func createInput(pipelineFilename string, fieldsFilename string, inputPluginName
 		InputFilename:            inputFilename,
 		InputCodec:               inputCodec,
 		RandomDelimiter:          randomDelimiter,
+		HasFields:                hasFields,
 		FieldsFilename:           fieldsFilename,
 		DummyEventInputIndicator: testcase.DummyEventInputIndicator,
 	}

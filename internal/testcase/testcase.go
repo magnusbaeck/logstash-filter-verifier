@@ -207,7 +207,14 @@ func New(reader io.Reader, configType string) (*TestCaseSet, error) {
 
 	tcs.descriptions = make([]string, len(tcs.ExpectedEvents))
 
-	for range tcs.InputLines {
+	maxEvents := len(tcs.ExpectedEvents)
+	for _, tc := range tcs.TestCases {
+		maxEvents += len(tc.ExpectedEvents)
+	}
+	if len(tcs.InputLines) > maxEvents {
+		maxEvents = len(tcs.InputLines)
+	}
+	for i := 0; i < maxEvents; i++ {
 		tcs.Events = append(tcs.Events, tcs.InputFields.Clone())
 	}
 

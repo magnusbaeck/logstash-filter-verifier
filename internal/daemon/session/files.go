@@ -50,6 +50,7 @@ filter {
     remove_field => [ "host", "path", "[@metadata][host]", "[@metadata][path]" ]
   }
 
+{{ if .HasFields }}
   translate {
     dictionary_path => "{{ .FieldsFilename }}"
     field => "[@metadata][__lfv_id]"
@@ -59,6 +60,7 @@ filter {
     fallback => "__lfv_fields_not_found"
     refresh_interval => 0
   }
+{{ end }}
 
   ruby {
     id => '__lfv_ruby_fields'
