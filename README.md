@@ -508,6 +508,8 @@ Additional fields:
   of the input plugin in the tested configuration, where the test input is
   coming from. This is necessary, if a setup with multiple inputs is tested,
   which either have different codecs or are part of different pipelines.
+  The `codec` is taken from the input plugin, if present. This setting can be
+  overwritten by the `codec` field.
 * `export_metadata`: Controls if the metadata of the event processed by Logstash
   is returned. The metadata is contained in the field `[@metadata]` in the
   Logstash event. If the metadata is exported, the respective fields are
@@ -519,10 +521,6 @@ Additional fields:
 * `testcases`:
   * `fields`: Local fields, only added to the events of this test case. These
     fields overwrite global fields.
-
-Ignored / obsolete fields:
-
-* `codec`
 
 
 #### Plugin mock
