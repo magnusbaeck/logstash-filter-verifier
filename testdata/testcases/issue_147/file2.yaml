@@ -1,4 +1,5 @@
 ---
+codec: line
 ignore:
   - "@timestamp"
 testcases:

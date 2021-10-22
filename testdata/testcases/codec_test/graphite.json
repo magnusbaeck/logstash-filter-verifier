@@ -4,7 +4,8 @@
     {
       "input": [
         "foo.bar.metric1 100 1617385070",
-        "foo.bar.metric2 200 1617385070"
+        "foo.bar.metric2 200 1617385070",
+        ""
       ],
       "expected": [
         {

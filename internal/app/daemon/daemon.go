@@ -378,7 +378,7 @@ func (d *Daemon) ExecuteTest(ctx context.Context, in *pb.ExecuteTestRequest) (ou
 		return nil, errors.Wrap(err, "invalid json for fields")
 	}
 
-	err = session.ExecuteTest(in.InputPlugin, in.InputLines, events, int(in.ExpectedEvents))
+	err = session.ExecuteTest(in.InputPlugin, in.InputLines, events, int(in.ExpectedEvents), in.Codec)
 	if err != nil {
 		return nil, err
 	}

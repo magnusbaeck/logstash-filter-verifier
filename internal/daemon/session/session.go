@@ -157,16 +157,24 @@ func (s *Session) createOutputPipelines(outputs []string) ([]pipeline.Pipeline, 
 	return pipelines, nil
 }
 
+// Delimited codec define the the end of the events them self and therefore
+// the file input should not care about delimiting events. As a result,
+// the delimiter for the file input is set to a random string.
+var delimitedCodecs = regexp.MustCompile("codec => ((edn|json)_lines|graphite|(multi)?line)")
+
 // ExecuteTest runs a test case set against the Logstash configuration, that has
 // been loaded previously with SetupTest.
-func (s *Session) ExecuteTest(inputPlugin string, inputLines []string, inEvents []map[string]interface{}, expectedEvents int) error {
+func (s *Session) ExecuteTest(inputPlugin string, inputLines []string, inEvents []map[string]interface{}, expectedEvents int, codec string) error {
 	s.testexec++
 	pipelineName := fmt.Sprintf("lfv_input_%d", s.testexec)
 	inputDir := filepath.Join(s.sessionDir, "lfv_inputs", strconv.Itoa(s.testexec))
 	inputPluginName := fmt.Sprintf("%s_%s_%s", "__lfv_input", s.id, inputPlugin)
 	inputCodec, ok := s.inputPluginCodecs[inputPlugin]
 	if !ok {
-		inputCodec = "codec => plain"
+		if codec == "" {
+			codec = "plain"
+		}
+		inputCodec = fmt.Sprintf("codec => %s", codec)
 	}
 
 	// Prepare input directory
@@ -181,9 +189,14 @@ func (s *Session) ExecuteTest(inputPlugin string, inputLines []string, inEvents 
 		return err
 	}
 
-	input := []byte(strings.Join(inputLines, "\n"))
-	if len(input) == 0 || input[len(input)-1] != '\n' {
-		input = append(input, byte('\n'))
+	delimiter := "\n"
+	if !delimitedCodecs.MatchString(inputCodec) {
+		delimiter = "xyTY1zS2mwJ9xuFCIkrPucLtiSuYIkXAmgCXB142"
+	}
+
+	input := []byte(strings.Join(inputLines, delimiter))
+	if len(input) == 0 {
+		input = append(input, []byte(delimiter)...)
 	}
 	inputFilename := filepath.Join(inputDir, "input.lines")
 	err = os.WriteFile(inputFilename, input, 0600)
@@ -192,7 +205,7 @@ func (s *Session) ExecuteTest(inputPlugin string, inputLines []string, inEvents 
 	}
 
 	pipelineFilename := filepath.Join(inputDir, "input.conf")
-	err = createInput(pipelineFilename, hasFields, fieldsFilename, inputPluginName, inputFilename, inputCodec)
+	err = createInput(pipelineFilename, hasFields, fieldsFilename, inputPluginName, inputFilename, inputCodec, delimiter)
 	if err != nil {
 		return err
 	}
@@ -239,18 +252,11 @@ func prepareFields(fieldsFilename string, inEvents []map[string]interface{}) (bo
 	return hasFields, nil
 }
 
-var delimitedCodecs = regexp.MustCompile("codec => ((edn|json)_lines|graphite|(multi)?line)")
-
-func createInput(pipelineFilename string, hasFields bool, fieldsFilename string, inputPluginName string, inputFilename string, inputCodec string) error {
-	randomDelimiter := false
-	if delimitedCodecs.MatchString(inputCodec) {
-		randomDelimiter = true
-	}
+func createInput(pipelineFilename string, hasFields bool, fieldsFilename string, inputPluginName string, inputFilename string, inputCodec string, delimiter string) error {
 	templateData := struct {
 		InputPluginName          string
 		InputFilename            string
 		InputCodec               string
-		RandomDelimiter          bool
 		HasFields                bool
 		FieldsFilename           string
 		DummyEventInputIndicator string
@@ -258,7 +264,6 @@ func createInput(pipelineFilename string, hasFields bool, fieldsFilename string,
 		InputPluginName:          inputPluginName,
 		InputFilename:            inputFilename,
 		InputCodec:               inputCodec,
-		RandomDelimiter:          randomDelimiter,
 		HasFields:                hasFields,
 		FieldsFilename:           fieldsFilename,
 		DummyEventInputIndicator: testcase.DummyEventInputIndicator,

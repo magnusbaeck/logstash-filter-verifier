@@ -29,9 +29,7 @@ input {
     file_completed_action => "log"
     file_completed_log_path => "{{ .InputFilename }}.log"
     exit_after_read => true
-    {{ if .RandomDelimiter }}
     delimiter => "xyTY1zS2mwJ9xuFCIkrPucLtiSuYIkXAmgCXB142"
-    {{ end }}
   }
 }
 

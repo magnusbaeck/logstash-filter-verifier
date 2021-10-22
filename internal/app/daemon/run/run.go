@@ -170,6 +170,7 @@ func (s Test) Run() (err error) {
 			InputLines:     t.InputLines,
 			Events:         b,
 			ExpectedEvents: int32(len(t.ExpectedEvents)),
+			Codec:          t.Codec,
 		})
 		if err != nil {
 			return err

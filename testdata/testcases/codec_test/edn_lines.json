@@ -9,7 +9,8 @@
         "{:test \"foo\", :value 0}",
         "{:test \"bar\", :value 1}",
         "{:test \"baz\", :value 2}",
-        "{:test \"foo2\", :value 3}"
+        "{:test \"foo2\", :value 3}",
+        ""
       ],
       "expected": [
         {
