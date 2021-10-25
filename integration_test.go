@@ -105,8 +105,9 @@ func TestIntegration(t *testing.T) {
 
 	// Run tests
 	cases := []struct {
-		name  string
-		debug bool
+		name   string
+		debug  bool
+		repeat int
 
 		minimumVersion *semver.Version
 
@@ -173,6 +174,10 @@ func TestIntegration(t *testing.T) {
 		{
 			name: "issue_153",
 		},
+		{
+			name:   "issue_150",
+			repeat: 5,
+		},
 	}
 
 	for _, tc := range cases {
@@ -210,8 +215,10 @@ func TestIntegration(t *testing.T) {
 			)
 			is.NoErr(err)
 
-			err = client.Run()
-			is.NoErr(err)
+			for i := 0; i <= tc.repeat; i++ {
+				err = client.Run()
+				is.NoErr(err)
+			}
 		})
 	}
 
