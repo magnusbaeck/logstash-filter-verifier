@@ -43,8 +43,8 @@ filter {
   }
 
   mutate {
-    # Remove fields "host", "sequence" and optionally "message", which are
-    # automatically created by the generator input.
+    # Remove fields "host", "path", "[@metadata][host]" and "[@metadata][path]"
+    # which are automatically created by the file input.
     remove_field => [ "host", "path", "[@metadata][host]", "[@metadata][path]" ]
   }
 
