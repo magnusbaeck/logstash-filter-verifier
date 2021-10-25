@@ -269,15 +269,29 @@ func (s Test) postProcessResults(results []string, t testcase.TestCaseSet) ([]st
 	var err error
 
 	sort.Slice(results, func(i, j int) bool {
-		idI := gjson.Get(results[i], `__lfv_id`).Int()
-		idJ := gjson.Get(results[j], `__lfv_id`).Int()
+		idI := gjson.Get(results[i], `__lfv_metadata.__lfv_id`).Int()
+		idJ := gjson.Get(results[j], `__lfv_metadata.__lfv_id`).Int()
 		if idI == idJ {
-			return gjson.Get(results[i], `__lfv_out_passed`).String() < gjson.Get(results[j], `__lfv_out_passed`).String()
+			return gjson.Get(results[i], `__lfv_metadata.__lfv_out_passed`).String() < gjson.Get(results[j], `__lfv_metadata.__lfv_out_passed`).String()
 		}
 		return idI < idJ
 	})
 
 	for i := 0; i < len(results); i++ {
+		if s.debug {
+			results[i], err = sjson.Set(results[i], `__lfv_id`, gjson.Get(results[i], `__lfv_metadata.__lfv_id`).String())
+			if err != nil {
+				return nil, err
+			}
+		}
+
+		if t.ExportOutputs || s.debug {
+			results[i], err = sjson.Set(results[i], `__lfv_out_passed`, gjson.Get(results[i], `__lfv_metadata.__lfv_out_passed`).String())
+			if err != nil {
+				return nil, err
+			}
+		}
+
 		// Export metadata
 		if t.ExportMetadata {
 			metadata := gjson.Get(results[i], "__lfv_metadata")
@@ -305,18 +319,6 @@ func (s Test) postProcessResults(results []string, t testcase.TestCaseSet) ([]st
 		// No cleanup if debug is set
 		if s.debug {
 			continue
-		}
-
-		results[i], err = sjson.Delete(results[i], "__lfv_id")
-		if err != nil {
-			return nil, err
-		}
-
-		if !t.ExportOutputs {
-			results[i], err = sjson.Delete(results[i], "__lfv_out_passed")
-			if err != nil {
-				return nil, err
-			}
 		}
 
 		tags := []string{}
