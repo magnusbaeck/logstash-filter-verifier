@@ -1,0 +1,39 @@
+---
+input_plugin: "input"
+ignore:
+  - "@timestamp"
+  - type
+testcases:
+  - input:
+      - >
+        {
+          "test": "Test 1",
+          "original": "yep"
+        }
+    expected:
+      - test: "Test 1"
+        original: "nope"
+      - test: "Test 1"
+        original: "yep"
+  - input:
+      - >
+        {
+          "test": "Test 2",
+          "original": "yep"
+        }
+    expected:
+      - test: "Test 2"
+        original: "nope"
+      - test: "Test 2"
+        original: "yep"
+  - input:
+      - >
+        {
+          "test": "Test 3",
+          "original": "yep"
+        }
+    expected:
+      - test: "Test 3"
+        original: "nope"
+      - test: "Test 3"
+        original: "yep"
