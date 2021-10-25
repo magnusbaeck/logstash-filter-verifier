@@ -1,0 +1,16 @@
+input_plugin: "input"
+fields:
+  type: original_event
+export_outputs: true
+ignore:
+  - "@timestamp"
+  - "message"
+testcases:
+  - input:
+      - >
+        Test message
+    expected:
+      - type: cloned_event
+        __lfv_out_passed: "clone_output"
+      - type: original_event
+        __lfv_out_passed: "original_output"
