@@ -24,10 +24,8 @@
           "message": "",
           "second": "2",
           "tags": [
-            "__lfv_in_passed",
             "main2_passed",
-            "sut_passed",
-            "__lfv_out_stdout_passed"
+            "sut_passed"
           ]
         }
       ]

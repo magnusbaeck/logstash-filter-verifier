@@ -8,8 +8,7 @@ const outputPipeline = `input {
 
 filter {
   mutate {
-    add_tag => [ "__lfv_out_{{ .PipelineOrigName }}_passed" ]
-    add_field => { "[__lfv_out_passed]" => "{{ .PipelineOrigName }}" }
+    add_field => { "[@metadata][__lfv_out_passed]" => "{{ .PipelineOrigName }}" }
   }
 }
 
@@ -36,13 +35,12 @@ filter {
   ruby {
     id => '__lfv_ruby_count'
     init => '@count = 0'
-    code => 'event.set("__lfv_id", @count.to_s)
+    code => 'event.set("[@metadata][__lfv_id]", @count.to_s)
              @count += 1'
     tag_on_exception => '__lfv_ruby_count_exception'
   }
 
   mutate {
-    add_tag => [ "__lfv_in_passed" ]
     # Remove fields "host", "sequence" and optionally "message", which are
     # automatically created by the generator input.
     remove_field => [ "host", "sequence" ]
@@ -50,7 +48,7 @@ filter {
 
   translate {
     dictionary_path => "{{ .FieldsFilename }}"
-    field => "[__lfv_id]"
+    field => "[@metadata][__lfv_id]"
     destination => "[@metadata][__lfv_fields]"
     exact => true
     override => true
