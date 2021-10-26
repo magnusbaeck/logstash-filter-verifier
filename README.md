@@ -25,6 +25,7 @@
     * [Daemon mode](#daemon-mode)
   * [Windows compatibility](#windows-compatibility)
   * [Plugin ID (Daemon mode)](#plugin-id-daemon-mode)
+  * [@metadata field](#metadata-field)
 * [Development](#development)
   * [Dependencies](#dependencies)
 * [Known limitations and future work](#known-limitations-and-future-work)
@@ -657,6 +658,28 @@ are two options:
 
 2. Let Logstash Filter Verifier add the ID temporarily just for the execution
    of the test cases by adding the flag `--add-missing-id`.
+
+
+### @metadata field
+
+Events in Logstash have a special field called [`@metadata`](https://www.elastic.co/guide/en/logstash/master/event-dependent-configuration.html#metadata).
+The contents of `@metadata` are not part of any of your events at output time.
+LFV does make use of `@metadata` to store information, which is required to
+control the processing of the events. To ensure the correct operation of LFV,
+the Logstash configuration under test is not allowed to alter any field within
+the `@metadata`, which start with `__lfv_`. For example the following fields
+are used by LFV (not conclusive):
+
+* `[@metadata][__lfv_id]`
+* `[@metadata][__lfv_out_passed]`
+
+These fields are also removed from `@metadata` even when the test case definition
+does include `export_metadata`.
+
+Additionally, all fields within `@metadata` starting with `__tmp_` are removed.
+
+For debug purposes, the `--debug` flag may be passed, which prevents the
+removal of the above mentioned fields.
 
 
 ## Development
