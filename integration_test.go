@@ -179,6 +179,10 @@ func TestIntegration(t *testing.T) {
 			repeat: 5,
 		},
 		{
+			name:   "issue_150a",
+			repeat: 5,
+		},
+		{
 			name: "issue_155",
 		},
 	}

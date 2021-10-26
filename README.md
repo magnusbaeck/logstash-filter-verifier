@@ -25,6 +25,7 @@
     * [Daemon mode](#daemon-mode)
   * [Windows compatibility](#windows-compatibility)
   * [Plugin ID (Daemon mode)](#plugin-id-daemon-mode)
+  * [Logstash Plugins](#logstash-plugins)
   * [@metadata field](#metadata-field)
 * [Development](#development)
   * [Dependencies](#dependencies)
@@ -658,6 +659,21 @@ are two options:
 
 2. Let Logstash Filter Verifier add the ID temporarily just for the execution
    of the test cases by adding the flag `--add-missing-id`.
+
+
+### Logstash Plugins
+
+#### Clone (Filter)
+
+LFV configures Logstash such that the ordering of the events while being
+processed by the pipeline is ensured. In this regard, the [`clone` filter](https://www.elastic.co/guide/en/logstash/current/plugins-filters-clone.html)
+is special, because it injects additional events into the processing pipeline.
+
+The cloned events can be expected in the following order:
+
+1. original event
+2. clones of the event in the order of appearance in the `clones` attribute
+   of the `clone` filter.
 
 
 ### @metadata field

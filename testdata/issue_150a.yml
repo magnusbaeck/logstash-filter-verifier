@@ -1,0 +1,2 @@
+- pipeline.id: pipeline
+  path.config: "main.conf"
