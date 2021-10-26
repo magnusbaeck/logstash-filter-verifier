@@ -22,6 +22,7 @@ require (
 	github.com/mattn/go-shellwords v1.0.6
 	github.com/mholt/archiver/v3 v3.5.0
 	github.com/mikefarah/yaml/v2 v2.4.0
+	github.com/mohae/deepcopy v0.0.0-20170929034955-c48cc78d4826
 	github.com/op/go-logging v0.0.0-20160315200505-970db520ece7
 	github.com/pkg/errors v0.9.1
 	github.com/spf13/cobra v1.2.1
