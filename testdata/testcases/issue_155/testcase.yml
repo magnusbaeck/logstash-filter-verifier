@@ -1,0 +1,35 @@
+---
+ignore:
+  - "@timestamp"
+input_plugin: "json_lines"
+testcases:
+  - input:
+      - >
+        {
+          "message": "message1"
+        }
+    fields:
+      hostname: host1
+    expected:
+      - message: "message1"
+        hostname: "host1"
+  - input:
+      - >
+        {
+          "message": "message2"
+        }
+    fields:
+      hostname: host2
+    expected:
+      - message: "message2"
+        hostname: "host2"
+  - input:
+      - >
+        {
+          "message": "message3"
+        }
+    fields:
+      hostname: host3
+    expected:
+      - message: "message3"
+        hostname: "host3"

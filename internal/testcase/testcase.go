@@ -208,7 +208,7 @@ func New(reader io.Reader, configType string) (*TestCaseSet, error) {
 	tcs.descriptions = make([]string, len(tcs.ExpectedEvents))
 
 	for range tcs.InputLines {
-		tcs.Events = append(tcs.Events, tcs.InputFields)
+		tcs.Events = append(tcs.Events, tcs.InputFields.Clone())
 	}
 
 	for _, tc := range tcs.TestCases {
@@ -221,7 +221,7 @@ func New(reader io.Reader, configType string) (*TestCaseSet, error) {
 		// Process each input line
 		for range tc.InputLines {
 			// Global Fields first.
-			tcs.Events = append(tcs.Events, tcs.InputFields)
+			tcs.Events = append(tcs.Events, tcs.InputFields.Clone())
 			// Merge with test case fields, eventually overwriting global fields.
 			for k, v := range tc.InputFields {
 				tcs.Events[len(tcs.Events)-1][k] = v

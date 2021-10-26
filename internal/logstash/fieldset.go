@@ -7,6 +7,8 @@ import (
 	"fmt"
 	"sort"
 	"strings"
+
+	"github.com/mohae/deepcopy"
 )
 
 // FieldSet contains a set of fields for a Logstash event and can be
@@ -46,6 +48,10 @@ func (fs FieldSet) LogstashHash() (string, error) {
 	// more than one field in the map.
 	sort.Strings(result)
 	return "{ " + strings.Join(result, " ") + " }", nil
+}
+
+func (fs FieldSet) Clone() FieldSet {
+	return deepcopy.Copy(fs).(FieldSet)
 }
 
 // serializeAsLogstashLiteral serializes a single entity into a
