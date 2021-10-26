@@ -298,7 +298,7 @@ func (s Test) postProcessResults(results []string, t testcase.TestCaseSet) ([]st
 			if metadata.Exists() && metadata.IsObject() {
 				md := make(map[string]json.RawMessage, len(metadata.Map()))
 				for key, value := range metadata.Map() {
-					if strings.HasPrefix(key, "__lfv") || strings.HasPrefix(key, "__tmp") {
+					if strings.HasPrefix(key, "__lfv_") || strings.HasPrefix(key, "__tmp_") {
 						continue
 					}
 					md[key] = json.RawMessage(value.Raw)

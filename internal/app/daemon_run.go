@@ -26,7 +26,7 @@ func makeDaemonRunCmd() *cobra.Command {
 	_ = viper.BindPFlag("testcase-dir", cmd.Flags().Lookup("testcase-dir"))
 	cmd.Flags().String("plugin-mock", "", "path to a yaml file containing the definition for the plugin mocks.")
 	_ = viper.BindPFlag("plugin-mock", cmd.Flags().Lookup("plugin-mock"))
-	cmd.Flags().Bool("debug", false, "enable debug mode; e.g. prevents stripping '__lfv' data from Logstash events")
+	cmd.Flags().Bool("debug", false, "enable debug mode; e.g. prevents stripping '__lfv_' prefixed fields/tags from Logstash events")
 	_ = viper.BindPFlag("debug", cmd.Flags().Lookup("debug"))
 	cmd.Flags().String("metadata-key", "@metadata", "Key under which the content of the `@metadata` field is exposed in the returned events.")
 	_ = viper.BindPFlag("metadata-key", cmd.Flags().Lookup("metadata-key"))
