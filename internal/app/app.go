@@ -33,7 +33,7 @@ func Execute(version string, stdout, stderr io.Writer) int {
 	viper.AddConfigPath("/etc/logstash-filter-verifier/")
 
 	// Setup default values
-	viper.SetDefault("loglevel", "WARNING")
+	viper.SetDefault("loglevel", "INFO")
 	viper.SetDefault("socket", "/tmp/logstash-filter-verifier.sock")
 	viper.SetDefault("logstash.path", "/usr/share/logstash/bin/logstash")
 	viper.SetDefault("inflight-shutdown-timeout", 10*time.Second)
@@ -76,7 +76,7 @@ func makeRootCmd(version string) *cobra.Command {
 
 	rootCmd.InitDefaultVersionFlag()
 
-	rootCmd.PersistentFlags().String("loglevel", "WARNING", "Set the desired level of logging (one of: CRITICAL, ERROR, WARNING, NOTICE, INFO, DEBUG).")
+	rootCmd.PersistentFlags().String("loglevel", "INFO", "Set the desired level of logging (one of: CRITICAL, ERROR, WARNING, NOTICE, INFO, DEBUG).")
 	_ = viper.BindPFlag("loglevel", rootCmd.PersistentFlags().Lookup("loglevel"))
 
 	rootCmd.AddCommand(makeStandaloneCmd())
