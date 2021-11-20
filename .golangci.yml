@@ -2,21 +2,29 @@
 linters:
   disable-all: true
   enable:
+    - asciicheck
+    - bidichk
     - deadcode
+    - durationcheck
+    - errname
+    - exportloopref
     - gocyclo
     - godot
     - gofmt
     - gosec
     - gosimple
     - ineffassign
+    - makezero
     - misspell
     - prealloc
     - staticcheck
     - structcheck
+    - tenv
     - typecheck
     - unconvert
     - unused
     - varcheck
+    - wastedassign
     - whitespace
 
 linters-settings:

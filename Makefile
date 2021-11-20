@@ -44,7 +44,7 @@ PROTOC_GEN_GO      := $(GOBIN)/protoc-gen-go$(EXEC_SUFFIX)
 PROTOC_GEN_GO_GRPC := $(GOBIN)/protoc-gen-go-grpc$(EXEC_SUFFIX)
 MOQ                := $(GOBIN)/moq$(EXEC_SUFFIX)
 
-GOLANGCI_LINT_VERSION := v1.32.2
+GOLANGCI_LINT_VERSION := v1.43.0
 
 .PHONY: all
 all: $(PROGRAM)$(EXEC_SUFFIX)
