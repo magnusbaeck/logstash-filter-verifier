@@ -1,0 +1,14 @@
+---
+ignore:
+  - "@timestamp"
+input_plugin: "input"
+testcases:
+  - input:
+      - Test
+    expected:
+      - field: "value"
+        message: Test
+        type: test_event
+        tags: [
+          "tag"
+        ]
