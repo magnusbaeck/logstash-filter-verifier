@@ -95,7 +95,7 @@ func (r replaceInputsWalker) replaceInputs(c *astutil.Cursor) {
 			continue
 		}
 		switch attr.Name() {
-		case "add_field", "tags":
+		case "add_field", "tags", "type":
 			attrs = append(attrs, attr)
 		case "codec":
 			r.inputCodecs[id] = attr.String()
