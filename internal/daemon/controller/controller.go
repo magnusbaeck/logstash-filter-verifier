@@ -31,11 +31,13 @@ type Controller struct {
 	stateMachine               *stateMachine
 	waitForStateTimeout        time.Duration
 	isOrderedPipelineSupported bool
-	receivedEvents             *events
-	pipelines                  *pipelines
+	waitForLateArrivalsTimeout time.Duration
+
+	receivedEvents *events
+	pipelines      *pipelines
 }
 
-func NewController(instance Instance, baseDir string, log logging.Logger, waitForStateTimeout time.Duration, isOrderedPipelineSupported bool) (*Controller, error) {
+func NewController(instance Instance, baseDir string, log logging.Logger, waitForStateTimeout time.Duration, isOrderedPipelineSupported bool, waitForLateArrivalsTimeout time.Duration) (*Controller, error) {
 	id := idgen.New()
 
 	workDir := filepath.Join(baseDir, LogstashInstanceDirectoryPrefix, id)
@@ -74,6 +76,7 @@ func NewController(instance Instance, baseDir string, log logging.Logger, waitFo
 
 		waitForStateTimeout:        waitForStateTimeout,
 		isOrderedPipelineSupported: isOrderedPipelineSupported,
+		waitForLateArrivalsTimeout: waitForLateArrivalsTimeout,
 
 		receivedEvents: newEvents(),
 		pipelines:      newPipelines(),
@@ -140,7 +143,7 @@ func (c *Controller) GetResults() ([]string, error) {
 
 	// The last event might be sent through multiple outputs, therefore we give
 	// a little headroom for more events with the same ID to arrive.
-	time.Sleep(50 * time.Millisecond)
+	time.Sleep(c.waitForLateArrivalsTimeout)
 
 	return c.receivedEvents.get(), nil
 }

@@ -48,9 +48,10 @@ type Daemon struct {
 
 	tempdir string
 
-	inflightShutdownTimeout time.Duration
-	shutdownTimeout         time.Duration
-	waitForStateTimeout     time.Duration
+	inflightShutdownTimeout    time.Duration
+	shutdownTimeout            time.Duration
+	waitForStateTimeout        time.Duration
+	waitForLateArrivalsTimeout time.Duration
 
 	noCleanup bool
 
@@ -64,19 +65,20 @@ type Daemon struct {
 }
 
 // New creates a new logstash filter verifier daemon.
-func New(socket string, logstashPath string, keptEnvVars []string, log logging.Logger, inflightShutdownTimeout time.Duration, shutdownTimeout time.Duration, waitForStateTimeout time.Duration, noCleanup bool) Daemon {
+func New(socket string, logstashPath string, keptEnvVars []string, log logging.Logger, inflightShutdownTimeout time.Duration, shutdownTimeout time.Duration, waitForStateTimeout time.Duration, noCleanup bool, waitForLateArrivalsTimeout time.Duration) Daemon {
 	ctxShutdownSignal, shutdownSignalFunc := context.WithCancel(context.Background())
 	return Daemon{
-		socket:                  socket,
-		logstashPath:            logstashPath,
-		keptEnvVars:             keptEnvVars,
-		inflightShutdownTimeout: inflightShutdownTimeout,
-		shutdownTimeout:         shutdownTimeout,
-		log:                     log,
-		ctxShutdownSignal:       ctxShutdownSignal,
-		shutdownSignalFunc:      shutdownSignalFunc,
-		waitForStateTimeout:     waitForStateTimeout,
-		noCleanup:               noCleanup,
+		socket:                     socket,
+		logstashPath:               logstashPath,
+		keptEnvVars:                keptEnvVars,
+		inflightShutdownTimeout:    inflightShutdownTimeout,
+		shutdownTimeout:            shutdownTimeout,
+		log:                        log,
+		ctxShutdownSignal:          ctxShutdownSignal,
+		shutdownSignalFunc:         shutdownSignalFunc,
+		waitForStateTimeout:        waitForStateTimeout,
+		noCleanup:                  noCleanup,
+		waitForLateArrivalsTimeout: waitForLateArrivalsTimeout,
 	}
 }
 
@@ -112,7 +114,7 @@ func (d *Daemon) Run(ctx context.Context) error {
 	logstashControllerFactory := func() (session.LogstashController, error) {
 		shutdownLogstashInstancesWG.Add(1)
 		instance := logstash.New(ctxKill, d.logstashPath, env, d.log, shutdownLogstashInstancesWG)
-		logstashController, err := controller.NewController(instance, tempdir, d.log, d.waitForStateTimeout, isOrderedPipelineSupported)
+		logstashController, err := controller.NewController(instance, tempdir, d.log, d.waitForStateTimeout, isOrderedPipelineSupported, d.waitForLateArrivalsTimeout)
 		if err != nil {
 			return nil, err
 		}

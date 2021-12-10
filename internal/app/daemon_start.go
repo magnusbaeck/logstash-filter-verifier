@@ -33,6 +33,9 @@ func makeDaemonStartCmd() *cobra.Command {
 	cmd.Flags().Bool("no-cleanup", false, "with no-cleanup set to true, the temporary files (logstash pipelines, logs, etc.) are not cleaned up and left on the system for later inspection.")
 	_ = viper.BindPFlag("no-cleanup", cmd.Flags().Lookup("no-cleanup"))
 
+	cmd.Flags().Duration("wait-for-late-arrivals-timeout", 50*time.Millisecond, "duration to wait for late arriving events from Logstash (e.g. to test Logstash filters with a timeout like aggregation filter)")
+	_ = viper.BindPFlag("wait-for-late-arrivals-timeout", cmd.Flags().Lookup("wait-for-late-arrivals-timeout"))
+
 	// TODO: Move default values to some sort of global lookup like defaultKeptEnvVars.
 	// TODO: Not yet sure, if this should be global or only in standalone.
 	cmd.Flags().StringSlice("keep-env", nil, "Add this environment variable to the list of variables that will be preserved from the calling process's environment.")
@@ -52,12 +55,13 @@ func runDaemonStart(_ *cobra.Command, _ []string) error {
 	shutdownTimeout := viper.GetDuration("shutdown-timeout")
 	waitForStateTimeout := viper.GetDuration("wait-for-state-timeout")
 	noCleanup := viper.GetBool("no-cleanup")
+	waitForLateArrivalsTimeout := viper.GetDuration("wait-for-late-arrivals-timeout")
 	log := viper.Get("logger").(logging.Logger)
 
 	log.Debugf("config: socket: %s", socket)
 	log.Debugf("config: logstash-path: %s", logstashPath)
 
-	s := daemon.New(socket, logstashPath, keptEnvs, log, inflightShutdownTimeout, shutdownTimeout, waitForStateTimeout, noCleanup)
+	s := daemon.New(socket, logstashPath, keptEnvs, log, inflightShutdownTimeout, shutdownTimeout, waitForStateTimeout, noCleanup, waitForLateArrivalsTimeout)
 	defer s.Cleanup()
 
 	return s.Run(context.Background())
