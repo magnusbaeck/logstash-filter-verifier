@@ -16,7 +16,10 @@ import (
 	"github.com/magnusbaeck/logstash-filter-verifier/v2/internal/logging"
 )
 
-const defaultWaitForStateTimeout = 30 * time.Second
+const (
+	defaultWaitForStateTimeout        = 30 * time.Second
+	defaultWaitForLateArrivalsTimeout = 50 * time.Millisecond
+)
 
 func TestNewController(t *testing.T) {
 	cases := []struct {
@@ -33,7 +36,7 @@ func TestNewController(t *testing.T) {
 
 			tempdir := t.TempDir()
 
-			c, err := controller.NewController(nil, tempdir, logging.NoopLogger, defaultWaitForStateTimeout, true)
+			c, err := controller.NewController(nil, tempdir, logging.NoopLogger, defaultWaitForStateTimeout, true, defaultWaitForLateArrivalsTimeout)
 			is.NoErr(err)
 
 			is.True(file.Exists(filepath.Join(tempdir, controller.LogstashInstanceDirectoryPrefix, c.ID(), "logstash.yml")))      // logstash.yml
@@ -75,7 +78,7 @@ func TestLaunch(t *testing.T) {
 
 			tempdir := t.TempDir()
 
-			c, err := controller.NewController(instance, tempdir, logging.NoopLogger, defaultWaitForStateTimeout, true)
+			c, err := controller.NewController(instance, tempdir, logging.NoopLogger, defaultWaitForStateTimeout, true, defaultWaitForLateArrivalsTimeout)
 			is.NoErr(err)
 
 			err = c.Launch(context.Background())
@@ -108,7 +111,7 @@ func TestCompleteCycle(t *testing.T) {
 
 			tempdir := t.TempDir()
 
-			c, err := controller.NewController(instance, tempdir, logging.NoopLogger, defaultWaitForStateTimeout, true)
+			c, err := controller.NewController(instance, tempdir, logging.NoopLogger, defaultWaitForStateTimeout, true, defaultWaitForLateArrivalsTimeout)
 			is.NoErr(err)
 
 			err = c.Launch(context.Background())
@@ -191,7 +194,7 @@ func TestSetupTest_Shutdown(t *testing.T) {
 
 			tempdir := t.TempDir()
 
-			c, err := controller.NewController(instance, tempdir, logging.NoopLogger, defaultWaitForStateTimeout, true)
+			c, err := controller.NewController(instance, tempdir, logging.NoopLogger, defaultWaitForStateTimeout, true, defaultWaitForLateArrivalsTimeout)
 			is.NoErr(err)
 
 			ctx, cancel := context.WithCancel(context.Background())
