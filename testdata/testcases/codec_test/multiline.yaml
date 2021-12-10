@@ -11,7 +11,6 @@ testcases:
           this is message 1 also
         This is message 2 and
           this is message 2 also
-      -
     expected:
       - input_codec: "multiline"
         message: "This is message 1 and\n  this is message 1 also"
