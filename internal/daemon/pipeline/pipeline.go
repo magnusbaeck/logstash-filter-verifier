@@ -156,7 +156,7 @@ func (a Archive) ZipWithPreprocessor(addMissingID bool, preprocess func([]byte) 
 				outputs[id] += count
 			}
 
-			_, err = f.Write(body)
+			_, err = f.Write(configFile.Body)
 			if err != nil {
 				return nil, nil, err
 			}

@@ -205,7 +205,7 @@ func (v *validator) walk(c *astutil.Cursor) {
 	if err != nil {
 		if v.addMissingID {
 			plugin := c.Plugin()
-			id = fmt.Sprintf("%s-%d", name, v.count)
+			id = fmt.Sprintf("id_missing_%0000d", v.count)
 			plugin.Attributes = append(plugin.Attributes, ast.NewStringAttribute("id", id, ast.DoubleQuoted))
 
 			c.Replace(plugin)
