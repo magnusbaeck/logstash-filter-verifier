@@ -1,0 +1,45 @@
+# issue #147
+input_plugin: "multiline"
+fields:
+  global: true
+ignore:
+  - "@timestamp"
+testcases:
+  - input:
+      - |-
+        This is message 1 and
+          this is message 1 also
+        This is message 2 and
+          this is message 2 also
+    fields:
+      local: 1
+    expected:
+      - input_codec: "multiline"
+        message: "This is message 1 and\n  this is message 1 also"
+        tags: ["multiline", "input_codec_multiline"]
+        global: true
+        local: 1
+      - input_codec: "multiline"
+        message: "This is message 2 and\n  this is message 2 also"
+        tags: ["multiline", "input_codec_multiline"]
+        global: true
+        local: 1
+  - input:
+      - |-
+        This is message 3 and
+          this is message 3 also
+        This is message 4 and
+          this is message 4 also
+    fields:
+      local: 2
+    expected:
+      - input_codec: "multiline"
+        message: "This is message 3 and\n  this is message 3 also"
+        tags: ["multiline", "input_codec_multiline"]
+        global: true
+        local: 2
+      - input_codec: "multiline"
+        message: "This is message 4 and\n  this is message 4 also"
+        tags: ["multiline", "input_codec_multiline"]
+        global: true
+        local: 2

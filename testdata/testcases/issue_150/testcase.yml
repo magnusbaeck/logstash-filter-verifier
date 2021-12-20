@@ -7,7 +7,7 @@ ignore:
   - "message"
 testcases:
   - input:
-      - >
+      - >-
         Test message
     expected:
       - type: cloned_event

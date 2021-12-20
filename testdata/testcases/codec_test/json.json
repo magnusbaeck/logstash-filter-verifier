@@ -6,9 +6,7 @@
   "testcases": [
     {
       "input": [
-        "[ {\"test\": \"foo\", \"value\": 0},{\"test\": \"bar\", \"value\": 1},{\"test\": \"baz\", \"value\": 2} ]",
-        "",
-        ""
+        "[ {\"test\": \"foo\", \"value\": 0},{\"test\": \"bar\", \"value\": 1},{\"test\": \"baz\", \"value\": 2} ]"
       ],
       "expected": [
         {

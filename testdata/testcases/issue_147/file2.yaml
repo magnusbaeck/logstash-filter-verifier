@@ -1,0 +1,21 @@
+---
+codec: line
+ignore:
+  - "@timestamp"
+testcases:
+  - input:
+      - |-
+        TYP_INST;DBNAME;OS_USERNAME;USERNAME;USERHOST;TERMINAL;LOGON_TIME;LOGOFF_TIME;OS_PROCESS;CLIENT_ID
+        Prod;myBeautifulDB;myOS;myUsername;myUserhost;;22/08/2021 14:14:43;22/08/2021 14:14:43;4468;
+    expected:
+      - message: "Prod;myBeautifulDB;myOS;myUsername;myUserhost;;22/08/2021 14:14:43;22/08/2021 14:14:43;4468;"
+        TYP_INST: "Prod"
+        DBNAME: "myBeautifulDB"
+        OS_USERNAME: "myOS"
+        USERNAME: "myUsername"
+        USERHOST: "myUserhost"
+        LOGON_TIME: "22/08/2021 14:14:43"
+        LOGOFF_TIME: "22/08/2021 14:14:43"
+        OS_PROCESS: "4468"
+        tags: ["file2"]
+input_plugin: file2

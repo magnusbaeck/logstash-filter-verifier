@@ -6,11 +6,9 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strconv"
-	"strings"
 
-	"github.com/breml/logstash-config/ast"
-	"github.com/breml/logstash-config/ast/astutil"
 	"github.com/pkg/errors"
 
 	"github.com/magnusbaeck/logstash-filter-verifier/v2/internal/daemon/idgen"
@@ -158,16 +156,21 @@ func (s *Session) createOutputPipelines(outputs []string) ([]pipeline.Pipeline, 
 	return pipelines, nil
 }
 
+// Delimited codec define the the end of the events them self and therefore
+// the file input should not care about delimiting events. As a result,
+// the delimiter for the file input is set to a random string.
+var delimitedCodecs = regexp.MustCompile("codec => ((edn|json)_lines|graphite|(multi)?line)")
+
 // ExecuteTest runs a test case set against the Logstash configuration, that has
 // been loaded previously with SetupTest.
-func (s *Session) ExecuteTest(inputPlugin string, inputLines []string, inEvents []map[string]interface{}, expectedEvents int) error {
+func (s *Session) ExecuteTest(inputPlugin string, inputLines []string, inEvents []map[string]interface{}, expectedEvents int, codec string) error {
 	s.testexec++
 	pipelineName := fmt.Sprintf("lfv_input_%d", s.testexec)
 	inputDir := filepath.Join(s.sessionDir, "lfv_inputs", strconv.Itoa(s.testexec))
 	inputPluginName := fmt.Sprintf("%s_%s_%s", "__lfv_input", s.id, inputPlugin)
 	inputCodec, ok := s.inputPluginCodecs[inputPlugin]
 	if !ok {
-		inputCodec = "codec => plain"
+		inputCodec = fmt.Sprintf("codec => %s", codec)
 	}
 
 	// Prepare input directory
@@ -177,13 +180,33 @@ func (s *Session) ExecuteTest(inputPlugin string, inputLines []string, inEvents 
 	}
 
 	fieldsFilename := filepath.Join(inputDir, "fields.json")
-	err = prepareFields(fieldsFilename, inEvents)
+	hasFields, err := prepareFields(fieldsFilename, inEvents)
 	if err != nil {
 		return err
 	}
 
+	delimiter := "\n"
+	if !delimitedCodecs.MatchString(inputCodec) {
+		delimiter = "xyTY1zS2mwJ9xuFCIkrPucLtiSuYIkXAmgCXB142"
+	}
+
+	inputFilename := filepath.Join(inputDir, "input.lines")
+	inputIndices := []string{}
+	for i := range inputLines {
+		fn := fmt.Sprintf("%s_%03d", inputFilename, i)
+		inputIndices = append(inputIndices, fmt.Sprintf("%03d", i))
+		input := inputLines[i] + delimiter
+		// if len(input) == 0 {
+		// 	input = delimiter
+		// }
+		err = os.WriteFile(fn, []byte(input), 0600)
+		if err != nil {
+			return err
+		}
+	}
+
 	pipelineFilename := filepath.Join(inputDir, "input.conf")
-	err = createInput(pipelineFilename, fieldsFilename, inputPluginName, inputLines, inputCodec)
+	err = createInput(pipelineFilename, hasFields, fieldsFilename, inputPluginName, inputFilename, inputCodec, delimiter, inputIndices)
 	if err != nil {
 		return err
 	}
@@ -205,48 +228,48 @@ func (s *Session) ExecuteTest(inputPlugin string, inputLines []string, inEvents 
 	return nil
 }
 
-func prepareFields(fieldsFilename string, inEvents []map[string]interface{}) error {
+func prepareFields(fieldsFilename string, inEvents []map[string]interface{}) (bool, error) {
+	hasFields := false
+
 	fields := make(map[string]map[string]interface{})
 
 	for i, event := range inEvents {
 		id := fmt.Sprintf("%d", i)
 		fields[id] = event
+		if len(event) > 0 {
+			hasFields = true
+		}
 	}
 
 	bfields, err := json.Marshal(fields)
 	if err != nil {
-		return err
+		return false, err
 	}
 	err = ioutil.WriteFile(fieldsFilename, bfields, 0600)
 	if err != nil {
-		return err
+		return false, err
 	}
 
-	return nil
+	return hasFields, nil
 }
 
-func createInput(pipelineFilename string, fieldsFilename string, inputPluginName string, inputLines []string, inputCodec string) error {
-	for i := range inputLines {
-		var err error
-		inputLine, err := astutil.Quote(inputLines[i], ast.DoubleQuoted)
-		if err != nil {
-			inputLine = astutil.QuoteWithEscape(inputLines[i], ast.SingleQuoted)
-		}
-		inputLines[i] = inputLine
-	}
-
+func createInput(pipelineFilename string, hasFields bool, fieldsFilename string, inputPluginName string, inputFilename string, inputCodec string, delimiter string, inputIndices []string) error {
 	templateData := struct {
 		InputPluginName          string
-		InputLines               string
+		InputFilename            string
 		InputCodec               string
+		HasFields                bool
 		FieldsFilename           string
 		DummyEventInputIndicator string
+		InputIndices             []string
 	}{
 		InputPluginName:          inputPluginName,
-		InputLines:               strings.Join(inputLines, ", "),
+		InputFilename:            inputFilename,
 		InputCodec:               inputCodec,
+		HasFields:                hasFields,
 		FieldsFilename:           fieldsFilename,
 		DummyEventInputIndicator: testcase.DummyEventInputIndicator,
+		InputIndices:             inputIndices,
 	}
 	err := template.ToFile(pipelineFilename, inputGenerator, templateData, 0600)
 	if err != nil {

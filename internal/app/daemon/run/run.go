@@ -12,8 +12,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/breml/logstash-config/ast"
-	"github.com/breml/logstash-config/ast/astutil"
 	"github.com/imkira/go-observer"
 	"github.com/pkg/errors"
 	"github.com/tidwall/gjson"
@@ -165,7 +163,6 @@ func (s Test) Run() (err error) {
 		if err != nil {
 			return err
 		}
-		s.validateInputLines(t.InputLines)
 
 		result, err := c.ExecuteTest(context.Background(), &pb.ExecuteTestRequest{
 			SessionID:      sessionID,
@@ -173,6 +170,7 @@ func (s Test) Run() (err error) {
 			InputLines:     t.InputLines,
 			Events:         b,
 			ExpectedEvents: int32(len(t.ExpectedEvents)),
+			Codec:          t.Codec,
 		})
 		if err != nil {
 			return err
@@ -252,17 +250,6 @@ func (s Test) createImplicitPipeline() (string, error) {
 	}
 
 	return pipelineFile, nil
-}
-
-func (s Test) validateInputLines(lines []string) {
-	for _, line := range lines {
-		_, doubleQuoteErr := astutil.Quote(line, ast.DoubleQuoted)
-		_, singleQuoteErr := astutil.Quote(line, ast.SingleQuoted)
-
-		if doubleQuoteErr != nil && singleQuoteErr != nil {
-			s.log.Warningf("Test input line %q contains unescaped double and single quotes, single quotes will be escaped automatically", line)
-		}
-	}
 }
 
 func (s Test) postProcessResults(results []string, t testcase.TestCaseSet) ([]string, error) {

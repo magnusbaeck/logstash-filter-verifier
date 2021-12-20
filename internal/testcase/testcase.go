@@ -205,7 +205,7 @@ func New(reader io.Reader, configType string) (*TestCaseSet, error) {
 	tcs.IgnoredFields = append(tcs.IgnoredFields, defaultIgnoredFields...)
 	sort.Strings(tcs.IgnoredFields)
 
-	tcs.descriptions = make([]string, len(tcs.ExpectedEvents))
+	tcs.descriptions = make([]string, 0, len(tcs.ExpectedEvents))
 
 	for range tcs.InputLines {
 		tcs.Events = append(tcs.Events, tcs.InputFields.Clone())

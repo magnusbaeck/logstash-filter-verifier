@@ -1,0 +1,18 @@
+---
+ignore:
+  - "@timestamp"
+  - host
+input_plugin: "json_lines"
+testcases:
+  - input:
+      - >
+        {
+        "before": "hello"
+        }
+      - >
+        {
+        "before": "'hello'"
+        }
+    expected:
+      - after: "hello"
+      - after: "'hello'"

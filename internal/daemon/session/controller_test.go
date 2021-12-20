@@ -90,7 +90,7 @@ func TestSession(t *testing.T) {
 					"some_random_key": "value",
 				},
 			}
-			err = s.ExecuteTest("input", inputLines, inFields, 1)
+			err = s.ExecuteTest("input", inputLines, inFields, 1, "")
 			is.NoErr(err)
 
 			is.True(file.Exists(filepath.Join(tempdir, "session", s.ID(), "lfv_inputs", "1", "fields.json")))                              // lfv_inputs/1/fields.json
