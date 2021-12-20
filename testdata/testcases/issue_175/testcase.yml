@@ -1,0 +1,10 @@
+input_plugin: "input"
+ignore:
+  - "@timestamp"
+testcases:
+  - input:
+      - >-
+        Test
+    expected:
+      - message: Test
+        blah: foo

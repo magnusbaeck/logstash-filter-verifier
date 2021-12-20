@@ -6,6 +6,7 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"strings"
 
 	config "github.com/breml/logstash-config"
 	"github.com/breml/logstash-config/ast"
@@ -137,6 +138,7 @@ func (o *outputPipelineReplacer) walk(c *astutil.Cursor) {
 	if err != nil {
 		id = idgen.New()
 	}
+	id = pluginIDSave(id)
 	outputName := fmt.Sprintf("lfv_output_%s", id)
 	o.outputs = append(o.outputs, id)
 
@@ -153,6 +155,7 @@ func (f *File) Validate(addMissingID bool) (inputs map[string]int, outputs map[s
 		pluginIDs:    map[string]int{},
 		inputs:       map[string]int{},
 		outputs:      map[string]int{},
+		name:         pluginIDSave(f.Name),
 		addMissingID: addMissingID,
 	}
 
@@ -192,6 +195,7 @@ type validator struct {
 	pluginIDs    map[string]int
 	inputs       map[string]int
 	outputs      map[string]int
+	name         string
 	count        int
 	addMissingID bool
 }
@@ -205,7 +209,7 @@ func (v *validator) walk(c *astutil.Cursor) {
 	if err != nil {
 		if v.addMissingID {
 			plugin := c.Plugin()
-			id = fmt.Sprintf("id_missing_%04d", v.count)
+			id = fmt.Sprintf("id_missing_%s_%04d", v.name, v.count)
 			plugin.Attributes = append(plugin.Attributes, ast.NewStringAttribute("id", id, ast.DoubleQuoted))
 
 			c.Replace(plugin)
@@ -243,4 +247,17 @@ func (f *File) ApplyMocks(m pluginmock.Mocks) error {
 	f.Body = []byte(f.config.String())
 
 	return nil
+}
+
+func pluginIDSave(in string) string {
+	return strings.Map(func(r rune) rune {
+		switch {
+		case r >= 'A' && r <= 'Z' ||
+			r >= 'a' && r <= 'z' ||
+			r >= '0' && r <= '9':
+			return r
+		default:
+			return '_'
+		}
+	}, in)
 }

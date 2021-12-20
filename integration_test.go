@@ -188,6 +188,10 @@ func TestIntegration(t *testing.T) {
 		{
 			name: "issue_166",
 		},
+		{
+			name:         "issue_175",
+			addMissingID: true,
+		},
 	}
 
 	for _, tc := range cases {
