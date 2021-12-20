@@ -6,7 +6,7 @@ ignore:
   - "message"
 testcases:
   - input:
-      - >
+      - >-
         Test message
     expected:
       - type: original_event

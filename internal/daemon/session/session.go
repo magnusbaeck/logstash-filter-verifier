@@ -8,7 +8,6 @@ import (
 	"path/filepath"
 	"regexp"
 	"strconv"
-	"strings"
 
 	"github.com/pkg/errors"
 
@@ -191,18 +190,23 @@ func (s *Session) ExecuteTest(inputPlugin string, inputLines []string, inEvents 
 		delimiter = "xyTY1zS2mwJ9xuFCIkrPucLtiSuYIkXAmgCXB142"
 	}
 
-	input := []byte(strings.Join(inputLines, delimiter))
-	if len(input) == 0 {
-		input = append(input, []byte(delimiter)...)
-	}
 	inputFilename := filepath.Join(inputDir, "input.lines")
-	err = os.WriteFile(inputFilename, input, 0600)
-	if err != nil {
-		return err
+	inputIndices := []string{}
+	for i := range inputLines {
+		fn := fmt.Sprintf("%s_%03d", inputFilename, i)
+		inputIndices = append(inputIndices, fmt.Sprintf("%03d", i))
+		input := inputLines[i] + delimiter
+		// if len(input) == 0 {
+		// 	input = delimiter
+		// }
+		err = os.WriteFile(fn, []byte(input), 0600)
+		if err != nil {
+			return err
+		}
 	}
 
 	pipelineFilename := filepath.Join(inputDir, "input.conf")
-	err = createInput(pipelineFilename, hasFields, fieldsFilename, inputPluginName, inputFilename, inputCodec, delimiter)
+	err = createInput(pipelineFilename, hasFields, fieldsFilename, inputPluginName, inputFilename, inputCodec, delimiter, inputIndices)
 	if err != nil {
 		return err
 	}
@@ -249,7 +253,7 @@ func prepareFields(fieldsFilename string, inEvents []map[string]interface{}) (bo
 	return hasFields, nil
 }
 
-func createInput(pipelineFilename string, hasFields bool, fieldsFilename string, inputPluginName string, inputFilename string, inputCodec string, delimiter string) error {
+func createInput(pipelineFilename string, hasFields bool, fieldsFilename string, inputPluginName string, inputFilename string, inputCodec string, delimiter string, inputIndices []string) error {
 	templateData := struct {
 		InputPluginName          string
 		InputFilename            string
@@ -257,6 +261,7 @@ func createInput(pipelineFilename string, hasFields bool, fieldsFilename string,
 		HasFields                bool
 		FieldsFilename           string
 		DummyEventInputIndicator string
+		InputIndices             []string
 	}{
 		InputPluginName:          inputPluginName,
 		InputFilename:            inputFilename,
@@ -264,6 +269,7 @@ func createInput(pipelineFilename string, hasFields bool, fieldsFilename string,
 		HasFields:                hasFields,
 		FieldsFilename:           fieldsFilename,
 		DummyEventInputIndicator: testcase.DummyEventInputIndicator,
+		InputIndices:             inputIndices,
 	}
 	err := template.ToFile(pipelineFilename, inputGenerator, templateData, 0600)
 	if err != nil {

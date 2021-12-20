@@ -6,9 +6,7 @@
   "testcases": [
     {
       "input": [
-        "foo",
-        "  bar",
-        "  baz",
+        "foo\n  bar\n  baz",
         "other foo\n  bar\n  baz"
       ],
       "expected": [

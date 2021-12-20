@@ -20,28 +20,26 @@ output {
 `
 
 const inputGenerator = `
+{{ $root := . }}
+{{ range $i, $index := .InputIndices }}
 input {
   file {
-    id => '__lfv_file_input'
-    path => "{{ .InputFilename }}"
-    {{ .InputCodec }}
+    id => '__lfv_file_input_{{ $index }}'
+    path => "{{ $root.InputFilename }}_{{ $index }}"
+    {{ $root.InputCodec }}
     mode => "read"
     file_completed_action => "log"
-    file_completed_log_path => "{{ .InputFilename }}.log"
+    file_completed_log_path => "{{ $root.InputFilename }}_{{ $index }}.log"
     exit_after_read => true
     delimiter => "xyTY1zS2mwJ9xuFCIkrPucLtiSuYIkXAmgCXB142"
+    add_field => {
+      "[@metadata][__lfv_id]" => "{{ $i }}"
+    }
   }
 }
+{{ end }}
 
 filter {
-  ruby {
-    id => '__lfv_ruby_count'
-    init => '@count = 0'
-    code => 'event.set("[@metadata][__lfv_id]", @count.to_s)
-             @count += 1'
-    tag_on_exception => '__lfv_ruby_count_exception'
-  }
-
   mutate {
     # Remove fields "host", "path", "[@metadata][host]" and "[@metadata][path]"
     # which are automatically created by the file input.
