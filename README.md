@@ -415,8 +415,10 @@ have been added:
   these plugins can be replaced with mocks. In particular the [mutate](https://www.elastic.co/guide/en/logstash/current/plugins-filters-mutate.html)
   and the [translate](https://www.elastic.co/guide/en/logstash/current/plugins-filters-translate.html)
   filters have proven to be helpful as replacements.
-  An other use case for mocks is to replace pipeline input and output plugins
-  in order to test pipelines in isolation.
+  Other use cases for mocks are:
+  * replace filters, that operate on environment variables, that need to be changed
+    between different test cases (see [#120](https://github.com/magnusbaeck/logstash-filter-verifier/issues/120)).
+  * replace pipeline input and output plugins in order to test pipelines in isolation.
 
 In order to execute a test case in daemon mode, first the daemon needs to be
 started (e.g. in its own terminal or shell):
@@ -715,6 +717,9 @@ present:
 * Some log formats don't include all timestamp components. For
   example, most syslog formats don't include the year. This should be
   dealt with somehow.
+* Logstash configurations, which remove the `@timestamp` field can not be tested
+  using the daemon mode (see [#151](https://github.com/magnusbaeck/logstash-filter-verifier/issues/151)).
+* The maximum size of events, that can be processed is ~64KB (see [#169](https://github.com/magnusbaeck/logstash-filter-verifier/issues/169)).
 
 
 ## License
