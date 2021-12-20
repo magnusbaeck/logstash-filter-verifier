@@ -1,0 +1,4 @@
+- pipeline.id: pipeline1
+  path.config: "pipeline1/*.conf"
+- pipeline.id: pipeline2
+  path.config: "pipeline2/*.conf"
