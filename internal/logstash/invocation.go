@@ -160,13 +160,14 @@ func (inv *Invocation) Release() {
 // from the Logstash distribution so that e.g. JVM and logging is set
 // up properly even though we provide our own logstash.yml.
 //
-// The files to copy are either dug up from ../config relative to the
+// The files to copy are either dug up from ../config or ../etc/logstash relative to the
 // Logstash executable or from /etc/logstash, where they're stored in
 // the RPM/Debian case. If successful, the directory where the files
 // were found is returned.
 func copyConfigFiles(logstashPath string, configDir string) (string, error) {
 	sourceDirs := []string{
 		filepath.Clean(filepath.Join(filepath.Dir(logstashPath), "../config")),
+		filepath.Clean(filepath.Join(filepath.Dir(logstashPath), "../etc/logstash")),
 		"/etc/logstash",
 	}
 	sourceFiles := []string{
