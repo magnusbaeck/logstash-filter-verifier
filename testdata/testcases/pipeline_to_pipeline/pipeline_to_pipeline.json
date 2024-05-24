@@ -2,7 +2,8 @@
   "fields": {
   },
   "ignore": [
-    "@timestamp"
+    "@timestamp",
+    "event"
   ],
   "input_plugin": "stage1_input",
   "testcases": [

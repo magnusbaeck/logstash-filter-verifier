@@ -1,6 +1,7 @@
 ---
 ignore:
   - "@timestamp"
+  - "event"
 input_plugin: "json_lines"
 testcases:
   - input:

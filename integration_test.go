@@ -110,6 +110,7 @@ func TestIntegration(t *testing.T) {
 		repeat int
 
 		minimumVersion *semver.Version
+		maximumVersion *semver.Version // exclusive
 
 		// optional integration tests require additional logstash plugins,
 		// which are not provided by a default installation.
@@ -150,6 +151,14 @@ func TestIntegration(t *testing.T) {
 		},
 		{
 			name: "codec_test",
+		},
+		{
+			name:           "codec_version_7_test",
+			maximumVersion: semver.MustParse("8.0.0"),
+		},
+		{
+			name:           "codec_version_8_test",
+			minimumVersion: semver.MustParse("8.0.0"),
 		},
 		{
 			name:     "codec_optional_test",
@@ -199,7 +208,11 @@ func TestIntegration(t *testing.T) {
 			is := is.New(t)
 
 			if tc.minimumVersion != nil && tc.minimumVersion.GreaterThan(version) {
-				t.Skipf("Logstash minimum version not satisfied, require %s, have %s", tc.minimumVersion.String(), version.String())
+				t.Skipf("Logstash minimum version not satisfied, require at least %s, have %s", tc.minimumVersion.String(), version.String())
+			}
+
+			if tc.maximumVersion != nil && tc.maximumVersion.LessThan(version) {
+				t.Skipf("Logstash maximum version not satisfied, require less than %s, have %s", tc.maximumVersion.String(), version.String())
 			}
 
 			if tc.optional && os.Getenv("INTEGRATION_TEST_OPTIONAL") != "1" {

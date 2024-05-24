@@ -4,6 +4,7 @@ fields:
 ignore:
   - "@timestamp"
   - "message"
+  - "event"
 testcases:
   - input:
       - >
