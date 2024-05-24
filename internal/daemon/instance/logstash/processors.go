@@ -98,6 +98,13 @@ func (i *instance) logstashLogProcessor(t *tail.Tail) {
 			case "Pipelines running":
 				rp := gjson.Get(line.Text, `logEvent.running_pipelines.0.metaClass.metaClass.metaClass.running_pipelines`).String()
 				runningPipelines := extractPipelines(rp)
+				if runningPipelines == nil {
+					// Since Logstash 8.11.x, the running pipelines are directly in the logEvent.
+					rps := gjson.Get(line.Text, `logEvent.running_pipelines`).Array()
+					for _, rp := range rps {
+						runningPipelines = append(runningPipelines, rp.String())
+					}
+				}
 				i.log.Debugf("taillog: -> pipeline running: %v", runningPipelines)
 
 				i.controller.PipelinesReady(runningPipelines...)
