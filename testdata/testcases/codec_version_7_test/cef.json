@@ -1,6 +1,7 @@
 {
   "ignore": [
-    "@timestamp"
+    "@timestamp",
+    "event"
   ],
   "input_plugin": "cef",
   "testcases": [

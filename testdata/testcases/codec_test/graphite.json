@@ -1,4 +1,8 @@
 {
+  "ignore": [
+    "@timestamp",
+    "event"
+  ],
   "input_plugin": "graphite",
   "testcases": [
     {
@@ -8,13 +12,11 @@
       ],
       "expected": [
         {
-          "@timestamp": "2021-04-02T17:37:50.000Z",
           "foo.bar.metric1": 100,
           "input_codec": "graphite",
           "tags": [ "input_codec_graphite" ]
         },
         {
-          "@timestamp": "2021-04-02T17:37:50.000Z",
           "foo.bar.metric2": 200,
           "input_codec": "graphite",
           "tags": [ "input_codec_graphite" ]

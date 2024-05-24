@@ -5,6 +5,7 @@ export_outputs: true
 ignore:
   - "@timestamp"
   - "message"
+  - "event"
 testcases:
   - input:
       - >

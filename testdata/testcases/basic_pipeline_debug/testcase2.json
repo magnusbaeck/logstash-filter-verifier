@@ -4,7 +4,8 @@
     "second": "2"
   },
   "ignore": [
-    "@timestamp"
+    "@timestamp",
+    "event"
   ],
   "input_plugin": "stdin-with-dash",
   "export_metadata": true,

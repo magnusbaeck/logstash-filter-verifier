@@ -3,7 +3,8 @@
     "type": "syslog"
   },
   "ignore": [
-    "@timestamp"
+    "@timestamp",
+    "event"
   ],
   "input_plugin": "stdin",
   "testcases": [

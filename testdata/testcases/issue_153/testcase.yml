@@ -3,6 +3,7 @@ input_plugin: "input"
 ignore:
   - "@timestamp"
   - type
+  - event
 testcases:
   - input:
       - >

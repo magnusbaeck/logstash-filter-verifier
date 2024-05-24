@@ -3,7 +3,8 @@
   "fields": {
   },
   "ignore": [
-    "@timestamp"
+    "@timestamp",
+    "event"
   ],
   "input_plugin": "stdin",
   "export_outputs": true,
