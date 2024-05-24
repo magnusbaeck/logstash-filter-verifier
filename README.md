@@ -712,6 +712,37 @@ present:
 * Proto buffer compiler (`protobuf-compiler`)
 
 
+### Run Integration Tests
+
+In order to run the integration tests, the following preperation is needed:
+
+1. Run `go run . setup 8.12.1` to download Logstash version 8.12.1
+2. Prepare a `logstash-filter-verifier.yml` config file, which points to the
+   downloaded Logstash version, e.g.
+
+   ```yaml
+   ---
+
+   loglevel: debug
+   logstash:
+     path: ./3rdparty/logstash-8.12.1-linux-x86_64/bin/logstash
+   keep-envs:
+     - TESTMODE
+   metadata-key: __metadata
+   ```
+
+3. Execute the integration tests by providing the respective env var:
+
+   `INTEGRATION_TEST=1 go test -v .`
+
+   or
+
+   ```shell
+   export INTEGRATION_TEST=1
+   go test -v .
+   ```
+
+
 ## Known limitations and future work
 
 * Some log formats don't include all timestamp components. For
