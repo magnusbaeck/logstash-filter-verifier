@@ -714,7 +714,7 @@ present:
 
 ### Run Integration Tests
 
-In order to run the integration tests, the following preperation is needed:
+In order to run the integration tests, the following preparation is needed:
 
 1. Run `go run . setup 8.12.1` to download Logstash version 8.12.1
 2. Prepare a `logstash-filter-verifier.yml` config file, which points to the
