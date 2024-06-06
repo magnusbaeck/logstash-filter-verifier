@@ -86,18 +86,16 @@ func TestAllFilesExist(t *testing.T) {
 		},
 	}
 	for i, c := range cases {
-		tempdir, err := ioutil.TempDir("", "")
-		if err != nil {
-			t.Fatalf("Test %d: Unexpected error when creating temp dir: %s", i, err)
-		}
-		defer os.RemoveAll(tempdir)
+		tempdir := t.TempDir()
+		// The test fails if it can't clean up the directory.
+		defer os.Chmod(tempdir, 0700)
 
 		for _, fwm := range c.files {
-			if err = fwm.Create(tempdir); err != nil {
+			if err := fwm.Create(tempdir); err != nil {
 				t.Fatalf("Test %d: Unexpected error when creating test file: %s", i, err)
 			}
 		}
-		if err = os.Chmod(tempdir, c.tempdirMode); err != nil {
+		if err := os.Chmod(tempdir, c.tempdirMode); err != nil {
 			t.Fatalf("Test %d: Unexpected error when chmod'ing temp dir: %s", i, err)
 		}
 
@@ -131,13 +129,9 @@ func TestCopyAllFiles(t *testing.T) {
 		},
 	}
 	for i, c := range cases {
-		tempdir, err := ioutil.TempDir("", "")
-		if err != nil {
-			t.Fatalf("Test %d: Unexpected error when creating temp dir: %s", i, err)
-		}
-		defer os.RemoveAll(tempdir)
+		tempdir := t.TempDir()
 		destdir := filepath.Join(tempdir, "dest")
-		if err = os.Mkdir(destdir, 0755); err != nil {
+		if err := os.Mkdir(destdir, 0755); err != nil {
 			t.Fatalf("Test %d: Unexpected error when creating temp dir: %s", i, err)
 		}
 
@@ -145,11 +139,11 @@ func TestCopyAllFiles(t *testing.T) {
 		for diridx, files := range c.files {
 			thisdir := filepath.Join(tempdir, strconv.Itoa(diridx))
 			sourcedirs[diridx] = thisdir
-			if err = os.Mkdir(thisdir, 0755); err != nil {
+			if err := os.Mkdir(thisdir, 0755); err != nil {
 				t.Fatalf("Test %d: Unexpected error when creating temp dir: %s", i, err)
 			}
 			for _, fwm := range files {
-				if err = fwm.Create(thisdir); err != nil {
+				if err := fwm.Create(thisdir); err != nil {
 					t.Fatalf("Test %d: Unexpected error when creating test file: %s", i, err)
 				}
 			}
@@ -188,16 +182,8 @@ func TestCopyFile(t *testing.T) {
 	defer os.Remove(source.Name())
 	source.Write([]byte(testData))
 
-	// Create the destination directory.
-	tempdir, err := ioutil.TempDir("", "")
-	if err != nil {
-		t.Fatalf("Unexpected error when creating temp dir: %s", err)
-	}
-	defer os.RemoveAll(tempdir)
-	destPath := filepath.Join(tempdir, "arbitrary-filename")
-
-	err = copyFile(source.Name(), destPath)
-	if err != nil {
+	destPath := filepath.Join(t.TempDir(), "arbitrary-filename")
+	if err = copyFile(source.Name(), destPath); err != nil {
 		t.Fatalf("Unexpected error: %s", err)
 	}
 	buf, err := ioutil.ReadFile(destPath)

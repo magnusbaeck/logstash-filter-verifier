@@ -46,19 +46,14 @@ func TestDiscoverTests_Directory(t *testing.T) {
 		},
 	}
 	for cnum, c := range cases {
-		tempdir, err := ioutil.TempDir("", "")
-		if err != nil {
-			t.Errorf(err.Error())
-			break
-		}
-		defer os.RemoveAll(tempdir)
+		tempdir := t.TempDir()
 
 		for _, f := range c.files {
 			if strings.Contains(f, "/") {
 				t.Errorf("This test doesn't support subdirectories: %s", f)
 				break
 			}
-			if err = ioutil.WriteFile(filepath.Join(tempdir, f), []byte(`{"type": "test"}`), 0600); err != nil {
+			if err := ioutil.WriteFile(filepath.Join(tempdir, f), []byte(`{"type": "test"}`), 0600); err != nil {
 				t.Fatalf(err.Error())
 			}
 		}
@@ -111,18 +106,12 @@ func TestDiscoverTests_File(t *testing.T) {
 		"filename.yaml",
 	}
 	for _, filename := range filenames {
-		tempdir, err := ioutil.TempDir("", "")
-		if err != nil {
-			t.Fatal(err.Error())
-		}
-		defer os.RemoveAll(tempdir)
-
-		inputpath := filepath.Join(tempdir, filename)
+		inputpath := filepath.Join(t.TempDir(), filename)
 
 		// As it happens a valid JSON file is also a valid YAML file so
 		// the file we create can have the same contents regardless of
 		// the file format.
-		if err = ioutil.WriteFile(inputpath, []byte(`{"type": "test"}`), 0600); err != nil {
+		if err := ioutil.WriteFile(inputpath, []byte(`{"type": "test"}`), 0600); err != nil {
 			t.Fatal(err.Error())
 		}
 
