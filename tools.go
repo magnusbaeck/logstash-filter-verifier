@@ -1,4 +1,4 @@
-// +build tools
+//go:build tools
 
 // This file exists only to get various parts of the toolchain
 // included in go.mod.

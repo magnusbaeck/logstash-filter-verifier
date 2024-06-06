@@ -17,7 +17,7 @@ OS_NAME := $(shell uname -s)
 endif
 
 # The Docker image to use when building release images.
-GOLANG_DOCKER_IMAGE := golang:1.16.8
+GOLANG_DOCKER_IMAGE := golang:1.22.4
 
 INSTALL := install
 
@@ -44,7 +44,7 @@ PROTOC_GEN_GO      := $(GOBIN)/protoc-gen-go$(EXEC_SUFFIX)
 PROTOC_GEN_GO_GRPC := $(GOBIN)/protoc-gen-go-grpc$(EXEC_SUFFIX)
 MOQ                := $(GOBIN)/moq$(EXEC_SUFFIX)
 
-GOLANGCI_LINT_VERSION := v1.43.0
+GOLANGCI_LINT_VERSION := v1.59.0
 
 .PHONY: all
 all: $(PROGRAM)$(EXEC_SUFFIX)

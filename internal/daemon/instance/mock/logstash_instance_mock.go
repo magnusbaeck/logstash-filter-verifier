@@ -16,22 +16,22 @@ var _ controller.Instance = &InstanceMock{}
 
 // InstanceMock is a mock implementation of controller.Instance.
 //
-// 	func TestSomethingThatUsesInstance(t *testing.T) {
+//	func TestSomethingThatUsesInstance(t *testing.T) {
 //
-// 		// make and configure a mocked controller.Instance
-// 		mockedInstance := &InstanceMock{
-// 			ConfigReloadFunc: func() error {
-// 				panic("mock out the ConfigReload method")
-// 			},
-// 			StartFunc: func(ctx context.Context, controllerMoqParam *controller.Controller, workdir string) error {
-// 				panic("mock out the Start method")
-// 			},
-// 		}
+//		// make and configure a mocked controller.Instance
+//		mockedInstance := &InstanceMock{
+//			ConfigReloadFunc: func() error {
+//				panic("mock out the ConfigReload method")
+//			},
+//			StartFunc: func(ctx context.Context, controllerMoqParam *controller.Controller, workdir string) error {
+//				panic("mock out the Start method")
+//			},
+//		}
 //
-// 		// use mockedInstance in code that requires controller.Instance
-// 		// and then make assertions.
+//		// use mockedInstance in code that requires controller.Instance
+//		// and then make assertions.
 //
-// 	}
+//	}
 type InstanceMock struct {
 	// ConfigReloadFunc mocks the ConfigReload method.
 	ConfigReloadFunc func() error
@@ -73,7 +73,8 @@ func (mock *InstanceMock) ConfigReload() error {
 
 // ConfigReloadCalls gets all the calls that were made to ConfigReload.
 // Check the length with:
-//     len(mockedInstance.ConfigReloadCalls())
+//
+//	len(mockedInstance.ConfigReloadCalls())
 func (mock *InstanceMock) ConfigReloadCalls() []struct {
 } {
 	var calls []struct {
@@ -106,7 +107,8 @@ func (mock *InstanceMock) Start(ctx context.Context, controllerMoqParam *control
 
 // StartCalls gets all the calls that were made to Start.
 // Check the length with:
-//     len(mockedInstance.StartCalls())
+//
+//	len(mockedInstance.StartCalls())
 func (mock *InstanceMock) StartCalls() []struct {
 	Ctx                context.Context
 	ControllerMoqParam *controller.Controller

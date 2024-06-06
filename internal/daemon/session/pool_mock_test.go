@@ -16,22 +16,22 @@ var _ session.Pool = &PoolMock{}
 
 // PoolMock is a mock implementation of session.Pool.
 //
-// 	func TestSomethingThatUsesPool(t *testing.T) {
+//	func TestSomethingThatUsesPool(t *testing.T) {
 //
-// 		// make and configure a mocked session.Pool
-// 		mockedPool := &PoolMock{
-// 			GetFunc: func() (pool.LogstashController, error) {
-// 				panic("mock out the Get method")
-// 			},
-// 			ReturnFunc: func(instance pool.LogstashController, clean bool)  {
-// 				panic("mock out the Return method")
-// 			},
-// 		}
+//		// make and configure a mocked session.Pool
+//		mockedPool := &PoolMock{
+//			GetFunc: func() (pool.LogstashController, error) {
+//				panic("mock out the Get method")
+//			},
+//			ReturnFunc: func(instance pool.LogstashController, clean bool)  {
+//				panic("mock out the Return method")
+//			},
+//		}
 //
-// 		// use mockedPool in code that requires session.Pool
-// 		// and then make assertions.
+//		// use mockedPool in code that requires session.Pool
+//		// and then make assertions.
 //
-// 	}
+//	}
 type PoolMock struct {
 	// GetFunc mocks the Get method.
 	GetFunc func() (pool.LogstashController, error)
@@ -71,7 +71,8 @@ func (mock *PoolMock) Get() (pool.LogstashController, error) {
 
 // GetCalls gets all the calls that were made to Get.
 // Check the length with:
-//     len(mockedPool.GetCalls())
+//
+//	len(mockedPool.GetCalls())
 func (mock *PoolMock) GetCalls() []struct {
 } {
 	var calls []struct {
@@ -102,7 +103,8 @@ func (mock *PoolMock) Return(instance pool.LogstashController, clean bool) {
 
 // ReturnCalls gets all the calls that were made to Return.
 // Check the length with:
-//     len(mockedPool.ReturnCalls())
+//
+//	len(mockedPool.ReturnCalls())
 func (mock *PoolMock) ReturnCalls() []struct {
 	Instance pool.LogstashController
 	Clean    bool
