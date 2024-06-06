@@ -29,6 +29,7 @@
   * [@metadata field](#metadata-field)
 * [Development](#development)
   * [Dependencies](#dependencies)
+  * [Run Integration Tests](#run-integration-tests)
 * [Known limitations and future work](#known-limitations-and-future-work)
 * [License](#license)
 
