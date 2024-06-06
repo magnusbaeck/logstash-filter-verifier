@@ -15,7 +15,7 @@ import (
 )
 
 func TestArgs(t *testing.T) {
-	tinv, err := createTestInvocation(*semver.MustParse("6.0.0"))
+	tinv, err := createTestInvocation(t, *semver.MustParse("6.0.0"))
 	if err != nil {
 		t.Fatalf("%s", err)
 	}
@@ -151,7 +151,7 @@ func TestNewInvocation(t *testing.T) {
 		},
 	}
 	for i, c := range cases {
-		tinv, err := createTestInvocation(*semver.MustParse(c.version))
+		tinv, err := createTestInvocation(t, *semver.MustParse(c.version))
 		if err != nil {
 			t.Errorf("Test %d: Error unexpectedly returned: %s", i, err)
 			continue
@@ -176,11 +176,8 @@ type testInvocation struct {
 	configContents string
 }
 
-func createTestInvocation(version semver.Version) (*testInvocation, error) {
-	tempdir, err := ioutil.TempDir("", "")
-	if err != nil {
-		return nil, fmt.Errorf("Unexpected error when creating temp dir: %s", err)
-	}
+func createTestInvocation(t *testing.T, version semver.Version) (*testInvocation, error) {
+	tempdir := t.TempDir()
 
 	files := []testhelpers.FileWithMode{
 		{"bin", os.ModeDir | 0755, ""},
@@ -190,14 +187,14 @@ func createTestInvocation(version semver.Version) (*testInvocation, error) {
 		{"config/log4j2.properties", 0644, ""},
 	}
 	for _, fwm := range files {
-		if err = fwm.Create(tempdir); err != nil {
+		if err := fwm.Create(tempdir); err != nil {
 			return nil, fmt.Errorf("Unexpected error when creating test file: %s", err)
 		}
 	}
 
 	configFile := filepath.Join(tempdir, "configfile.conf")
 	configContents := ""
-	if err = ioutil.WriteFile(configFile, []byte(configContents), 0600); err != nil {
+	if err := ioutil.WriteFile(configFile, []byte(configContents), 0600); err != nil {
 		return nil, fmt.Errorf("Unexpected error when creating dummy configuration file: %s", err)
 	}
 	logstashPath := filepath.Join(tempdir, "bin/logstash")

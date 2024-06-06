@@ -114,11 +114,7 @@ func TestNewFromFile(t *testing.T) {
 		"filename.yaml",
 	}
 	for _, filename := range filenames {
-		tempdir, err := ioutil.TempDir("", "")
-		if err != nil {
-			t.Fatalf(err.Error())
-		}
-		defer os.RemoveAll(tempdir)
+		tempdir := t.TempDir()
 		olddir, err := os.Getwd()
 		if err != nil {
 			t.Fatalf(err.Error())
@@ -151,11 +147,7 @@ func TestNewFromFile(t *testing.T) {
 func TestCompare(t *testing.T) {
 	// Create an empty tempdir so that we can construct a path to
 	// a diff binary that's guaranteed to not exist.
-	tempdir, err := ioutil.TempDir("", "")
-	if err != nil {
-		t.Fatalf(err.Error())
-	}
-	defer os.RemoveAll(tempdir)
+	tempdir := t.TempDir()
 
 	liveObserver := observer.NewProperty(nil)
 
@@ -415,16 +407,10 @@ func TestCompare(t *testing.T) {
 }
 
 func TestMarshalToFile(t *testing.T) {
-	tempdir, err := ioutil.TempDir("", "")
-	if err != nil {
-		t.Fatalf(err.Error())
-	}
-	defer os.RemoveAll(tempdir)
-
 	// Implicitly test that subdirectories are created as needed.
-	fullpath := filepath.Join(tempdir, "a", "b", "c.json")
+	fullpath := filepath.Join(t.TempDir(), "a", "b", "c.json")
 
-	if err = marshalToFile(logstash.Event{}, fullpath); err != nil {
+	if err := marshalToFile(logstash.Event{}, fullpath); err != nil {
 		t.Fatalf(err.Error())
 	}
 

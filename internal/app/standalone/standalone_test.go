@@ -3,7 +3,6 @@
 package standalone
 
 import (
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -104,14 +103,10 @@ func TestFindExecutable(t *testing.T) {
 		},
 	}
 	for i, c := range cases {
-		tempdir, err := ioutil.TempDir("", "")
-		if err != nil {
-			t.Fatalf("Test %d: Unexpected error when creating temp dir: %s", i, err)
-		}
-		defer os.RemoveAll(tempdir)
+		tempdir := t.TempDir()
 
 		for _, fwp := range c.files {
-			if err = fwp.Create(tempdir); err != nil {
+			if err := fwp.Create(tempdir); err != nil {
 				t.Fatalf("Test %d: Unexpected error when creating test file: %s", i, err)
 			}
 		}

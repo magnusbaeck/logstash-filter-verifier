@@ -101,14 +101,10 @@ func TestFlattenFilenames(t *testing.T) {
 		},
 	}
 	for i, c := range cases {
-		tempdir, err := ioutil.TempDir("", "")
-		if err != nil {
-			t.Fatalf("Test %d: Unexpected error when creating temp dir: %s", i, err)
-		}
-		defer os.RemoveAll(tempdir)
+		tempdir := t.TempDir()
 
 		for _, fwm := range c.existingFiles {
-			if err = fwm.Create(tempdir); err != nil {
+			if err := fwm.Create(tempdir); err != nil {
 				t.Fatalf("Test %d: Unexpected error when creating test file: %s", i, err)
 			}
 		}
@@ -154,27 +150,16 @@ func TestGetPipelineConfigDir(t *testing.T) {
 		// Create the files listed in the test case in a new
 		// temporary directory. The content of each file is
 		// the base of its own name.
-		tempdir, err := ioutil.TempDir("", "")
-		if err != nil {
-			t.Fatalf("Test %d: Unexpected error when creating temp dir: %s", i, err)
-		}
-		defer os.RemoveAll(tempdir)
-
-		resultDir, err := ioutil.TempDir("", "")
-		if err != nil {
-			t.Fatalf("Test %d: Unexpected error when creating temp dir: %s", i, err)
-		}
-		defer os.RemoveAll(resultDir)
+		tempdir := t.TempDir()
+		resultDir := t.TempDir()
 
 		var configFiles []string
 		for _, f := range c.files {
-			err = os.MkdirAll(filepath.Join(tempdir, filepath.Dir(f)), 0700)
-			if err != nil {
+			if err := os.MkdirAll(filepath.Join(tempdir, filepath.Dir(f)), 0700); err != nil {
 				t.Fatalf("Test %d: Unexpected error when creating temp dir: %s", i, err)
 			}
 
-			err = ioutil.WriteFile(filepath.Join(tempdir, f), []byte(createLogstashConfigWithString(filepath.Base(f))), 0600)
-			if err != nil {
+			if err := ioutil.WriteFile(filepath.Join(tempdir, f), []byte(createLogstashConfigWithString(filepath.Base(f))), 0600); err != nil {
 				t.Fatalf("Test %d: Unexpected error when writing to temp file: %s", i, err)
 			}
 			configFiles = append(configFiles, filepath.Join(tempdir, f))
@@ -251,11 +236,7 @@ func TestGetFilesInDir(t *testing.T) {
 		},
 	}
 	for i, c := range cases {
-		tempdir, err := ioutil.TempDir("", "")
-		if err != nil {
-			t.Fatalf("Test %d: Unexpected error when creating temp dir: %s", i, err)
-		}
-		defer os.RemoveAll(tempdir)
+		tempdir := t.TempDir()
 
 		for _, filename := range c.files {
 			f, err := os.Create(filepath.Join(tempdir, filename))
