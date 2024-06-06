@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/imkira/go-observer"
@@ -17,8 +18,9 @@ import (
 
 func TestNew(t *testing.T) {
 	cases := []struct {
-		input    string
-		expected TestCaseSet
+		input         string
+		expected      TestCaseSet
+		expectedError string // Substring match of error message, empty for no error.
 	}{
 		// Happy flow relying on the default codec.
 		{
@@ -67,27 +69,15 @@ func TestNew(t *testing.T) {
 				IgnoredFields: []string{"@version"},
 			},
 		},
-		// Ignore bracket notation in TCS input lines when codec is line.
+		// Return error if legacy "input" key is used.
 		{
-			input: `{"input": ["{\"[test][path]\": \"test\"}"]}`,
-			expected: TestCaseSet{
-				Codec:         "line",
-				InputLines:    []string{`{"[test][path]": "test"}`},
-				IgnoredFields: []string{"@version"},
-				InputFields:   logstash.FieldSet{},
-				Events:        []logstash.FieldSet{{}},
-			},
+			input:         `{"input": ["{\"test\": \"test\"}"]}`,
+			expectedError: `testcase file contained deprecated "input" key`,
 		},
-		// Transform bracket notation in TCS input lines when codec is json_lines.
+		// Return error if legacy "input" key is used.
 		{
-			input: `{"input": ["{\"[test][path]\": \"test\"}"], "codec": "json_lines"}`,
-			expected: TestCaseSet{
-				Codec:         "json_lines",
-				InputLines:    []string{`{"test":{"path":"test"}}`},
-				IgnoredFields: []string{"@version"},
-				InputFields:   logstash.FieldSet{},
-				Events:        []logstash.FieldSet{{}},
-			},
+			input:         `{"expected": [{"test": "test"}]}`,
+			expectedError: `testcase file contained deprecated "expected" key`,
 		},
 		// Ignore bracket notation in TC input lines when codec is line.
 		{
@@ -126,14 +116,25 @@ func TestNew(t *testing.T) {
 	}
 	for i, c := range cases {
 		tcs, err := New(bytes.NewReader([]byte(c.input)), "json")
-		if err != nil {
-			t.Errorf("Test %d: %q input: %s", i, c.input, err)
-			break
-		}
-		resultJSON := marshalTestCaseSet(t, tcs)
-		expectedJSON := marshalTestCaseSet(t, &c.expected)
-		if expectedJSON != resultJSON {
-			t.Errorf("Test %d:\nExpected:\n%s\nGot:\n%s", i, expectedJSON, resultJSON)
+		if c.expectedError != "" {
+			if err == nil {
+				t.Errorf("Test %d: %q input: expected error", i, c.input)
+				break
+			}
+			if !strings.Contains(err.Error(), c.expectedError) {
+				t.Errorf("Test %d: %q input: expected error to contain %q, but it didn't", i, c.input, err)
+				break
+			}
+		} else {
+			if err != nil {
+				t.Errorf("Test %d: %q input: %s", i, c.input, err)
+				break
+			}
+			resultJSON := marshalTestCaseSet(t, tcs)
+			expectedJSON := marshalTestCaseSet(t, &c.expected)
+			if expectedJSON != resultJSON {
+				t.Errorf("Test %d:\nExpected:\n%s\nGot:\n%s", i, expectedJSON, resultJSON)
+			}
 		}
 	}
 }
@@ -202,7 +203,6 @@ func TestCompare(t *testing.T) {
 					"type": "test",
 				},
 				Codec:          "line",
-				InputLines:     []string{},
 				ExpectedEvents: []logstash.Event{},
 			},
 			[]logstash.Event{},
@@ -217,8 +217,7 @@ func TestCompare(t *testing.T) {
 				InputFields: logstash.FieldSet{
 					"type": "test",
 				},
-				Codec:      "line",
-				InputLines: []string{},
+				Codec: "line",
 				ExpectedEvents: []logstash.Event{
 					{
 						"a": "b",
@@ -244,8 +243,7 @@ func TestCompare(t *testing.T) {
 				InputFields: logstash.FieldSet{
 					"type": "test",
 				},
-				Codec:      "line",
-				InputLines: []string{},
+				Codec: "line",
 				ExpectedEvents: []logstash.Event{
 					{
 						"a": "b",
@@ -271,8 +269,7 @@ func TestCompare(t *testing.T) {
 				InputFields: logstash.FieldSet{
 					"type": "test",
 				},
-				Codec:      "line",
-				InputLines: []string{},
+				Codec: "line",
 				ExpectedEvents: []logstash.Event{
 					{
 						"a": "b",
@@ -295,8 +292,7 @@ func TestCompare(t *testing.T) {
 				InputFields: logstash.FieldSet{
 					"type": "test",
 				},
-				Codec:      "line",
-				InputLines: []string{},
+				Codec: "line",
 				ExpectedEvents: []logstash.Event{
 					{
 						"a": "b",
@@ -321,7 +317,6 @@ func TestCompare(t *testing.T) {
 				},
 				Codec:         "line",
 				IgnoredFields: []string{"ignored"},
-				InputLines:    []string{},
 				ExpectedEvents: []logstash.Event{
 					{
 						"not_ignored": "value",
@@ -347,7 +342,6 @@ func TestCompare(t *testing.T) {
 				},
 				Codec:         "line",
 				IgnoredFields: []string{"[file][log][path]"},
-				InputLines:    []string{},
 				ExpectedEvents: []logstash.Event{
 					{
 						"not_ignored": "value",
@@ -383,7 +377,6 @@ func TestCompare(t *testing.T) {
 				},
 				Codec:         "line",
 				IgnoredFields: []string{"[file][log][path]"},
-				InputLines:    []string{},
 				ExpectedEvents: []logstash.Event{
 					{
 						"not_ignored": "value",
@@ -411,8 +404,7 @@ func TestCompare(t *testing.T) {
 				InputFields: logstash.FieldSet{
 					"type": "test",
 				},
-				Codec:      "line",
-				InputLines: []string{},
+				Codec: "line",
 				ExpectedEvents: []logstash.Event{
 					{
 						"a": "b",
