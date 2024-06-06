@@ -13,46 +13,46 @@ var _ Logger = &LoggerMock{}
 
 // LoggerMock is a mock implementation of Logger.
 //
-// 	func TestSomethingThatUsesLogger(t *testing.T) {
+//	func TestSomethingThatUsesLogger(t *testing.T) {
 //
-// 		// make and configure a mocked Logger
-// 		mockedLogger := &LoggerMock{
-// 			DebugFunc: func(args ...interface{})  {
-// 				panic("mock out the Debug method")
-// 			},
-// 			DebugfFunc: func(format string, args ...interface{})  {
-// 				panic("mock out the Debugf method")
-// 			},
-// 			ErrorFunc: func(args ...interface{})  {
-// 				panic("mock out the Error method")
-// 			},
-// 			ErrorfFunc: func(format string, args ...interface{})  {
-// 				panic("mock out the Errorf method")
-// 			},
-// 			FatalFunc: func(args ...interface{})  {
-// 				panic("mock out the Fatal method")
-// 			},
-// 			FatalfFunc: func(format string, args ...interface{})  {
-// 				panic("mock out the Fatalf method")
-// 			},
-// 			InfoFunc: func(args ...interface{})  {
-// 				panic("mock out the Info method")
-// 			},
-// 			InfofFunc: func(format string, args ...interface{})  {
-// 				panic("mock out the Infof method")
-// 			},
-// 			WarningFunc: func(args ...interface{})  {
-// 				panic("mock out the Warning method")
-// 			},
-// 			WarningfFunc: func(format string, args ...interface{})  {
-// 				panic("mock out the Warningf method")
-// 			},
-// 		}
+//		// make and configure a mocked Logger
+//		mockedLogger := &LoggerMock{
+//			DebugFunc: func(args ...interface{})  {
+//				panic("mock out the Debug method")
+//			},
+//			DebugfFunc: func(format string, args ...interface{})  {
+//				panic("mock out the Debugf method")
+//			},
+//			ErrorFunc: func(args ...interface{})  {
+//				panic("mock out the Error method")
+//			},
+//			ErrorfFunc: func(format string, args ...interface{})  {
+//				panic("mock out the Errorf method")
+//			},
+//			FatalFunc: func(args ...interface{})  {
+//				panic("mock out the Fatal method")
+//			},
+//			FatalfFunc: func(format string, args ...interface{})  {
+//				panic("mock out the Fatalf method")
+//			},
+//			InfoFunc: func(args ...interface{})  {
+//				panic("mock out the Info method")
+//			},
+//			InfofFunc: func(format string, args ...interface{})  {
+//				panic("mock out the Infof method")
+//			},
+//			WarningFunc: func(args ...interface{})  {
+//				panic("mock out the Warning method")
+//			},
+//			WarningfFunc: func(format string, args ...interface{})  {
+//				panic("mock out the Warningf method")
+//			},
+//		}
 //
-// 		// use mockedLogger in code that requires Logger
-// 		// and then make assertions.
+//		// use mockedLogger in code that requires Logger
+//		// and then make assertions.
 //
-// 	}
+//	}
 type LoggerMock struct {
 	// DebugFunc mocks the Debug method.
 	DebugFunc func(args ...interface{})
@@ -177,7 +177,8 @@ func (mock *LoggerMock) Debug(args ...interface{}) {
 
 // DebugCalls gets all the calls that were made to Debug.
 // Check the length with:
-//     len(mockedLogger.DebugCalls())
+//
+//	len(mockedLogger.DebugCalls())
 func (mock *LoggerMock) DebugCalls() []struct {
 	Args []interface{}
 } {
@@ -210,7 +211,8 @@ func (mock *LoggerMock) Debugf(format string, args ...interface{}) {
 
 // DebugfCalls gets all the calls that were made to Debugf.
 // Check the length with:
-//     len(mockedLogger.DebugfCalls())
+//
+//	len(mockedLogger.DebugfCalls())
 func (mock *LoggerMock) DebugfCalls() []struct {
 	Format string
 	Args   []interface{}
@@ -243,7 +245,8 @@ func (mock *LoggerMock) Error(args ...interface{}) {
 
 // ErrorCalls gets all the calls that were made to Error.
 // Check the length with:
-//     len(mockedLogger.ErrorCalls())
+//
+//	len(mockedLogger.ErrorCalls())
 func (mock *LoggerMock) ErrorCalls() []struct {
 	Args []interface{}
 } {
@@ -276,7 +279,8 @@ func (mock *LoggerMock) Errorf(format string, args ...interface{}) {
 
 // ErrorfCalls gets all the calls that were made to Errorf.
 // Check the length with:
-//     len(mockedLogger.ErrorfCalls())
+//
+//	len(mockedLogger.ErrorfCalls())
 func (mock *LoggerMock) ErrorfCalls() []struct {
 	Format string
 	Args   []interface{}
@@ -309,7 +313,8 @@ func (mock *LoggerMock) Fatal(args ...interface{}) {
 
 // FatalCalls gets all the calls that were made to Fatal.
 // Check the length with:
-//     len(mockedLogger.FatalCalls())
+//
+//	len(mockedLogger.FatalCalls())
 func (mock *LoggerMock) FatalCalls() []struct {
 	Args []interface{}
 } {
@@ -342,7 +347,8 @@ func (mock *LoggerMock) Fatalf(format string, args ...interface{}) {
 
 // FatalfCalls gets all the calls that were made to Fatalf.
 // Check the length with:
-//     len(mockedLogger.FatalfCalls())
+//
+//	len(mockedLogger.FatalfCalls())
 func (mock *LoggerMock) FatalfCalls() []struct {
 	Format string
 	Args   []interface{}
@@ -375,7 +381,8 @@ func (mock *LoggerMock) Info(args ...interface{}) {
 
 // InfoCalls gets all the calls that were made to Info.
 // Check the length with:
-//     len(mockedLogger.InfoCalls())
+//
+//	len(mockedLogger.InfoCalls())
 func (mock *LoggerMock) InfoCalls() []struct {
 	Args []interface{}
 } {
@@ -408,7 +415,8 @@ func (mock *LoggerMock) Infof(format string, args ...interface{}) {
 
 // InfofCalls gets all the calls that were made to Infof.
 // Check the length with:
-//     len(mockedLogger.InfofCalls())
+//
+//	len(mockedLogger.InfofCalls())
 func (mock *LoggerMock) InfofCalls() []struct {
 	Format string
 	Args   []interface{}
@@ -441,7 +449,8 @@ func (mock *LoggerMock) Warning(args ...interface{}) {
 
 // WarningCalls gets all the calls that were made to Warning.
 // Check the length with:
-//     len(mockedLogger.WarningCalls())
+//
+//	len(mockedLogger.WarningCalls())
 func (mock *LoggerMock) WarningCalls() []struct {
 	Args []interface{}
 } {
@@ -474,7 +483,8 @@ func (mock *LoggerMock) Warningf(format string, args ...interface{}) {
 
 // WarningfCalls gets all the calls that were made to Warningf.
 // Check the length with:
-//     len(mockedLogger.WarningfCalls())
+//
+//	len(mockedLogger.WarningfCalls())
 func (mock *LoggerMock) WarningfCalls() []struct {
 	Format string
 	Args   []interface{}

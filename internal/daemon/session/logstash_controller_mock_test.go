@@ -16,34 +16,34 @@ var _ session.LogstashController = &LogstashControllerMock{}
 
 // LogstashControllerMock is a mock implementation of session.LogstashController.
 //
-// 	func TestSomethingThatUsesLogstashController(t *testing.T) {
+//	func TestSomethingThatUsesLogstashController(t *testing.T) {
 //
-// 		// make and configure a mocked session.LogstashController
-// 		mockedLogstashController := &LogstashControllerMock{
-// 			ExecuteTestFunc: func(pipelines pipeline.Pipelines, expectedEvents int) error {
-// 				panic("mock out the ExecuteTest method")
-// 			},
-// 			GetResultsFunc: func() ([]string, error) {
-// 				panic("mock out the GetResults method")
-// 			},
-// 			IsHealthyFunc: func() bool {
-// 				panic("mock out the IsHealthy method")
-// 			},
-// 			KillFunc: func()  {
-// 				panic("mock out the Kill method")
-// 			},
-// 			SetupTestFunc: func(pipelines pipeline.Pipelines) error {
-// 				panic("mock out the SetupTest method")
-// 			},
-// 			TeardownFunc: func() error {
-// 				panic("mock out the Teardown method")
-// 			},
-// 		}
+//		// make and configure a mocked session.LogstashController
+//		mockedLogstashController := &LogstashControllerMock{
+//			ExecuteTestFunc: func(pipelines pipeline.Pipelines, expectedEvents int) error {
+//				panic("mock out the ExecuteTest method")
+//			},
+//			GetResultsFunc: func() ([]string, error) {
+//				panic("mock out the GetResults method")
+//			},
+//			IsHealthyFunc: func() bool {
+//				panic("mock out the IsHealthy method")
+//			},
+//			KillFunc: func()  {
+//				panic("mock out the Kill method")
+//			},
+//			SetupTestFunc: func(pipelines pipeline.Pipelines) error {
+//				panic("mock out the SetupTest method")
+//			},
+//			TeardownFunc: func() error {
+//				panic("mock out the Teardown method")
+//			},
+//		}
 //
-// 		// use mockedLogstashController in code that requires session.LogstashController
-// 		// and then make assertions.
+//		// use mockedLogstashController in code that requires session.LogstashController
+//		// and then make assertions.
 //
-// 	}
+//	}
 type LogstashControllerMock struct {
 	// ExecuteTestFunc mocks the ExecuteTest method.
 	ExecuteTestFunc func(pipelines pipeline.Pipelines, expectedEvents int) error
@@ -118,7 +118,8 @@ func (mock *LogstashControllerMock) ExecuteTest(pipelines pipeline.Pipelines, ex
 
 // ExecuteTestCalls gets all the calls that were made to ExecuteTest.
 // Check the length with:
-//     len(mockedLogstashController.ExecuteTestCalls())
+//
+//	len(mockedLogstashController.ExecuteTestCalls())
 func (mock *LogstashControllerMock) ExecuteTestCalls() []struct {
 	Pipelines      pipeline.Pipelines
 	ExpectedEvents int
@@ -148,7 +149,8 @@ func (mock *LogstashControllerMock) GetResults() ([]string, error) {
 
 // GetResultsCalls gets all the calls that were made to GetResults.
 // Check the length with:
-//     len(mockedLogstashController.GetResultsCalls())
+//
+//	len(mockedLogstashController.GetResultsCalls())
 func (mock *LogstashControllerMock) GetResultsCalls() []struct {
 } {
 	var calls []struct {
@@ -174,7 +176,8 @@ func (mock *LogstashControllerMock) IsHealthy() bool {
 
 // IsHealthyCalls gets all the calls that were made to IsHealthy.
 // Check the length with:
-//     len(mockedLogstashController.IsHealthyCalls())
+//
+//	len(mockedLogstashController.IsHealthyCalls())
 func (mock *LogstashControllerMock) IsHealthyCalls() []struct {
 } {
 	var calls []struct {
@@ -200,7 +203,8 @@ func (mock *LogstashControllerMock) Kill() {
 
 // KillCalls gets all the calls that were made to Kill.
 // Check the length with:
-//     len(mockedLogstashController.KillCalls())
+//
+//	len(mockedLogstashController.KillCalls())
 func (mock *LogstashControllerMock) KillCalls() []struct {
 } {
 	var calls []struct {
@@ -229,7 +233,8 @@ func (mock *LogstashControllerMock) SetupTest(pipelines pipeline.Pipelines) erro
 
 // SetupTestCalls gets all the calls that were made to SetupTest.
 // Check the length with:
-//     len(mockedLogstashController.SetupTestCalls())
+//
+//	len(mockedLogstashController.SetupTestCalls())
 func (mock *LogstashControllerMock) SetupTestCalls() []struct {
 	Pipelines pipeline.Pipelines
 } {
@@ -257,7 +262,8 @@ func (mock *LogstashControllerMock) Teardown() error {
 
 // TeardownCalls gets all the calls that were made to Teardown.
 // Check the length with:
-//     len(mockedLogstashController.TeardownCalls())
+//
+//	len(mockedLogstashController.TeardownCalls())
 func (mock *LogstashControllerMock) TeardownCalls() []struct {
 } {
 	var calls []struct {
