@@ -11,7 +11,7 @@ package pluginmock
 
 import (
 	"fmt"
-	"io/ioutil"
+	"os"
 
 	config "github.com/breml/logstash-config"
 	"github.com/breml/logstash-config/ast"
@@ -42,7 +42,7 @@ func FromFile(filename string) (Mocks, error) {
 
 	mocks := []Mock{}
 
-	body, err := ioutil.ReadFile(filename)
+	body, err := os.ReadFile(filename)
 	if err != nil {
 		return Mocks{}, err
 	}

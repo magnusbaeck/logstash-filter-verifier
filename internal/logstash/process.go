@@ -7,7 +7,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"os"
 	"os/exec"
 )
@@ -115,7 +114,7 @@ func (p *Process) Wait() (*Result, error) {
 
 	// Save the log output regardless of whether the child process
 	// succeeded or not.
-	logbuf, logerr := ioutil.ReadAll(p.inv.logFile)
+	logbuf, logerr := io.ReadAll(p.inv.logFile)
 	if logerr != nil {
 		// Log this weird error condition but don't let it
 		// fail the function. We don't care about the log
@@ -123,7 +122,7 @@ func (p *Process) Wait() (*Result, error) {
 		// report that problem anyway.
 		log.Errorf("Error reading the Logstash logfile: %s", logerr)
 	}
-	outbuf, _ := ioutil.ReadAll(p.stdio)
+	outbuf, _ := io.ReadAll(p.stdio)
 
 	result := Result{
 		Events:  []Event{},

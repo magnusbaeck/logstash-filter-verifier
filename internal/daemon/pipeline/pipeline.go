@@ -3,7 +3,6 @@ package pipeline
 import (
 	"archive/zip"
 	"bytes"
-	"io/ioutil"
 	"os"
 	"path"
 	"path/filepath"
@@ -36,7 +35,7 @@ type Pipeline struct {
 }
 
 func New(file, basePath string) (Archive, error) {
-	b, err := ioutil.ReadFile(file)
+	b, err := os.ReadFile(file)
 	if err != nil {
 		return Archive{}, err
 	}
@@ -82,7 +81,7 @@ func (a Archive) ZipWithPreprocessor(addMissingID bool, preprocess func([]byte) 
 	if err != nil {
 		return nil, nil, err
 	}
-	body, err := ioutil.ReadFile(a.File)
+	body, err := os.ReadFile(a.File)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -129,7 +128,7 @@ func (a Archive) ZipWithPreprocessor(addMissingID bool, preprocess func([]byte) 
 				return nil, nil, err
 			}
 
-			body, err := ioutil.ReadFile(file)
+			body, err := os.ReadFile(file)
 			if err != nil {
 				return nil, nil, err
 			}

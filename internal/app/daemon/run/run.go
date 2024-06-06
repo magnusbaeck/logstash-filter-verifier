@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"net"
 	"os"
 	"path/filepath"
@@ -223,7 +222,7 @@ func (s Test) createImplicitPipeline() (string, error) {
 		return "", errors.Wrap(err, "failed to read logstash config")
 	}
 
-	pipelineBaseDir, err := ioutil.TempDir("", "lfv-pipeline-*")
+	pipelineBaseDir, err := os.MkdirTemp("", "lfv-pipeline-*")
 	if err != nil {
 		return "", errors.Wrap(err, "failed to create temporary directory for implicit pipeline")
 	}
@@ -246,8 +245,7 @@ func (s Test) createImplicitPipeline() (string, error) {
 	}
 
 	pipelineFile := filepath.Join(pipelineBaseDir, "pipelines.yml")
-	err = ioutil.WriteFile(pipelineFile, body, 0600)
-	if err != nil {
+	if err := os.WriteFile(pipelineFile, body, 0600); err != nil {
 		return "", errors.Wrap(err, "failed to write implicit pipelines.yml file")
 	}
 

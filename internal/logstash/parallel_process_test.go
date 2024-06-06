@@ -5,7 +5,6 @@ package logstash
 import (
 	"errors"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"reflect"
 	"testing"
@@ -24,7 +23,7 @@ func TestParallelProcess(t *testing.T) {
 	}
 	defer CleanupTestStreams([]*TestStream{ts})
 
-	file, err := ioutil.TempFile("", "")
+	file, err := os.CreateTemp("", "")
 	if err != nil {
 		t.Fatalf("Failed to create temporary config file: %s", err)
 	}

@@ -7,7 +7,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"net"
 	"os"
 	"os/exec"
@@ -37,7 +36,7 @@ type TestStream struct {
 // The timeout defines, how long to wait in Write for the receiver to
 // become available.
 func NewTestStream(inputCodec string, fields FieldSet, timeout time.Duration) (*TestStream, error) {
-	dir, err := ioutil.TempDir("", "")
+	dir, err := os.MkdirTemp("", "")
 	if err != nil {
 		return nil, err
 	}
@@ -244,7 +243,7 @@ func (p *ParallelProcess) Wait() (*ParallelResult, error) {
 
 	// Save the log output regardless of whether the child process
 	// succeeded or not.
-	logbuf, logerr := ioutil.ReadAll(p.inv.logFile)
+	logbuf, logerr := io.ReadAll(p.inv.logFile)
 	if logerr != nil {
 		// Log this weird error condition but don't let it
 		// fail the function. We don't care about the log
@@ -252,7 +251,7 @@ func (p *ParallelProcess) Wait() (*ParallelResult, error) {
 		// report that problem anyway.
 		log.Errorf("Error reading the Logstash logfile: %s", logerr)
 	}
-	outbuf, _ := ioutil.ReadAll(p.stdio)
+	outbuf, _ := io.ReadAll(p.stdio)
 
 	result := ParallelResult{
 		Events:  [][]Event{},

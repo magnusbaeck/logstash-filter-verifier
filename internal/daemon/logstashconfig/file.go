@@ -2,7 +2,6 @@ package logstashconfig
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path"
 	"path/filepath"
@@ -30,7 +29,7 @@ func (f File) Save(targetDir string) error {
 		return err
 	}
 
-	return ioutil.WriteFile(filepath.Join(targetDir, f.Name), f.Body, 0600)
+	return os.WriteFile(filepath.Join(targetDir, f.Name), f.Body, 0600)
 }
 
 func (f *File) parse() error {

@@ -7,7 +7,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -176,7 +175,7 @@ func New(reader io.Reader, configType string) (*TestCaseSet, error) {
 		Codec:       "line",
 		InputFields: logstash.FieldSet{},
 	}
-	buf, err := ioutil.ReadAll(reader)
+	buf, err := io.ReadAll(reader)
 	if err != nil {
 		return nil, err
 	}
@@ -302,7 +301,7 @@ func (tcs *TestCaseSet) Compare(events []logstash.Event, diffCommand []string, l
 		return true, nil
 	}
 
-	tempdir, err := ioutil.TempDir("", "")
+	tempdir, err := os.MkdirTemp("", "")
 	if err != nil {
 		return false, err
 	}
@@ -367,7 +366,7 @@ func marshalToFile(event logstash.Event, filename string) error {
 	if err = os.MkdirAll(filepath.Dir(filename), 0700); err != nil {
 		return err
 	}
-	return ioutil.WriteFile(filename, []byte(string(buf)+"\n"), 0600)
+	return os.WriteFile(filename, []byte(string(buf)+"\n"), 0600)
 }
 
 // runDiffCommand passes two files to the supplied command (executable

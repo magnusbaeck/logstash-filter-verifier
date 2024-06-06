@@ -4,7 +4,6 @@ package testcase
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
@@ -27,7 +26,7 @@ func DiscoverTests(path string) ([]TestCaseSet, error) {
 }
 
 func discoverTestDirectory(path string) ([]TestCaseSet, error) {
-	files, err := ioutil.ReadDir(path)
+	files, err := os.ReadDir(path)
 	if err != nil {
 		return nil, fmt.Errorf("Error discovering test case files: %s", err)
 	}

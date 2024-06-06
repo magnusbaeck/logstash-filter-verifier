@@ -5,7 +5,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"io/ioutil"
+	"io"
 	"net"
 	"os"
 	"os/signal"
@@ -91,7 +91,7 @@ func (d *Daemon) Run(ctx context.Context) error {
 	ctx, shutdown := context.WithCancel(ctxKill)
 	defer shutdown()
 
-	tempdir, err := ioutil.TempDir("", "lfv-")
+	tempdir, err := os.MkdirTemp("", "lfv-")
 	if err != nil {
 		return err
 	}
@@ -330,7 +330,7 @@ func (d *Daemon) extractZip(in []byte) (pipeline.Pipelines, []logstashconfig.Fil
 				}
 			}()
 
-			body, err := ioutil.ReadAll(rc)
+			body, err := io.ReadAll(rc)
 			if err != nil {
 				return err
 			}

@@ -4,7 +4,7 @@ package logstash
 
 import (
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net"
 	"os"
 	"testing"
@@ -30,7 +30,7 @@ func logstashMock() {
 	if err != nil {
 		log.Fatalf("Failed to dial %s with error: %s", os.Getenv("TEST_SOCKET"), err)
 	}
-	b, err := ioutil.ReadAll(conn)
+	b, err := io.ReadAll(conn)
 	if err != nil {
 		log.Fatalf("Eror while reading from socket: %s", err)
 	}

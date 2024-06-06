@@ -5,7 +5,6 @@ package testcase
 import (
 	"bytes"
 	"encoding/json"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"testing"
@@ -129,7 +128,7 @@ func TestNewFromFile(t *testing.T) {
 		// As it happens a valid JSON file is also a valid YAML file so
 		// the file we create can have the same contents regardless of
 		// the file format.
-		if err = ioutil.WriteFile(fullTestCasePath, []byte(`{"type": "test"}`), 0600); err != nil {
+		if err = os.WriteFile(fullTestCasePath, []byte(`{"type": "test"}`), 0600); err != nil {
 			t.Fatal(err.Error())
 		}
 
@@ -417,7 +416,7 @@ func TestMarshalToFile(t *testing.T) {
 	// We won't verify the actual contents that was marshaled,
 	// we'll just check that it can be unmarshalled again and that
 	// the file ends with a newline.
-	buf, err := ioutil.ReadFile(fullpath)
+	buf, err := os.ReadFile(fullpath)
 	if err != nil {
 		t.Fatalf(err.Error())
 	}

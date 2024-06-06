@@ -2,7 +2,6 @@ package controller
 
 import (
 	"context"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"sync"
@@ -192,8 +191,7 @@ func (c *Controller) writePipelines(pipelines ...pipeline.Pipeline) error {
 		return err
 	}
 
-	err = ioutil.WriteFile(filepath.Join(c.workDir, "pipelines.yml"), pipelinesBody, 0600)
-	if err != nil {
+	if err := os.WriteFile(filepath.Join(c.workDir, "pipelines.yml"), pipelinesBody, 0600); err != nil {
 		return err
 	}
 

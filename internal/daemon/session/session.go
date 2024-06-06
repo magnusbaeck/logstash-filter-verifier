@@ -3,7 +3,6 @@ package session
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -217,8 +216,8 @@ func prepareFields(fieldsFilename string, inEvents []map[string]interface{}) err
 	if err != nil {
 		return err
 	}
-	err = ioutil.WriteFile(fieldsFilename, bfields, 0600)
-	if err != nil {
+
+	if err := os.WriteFile(fieldsFilename, bfields, 0600); err != nil {
 		return err
 	}
 

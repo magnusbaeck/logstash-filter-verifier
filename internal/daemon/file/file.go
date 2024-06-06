@@ -2,7 +2,6 @@ package file
 
 import (
 	"bytes"
-	"io/ioutil"
 	"os"
 )
 
@@ -12,7 +11,7 @@ func Exists(filename string) bool {
 }
 
 func Contains(filename string, needle string) bool {
-	body, err := ioutil.ReadFile(filename)
+	body, err := os.ReadFile(filename)
 	if err != nil {
 		return false
 	}

@@ -5,7 +5,6 @@ package logstash
 import (
 	"errors"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"testing"
@@ -48,7 +47,7 @@ func TestArgs(t *testing.T) {
 	var filterOk bool
 	var ioOk bool
 	for _, file := range files {
-		buf, err := ioutil.ReadFile(filepath.Join(configOption, file))
+		buf, err := os.ReadFile(filepath.Join(configOption, file))
 		if err != nil {
 			t.Errorf("Error reading configuration file: %s", err)
 			continue
@@ -194,7 +193,7 @@ func createTestInvocation(t *testing.T, version semver.Version) (*testInvocation
 
 	configFile := filepath.Join(tempdir, "configfile.conf")
 	configContents := ""
-	if err := ioutil.WriteFile(configFile, []byte(configContents), 0600); err != nil {
+	if err := os.WriteFile(configFile, []byte(configContents), 0600); err != nil {
 		return nil, fmt.Errorf("Unexpected error when creating dummy configuration file: %s", err)
 	}
 	logstashPath := filepath.Join(tempdir, "bin/logstash")
