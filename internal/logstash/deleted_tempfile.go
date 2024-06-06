@@ -3,7 +3,6 @@
 package logstash
 
 import (
-	"io/ioutil"
 	"os"
 )
 
@@ -13,12 +12,11 @@ type deletedTempFile struct {
 	*os.File
 }
 
-// NewDeletedTempFile creates a new temporary file that will be
-// deleted upon closing. It uses the TempFile function from io/ioutil
-// for the creation of the file and the dir and prefix parameters are
-// passed straight through.
+// NewDeletedTempFile creates a new temporary file that will be deleted
+// upon closing. It uses os.CreateTemp for the creation of the file and
+// the dir and prefix parameters are passed straight through.
 func newDeletedTempFile(dir, prefix string) (*deletedTempFile, error) {
-	f, err := ioutil.TempFile(dir, prefix)
+	f, err := os.CreateTemp(dir, prefix)
 	if err != nil {
 		return nil, err
 	}

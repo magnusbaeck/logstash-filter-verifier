@@ -4,7 +4,6 @@ package logstash
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"sort"
@@ -82,12 +81,12 @@ func getPipelineConfigDir(dir string, configs []string) error {
 // is true the returned path will include the directory name.
 func getFilesInDir(dir string, includeDir bool) ([]string, error) {
 	filenames := make([]string, 0)
-	files, err := ioutil.ReadDir(dir)
+	files, err := os.ReadDir(dir)
 	if err != nil {
 		return nil, err
 	}
 	for _, f := range files {
-		if !f.Mode().IsDir() {
+		if !f.IsDir() {
 			if includeDir {
 				filenames = append(filenames, filepath.Join(dir, f.Name()))
 			} else {
@@ -116,5 +115,5 @@ func removeInputOutput(path string) error {
 	config.Input = nil
 	config.Output = nil
 
-	return ioutil.WriteFile(path, []byte(config.String()), 0600)
+	return os.WriteFile(path, []byte(config.String()), 0600)
 }

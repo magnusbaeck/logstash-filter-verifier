@@ -3,7 +3,6 @@
 package logstash
 
 import (
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -160,7 +159,7 @@ func TestCopyAllFiles(t *testing.T) {
 		// Are all files copied and do they contain the
 		// expected contents (the filepath's basename)?
 		for _, filename := range c.wanted {
-			buf, err := ioutil.ReadFile(filepath.Join(destdir, filename))
+			buf, err := os.ReadFile(filepath.Join(destdir, filename))
 			if err != nil {
 				t.Errorf("Test %d: Got error reading copied file: %s", i, err)
 			}
@@ -175,7 +174,7 @@ func TestCopyFile(t *testing.T) {
 	testData := "random string\n"
 
 	// Create the source file.
-	source, err := ioutil.TempFile("", "")
+	source, err := os.CreateTemp("", "")
 	if err != nil {
 		t.Fatalf("Unexpected error when creating file: %s", err)
 	}
@@ -186,7 +185,7 @@ func TestCopyFile(t *testing.T) {
 	if err = copyFile(source.Name(), destPath); err != nil {
 		t.Fatalf("Unexpected error: %s", err)
 	}
-	buf, err := ioutil.ReadFile(destPath)
+	buf, err := os.ReadFile(destPath)
 	if err != nil {
 		t.Fatalf("Unexpected error reading destination file: %s", err)
 	}

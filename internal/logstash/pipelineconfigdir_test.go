@@ -4,7 +4,6 @@ package logstash
 
 import (
 	"errors"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"reflect"
@@ -159,7 +158,7 @@ func TestGetPipelineConfigDir(t *testing.T) {
 				t.Fatalf("Test %d: Unexpected error when creating temp dir: %s", i, err)
 			}
 
-			if err := ioutil.WriteFile(filepath.Join(tempdir, f), []byte(createLogstashConfigWithString(filepath.Base(f))), 0600); err != nil {
+			if err := os.WriteFile(filepath.Join(tempdir, f), []byte(createLogstashConfigWithString(filepath.Base(f))), 0600); err != nil {
 				t.Fatalf("Test %d: Unexpected error when writing to temp file: %s", i, err)
 			}
 			configFiles = append(configFiles, filepath.Join(tempdir, f))
@@ -197,7 +196,7 @@ func TestGetPipelineConfigDir(t *testing.T) {
 
 		// Check that each file contains its own name.
 		for _, f := range actualConfigFiles {
-			buf, err := ioutil.ReadFile(filepath.Join(resultDir, f))
+			buf, err := os.ReadFile(filepath.Join(resultDir, f))
 			if err != nil {
 				t.Fatalf("Test %d: Unexpected error when reading file: %s", i, err)
 			}
@@ -302,7 +301,7 @@ func TestRemoveInputOutput(t *testing.T) {
 		},
 	}
 	for i, c := range cases {
-		f, err := ioutil.TempFile("", "lsconf")
+		f, err := os.CreateTemp("", "lsconf")
 		if err != nil {
 			t.Fatalf("Test %d: Unexpected error when creating temp file: %s", i, err)
 		}
@@ -310,7 +309,7 @@ func TestRemoveInputOutput(t *testing.T) {
 		path := f.Name()
 		defer os.Remove(path)
 
-		err = ioutil.WriteFile(path, []byte(c.input), 0600)
+		err = os.WriteFile(path, []byte(c.input), 0600)
 		if err != nil {
 			t.Fatalf("Test %d: Unexpected error when writing to temp file: %s", i, err)
 		}
@@ -321,7 +320,7 @@ func TestRemoveInputOutput(t *testing.T) {
 			continue
 		}
 
-		data, err := ioutil.ReadFile(path)
+		data, err := os.ReadFile(path)
 		if err != nil {
 			t.Error(err)
 		}

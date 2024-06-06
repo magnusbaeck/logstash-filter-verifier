@@ -6,7 +6,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 
@@ -34,7 +33,7 @@ func NewInvocation(logstashPath string, logstashArgs []string, logstashVersion *
 		return nil, errors.New("must provide non-empty list of configuration file or directory names")
 	}
 
-	tempDir, err := ioutil.TempDir("", "")
+	tempDir, err := os.MkdirTemp("", "")
 	if err != nil {
 		return nil, err
 	}
@@ -66,7 +65,7 @@ func NewInvocation(logstashPath string, logstashArgs []string, logstashVersion *
 	// -f options so the invocation-specific input and output
 	// configurations need to go in a file in the pipeline
 	// directory. Generate a unique file for that purpose.
-	ioConfigFile, err := ioutil.TempFile(pipelineDir, "ioconfig.*.conf")
+	ioConfigFile, err := os.CreateTemp(pipelineDir, "ioconfig.*.conf")
 	if err != nil {
 		_ = logFile.Close()
 		_ = os.RemoveAll(tempDir)
@@ -110,7 +109,7 @@ func NewInvocation(logstashPath string, logstashArgs []string, logstashVersion *
 		// put there. The various path settings that we need
 		// to provide can just as well be passed as command
 		// arguments.
-		err := ioutil.WriteFile(filepath.Join(configDir, "logstash.yml"), []byte{}, 0600)
+		err := os.WriteFile(filepath.Join(configDir, "logstash.yml"), []byte{}, 0600)
 		if err != nil {
 			_ = logFile.Close()
 			_ = os.RemoveAll(tempDir)

@@ -27,11 +27,3 @@ linters:
 linters-settings:
   misspell:
     locale: US
-
-issues:
-  exclude-rules:
-    # We'll replace references to io/ioutil later. Until then we don't
-    # want to hear about it.
-    - linters:
-        - staticcheck
-      text: 'SA1019: "io/ioutil" has been deprecated'

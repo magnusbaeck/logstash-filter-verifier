@@ -3,7 +3,6 @@
 package testcase
 
 import (
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"sort"
@@ -53,7 +52,7 @@ func TestDiscoverTests_Directory(t *testing.T) {
 				t.Errorf("This test doesn't support subdirectories: %s", f)
 				break
 			}
-			if err := ioutil.WriteFile(filepath.Join(tempdir, f), []byte(`{"type": "test"}`), 0600); err != nil {
+			if err := os.WriteFile(filepath.Join(tempdir, f), []byte(`{"type": "test"}`), 0600); err != nil {
 				t.Fatalf(err.Error())
 			}
 		}
@@ -111,7 +110,7 @@ func TestDiscoverTests_File(t *testing.T) {
 		// As it happens a valid JSON file is also a valid YAML file so
 		// the file we create can have the same contents regardless of
 		// the file format.
-		if err := ioutil.WriteFile(inputpath, []byte(`{"type": "test"}`), 0600); err != nil {
+		if err := os.WriteFile(inputpath, []byte(`{"type": "test"}`), 0600); err != nil {
 			t.Fatal(err.Error())
 		}
 
