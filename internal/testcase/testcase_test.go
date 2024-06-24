@@ -113,7 +113,10 @@ func TestNewFromFile(t *testing.T) {
 		"filename.yaml",
 	}
 	for _, filename := range filenames {
-		tempdir := t.TempDir()
+		tempdir, err := filepath.EvalSymlinks(t.TempDir())
+		if err != nil {
+			t.Fatalf(err.Error())
+		}
 		olddir, err := os.Getwd()
 		if err != nil {
 			t.Fatalf(err.Error())
