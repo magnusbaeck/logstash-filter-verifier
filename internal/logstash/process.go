@@ -104,7 +104,7 @@ func (p *Process) Start() error {
 
 // Wait blocks until the started Logstash process terminates and
 // returns the result of the execution.
-func (p *Process) Wait() (*Result, error) {
+func (p *Process) Wait_(eventFunc func(r io.Reader) ([]Event, error)) (*Result, error) {
 	if p.child.Process == nil {
 		return nil, errors.New("can't wait on an unborn process")
 	}
@@ -135,9 +135,17 @@ func (p *Process) Wait() (*Result, error) {
 	}
 
 	var err error
-	result.Events, err = readEvents(p.output)
+	result.Events, err = eventFunc(p.output)
 	result.Success = err == nil
 	return &result, err
+}
+
+func (p *Process) WaitAndPrint() (*Result, error) {
+	return p.Wait_(formatAndPrintEvents)
+}
+
+func (p *Process) WaitAndRead() (*Result, error) {
+	return p.Wait_(readEvents)
 }
 
 // Release frees all allocated resources connected to this process.

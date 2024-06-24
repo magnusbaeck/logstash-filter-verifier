@@ -233,7 +233,7 @@ func (p *ParallelProcess) Start() error {
 
 // Wait blocks until the started Logstash process terminates and
 // returns the result of the execution.
-func (p *ParallelProcess) Wait() (*ParallelResult, error) {
+func (p *ParallelProcess) Wait_(eventFunc func(r io.Reader) ([]Event, error)) (*ParallelResult, error) {
 	if p.child.Process == nil {
 		return nil, errors.New("can't wait on an unborn process")
 	}
@@ -272,7 +272,7 @@ func (p *ParallelProcess) Wait() (*ParallelResult, error) {
 	var err error
 	result.Events = make([][]Event, len(p.streams))
 	for i, tc := range p.streams {
-		result.Events[i], err = readEvents(tc.receiver)
+		result.Events[i], err = eventFunc(tc.receiver)
 		tc.receiver.Close()
 		result.Success = err == nil
 
@@ -290,6 +290,14 @@ func (p *ParallelProcess) Wait() (*ParallelResult, error) {
 		}
 	}
 	return &result, err
+}
+
+func (p *ParallelProcess) WaitAndPrint() (*ParallelResult, error) {
+	return p.Wait_(formatAndPrintEvents)
+}
+
+func (p *ParallelProcess) WaitAndRead() (*ParallelResult, error) {
+	return p.Wait_(readEvents)
 }
 
 // Release frees all allocated resources connected to this process.
