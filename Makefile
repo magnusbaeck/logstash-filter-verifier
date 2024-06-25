@@ -38,7 +38,6 @@ VERSION := $(shell git describe --tags --always)
 GOCOV              := $(GOBIN)/gocov$(EXEC_SUFFIX)
 GOCOV_HTML         := $(GOBIN)/gocov-html$(EXEC_SUFFIX)
 GOLANGCI_LINT      := $(GOBIN)/golangci-lint$(EXEC_SUFFIX)
-GOVVV              := $(GOBIN)/govvv$(EXEC_SUFFIX)
 OVERALLS           := $(GOBIN)/overalls$(EXEC_SUFFIX)
 PROTOC_GEN_GO      := $(GOBIN)/protoc-gen-go$(EXEC_SUFFIX)
 PROTOC_GEN_GO_GRPC := $(GOBIN)/protoc-gen-go-grpc$(EXEC_SUFFIX)
@@ -63,9 +62,6 @@ $(GOLANGCI_LINT):
 	    https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh \
 		| sh -s -- -b $(dir $(GOLANGCI_LINT)) $(GOLANGCI_LINT_VERSION)
 
-$(GOVVV):
-	go install github.com/ahmetb/govvv
-
 $(OVERALLS):
 	go install github.com/go-playground/overalls
 
@@ -80,8 +76,8 @@ $(MOQ):
 
 # The Go compiler is fast and pretty good about figuring out what to
 # build so we don't try to to outsmart it.
-$(PROGRAM)$(EXEC_SUFFIX): gogenerate .FORCE $(GOVVV)
-	govvv build -o $@
+$(PROGRAM)$(EXEC_SUFFIX): gogenerate .FORCE
+	go build -o $@
 
 .PHONY: gogenerate
 gogenerate: $(MOQ) $(PROTOC_GEN_GO) $(PROTOC_GEN_GO_GRPC)
@@ -120,7 +116,7 @@ dist/$(PROGRAM)_$(VERSION).tar.gz:
 	mkdir -p $(dir $@)
 	git archive --output=$@ HEAD
 
-dist/$(PROGRAM)_$(VERSION)_%.tar.gz: $(GOVVV)
+dist/$(PROGRAM)_$(VERSION)_%.tar.gz:
 	mkdir -p $(dir $@)
 	GOOS="$$(basename $@ .tar.gz | awk -F_ '{print $$3}')" && \
 	    GOARCH="$$(basename $@ .tar.gz | awk -F_ '{print $$4}')" && \
@@ -131,7 +127,7 @@ dist/$(PROGRAM)_$(VERSION)_%.tar.gz: $(GOVVV)
 	    docker run --rm -v $$(pwd):$$(pwd) -w $$(pwd) \
 	        -e GOOS=$$GOOS -e GOARCH=$$GOARCH \
 	        $(GOLANG_DOCKER_IMAGE) \
-	        bin/govvv build -o $$DISTDIR/$(PROGRAM)$$EXEC_SUFFIX && \
+	        go build -o $$DISTDIR/$(PROGRAM)$$EXEC_SUFFIX && \
 	    tar -C $$DISTDIR -zcpf $@ . && \
 	    rm -rf $$DISTDIR
 
