@@ -11,7 +11,7 @@ require (
 	github.com/bmatcuk/doublestar/v2 v2.0.4
 	github.com/breml/logstash-config v0.5.3
 	github.com/go-playground/overalls v0.0.0-20191218162659-7df9f728c018
-	github.com/golang/protobuf v1.5.2
+	github.com/golang/protobuf v1.5.3
 	github.com/hashicorp/packer v1.4.4
 	github.com/hpcloud/tail v1.0.0
 	github.com/imkira/go-observer v1.0.3
@@ -30,9 +30,9 @@ require (
 	github.com/stretchr/testify v1.7.0
 	github.com/tidwall/gjson v1.11.0
 	github.com/tidwall/sjson v1.1.5
-	google.golang.org/grpc v1.38.0
+	google.golang.org/grpc v1.56.3
 	google.golang.org/grpc/cmd/protoc-gen-go-grpc v1.0.1
-	google.golang.org/protobuf v1.26.0
+	google.golang.org/protobuf v1.30.0
 	gopkg.in/cheggaaa/pb.v2 v2.0.7
 	gopkg.in/yaml.v2 v2.4.0
 )
@@ -70,7 +70,7 @@ require (
 	golang.org/x/sys v0.18.0 // indirect
 	golang.org/x/text v0.14.0 // indirect
 	golang.org/x/tools v0.17.0 // indirect
-	google.golang.org/genproto v0.0.0-20210602131652-f16073e35f0c // indirect
+	google.golang.org/genproto v0.0.0-20230410155749-daa745c078e1 // indirect
 	gopkg.in/VividCortex/ewma.v1 v1.1.1 // indirect
 	gopkg.in/fatih/color.v1 v1.7.0 // indirect
 	gopkg.in/fsnotify.v1 v1.4.7 // indirect

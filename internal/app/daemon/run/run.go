@@ -118,7 +118,7 @@ func (s Test) Run() (err error) {
 	s.log.Debugf("socket to daemon %q", s.socket)
 	conn, err := grpc.Dial(
 		s.socket,
-		grpc.WithInsecure(),
+		grpc.WithInsecure(), //nolint:staticcheck
 		grpc.WithContextDialer(func(ctx context.Context, addr string) (net.Conn, error) {
 			if d, ok := ctx.Deadline(); ok {
 				return net.DialTimeout("unix", addr, time.Until(d))
