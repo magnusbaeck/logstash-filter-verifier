@@ -67,26 +67,60 @@ func TestNew(t *testing.T) {
 				IgnoredFields: []string{"@version"},
 			},
 		},
-		// No handle input with bracket notation when codec is line
+		// Ignore bracket notation in TCS input lines when codec is line
 		{
 			input: `{"input": ["{\"[test][path]\": \"test\"}"]}`,
 			expected: TestCaseSet{
 				Codec:         "line",
-				InputLines:    []string{"{\"[test][path]\": \"test\"}"},
+				InputLines:    []string{`{"[test][path]": "test"}`},
 				IgnoredFields: []string{"@version"},
 				InputFields:   logstash.FieldSet{},
 				Events:        []logstash.FieldSet{{}},
 			},
 		},
-		// handle input with bracket notation when codec is json_lines
+		// Transform bracket notation in TCS input lines when codec is json_lines
 		{
 			input: `{"input": ["{\"[test][path]\": \"test\"}"], "codec": "json_lines"}`,
 			expected: TestCaseSet{
 				Codec:         "json_lines",
-				InputLines:    []string{"{\"test\":{\"path\":\"test\"}}"},
+				InputLines:    []string{`{"test":{"path":"test"}}`},
 				IgnoredFields: []string{"@version"},
 				InputFields:   logstash.FieldSet{},
 				Events:        []logstash.FieldSet{{}},
+			},
+		},
+		// Ignore bracket notation in TC input lines when codec is line
+		{
+			input: `{"testcases": [{"input": ["{\"[test][path]\": \"test\"}"]}]}`,
+			expected: TestCaseSet{
+				Codec:         "line",
+				InputLines:    []string{`{"[test][path]": "test"}`},
+				IgnoredFields: []string{"@version"},
+				InputFields:   logstash.FieldSet{},
+				Events:        []logstash.FieldSet{{}},
+				TestCases: []TestCase{
+					{
+						InputFields: make(logstash.FieldSet),
+						InputLines:  []string{`{"[test][path]": "test"}`},
+					},
+				},
+			},
+		},
+		// Transform bracket notation in TC input lines when codec is json_lines
+		{
+			input: `{"testcases": [{"input": ["{\"[test][path]\": \"test\"}"]}], "codec": "json_lines"}`,
+			expected: TestCaseSet{
+				Codec:         "json_lines",
+				InputLines:    []string{`{"test":{"path":"test"}}`},
+				IgnoredFields: []string{"@version"},
+				InputFields:   logstash.FieldSet{},
+				Events:        []logstash.FieldSet{{}},
+				TestCases: []TestCase{
+					{
+						InputFields: make(logstash.FieldSet),
+						InputLines:  []string{`{"test":{"path":"test"}}`},
+					},
+				},
 			},
 		},
 	}
