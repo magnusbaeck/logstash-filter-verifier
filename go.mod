@@ -6,7 +6,6 @@ toolchain go1.22.4
 
 require (
 	github.com/Masterminds/semver/v3 v3.0.1
-	github.com/ahmetb/govvv v0.3.0
 	github.com/axw/gocov v1.0.0
 	github.com/bmatcuk/doublestar/v2 v2.0.4
 	github.com/breml/logstash-config v0.5.3
