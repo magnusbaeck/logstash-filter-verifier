@@ -383,6 +383,19 @@ There are a few points to be made here:
   cases that behave differently depending on the host where they're
   run, we ignore that field with the `ignore` property.
 
+## Log-run mode
+
+Log-run mode is useful if you want to pass example log files through your filter
+and take a look at the result.  Log-run mode makes this easy by using your test
+configuration so that you do not have to modify your pipeline configuration or
+maintain a development pipeline configuration.
+
+The command-line argument `--logfile=LOGFILE` enables log-run mode and passes
+`LOGFILE` to Logstash and prints the result of your pipeline to stdout.  You can
+provide command-line argument `--logfile LOGFILE` multiple times.  If `LOGFILE`
+is a directory, log-run mode finds all the log files that match
+`--logfile-extension` below the given directory and processes them (default
+logfile extension is `log`).
 
 ### Version 2.0 (Daemon mode only)
 

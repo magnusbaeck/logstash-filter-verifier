@@ -3,6 +3,7 @@ package standalone
 import (
 	"errors"
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -43,6 +44,8 @@ type Standalone struct {
 	configPaths           []string
 	unixSockets           bool
 	unixSocketCommTimeout time.Duration
+	logfiles              []string
+	logfileExtension      string
 
 	log logging.Logger
 }
@@ -59,6 +62,8 @@ func New(
 	configPaths []string,
 	unixSockets bool,
 	unixSocketCommTimeout time.Duration,
+	logfiles []string,
+	logfileExtension string,
 	log logging.Logger,
 ) Standalone {
 	return Standalone{
@@ -73,6 +78,8 @@ func New(
 		configPaths:           configPaths,
 		unixSockets:           unixSockets,
 		unixSocketCommTimeout: unixSocketCommTimeout,
+		logfiles:              logfiles,
+		logfileExtension:      logfileExtension,
 		log:                   log,
 	}
 }
@@ -127,17 +134,24 @@ func (s Standalone) Run() error {
 		return fmt.Errorf("An error occurred while setting up the Logstash environment: %s", err)
 	}
 	defer inv.Release()
-	if s.unixSockets {
-		if runtime.GOOS == "windows" {
-			return fmt.Errorf("Use of Unix domain sockets for communication with Logstash is not supported on Windows.")
-		}
-		fmt.Println("Use Unix domain sockets.")
-		if status, err = s.runParallelTests(inv, tests, diffCmd, allKeptEnvVars, liveObserver); err != nil {
+
+	if len(s.logfiles) > 0 {
+		if status, err = s.runLogs(inv, tests, s.logfiles, s.logfileExtension, allKeptEnvVars); err != nil {
 			return fmt.Errorf(err.Error())
 		}
 	} else {
-		if status, err = s.runTests(inv, tests, diffCmd, allKeptEnvVars, liveObserver); err != nil {
-			return fmt.Errorf(err.Error())
+		if s.unixSockets {
+			if runtime.GOOS == "windows" {
+				return fmt.Errorf("Use of Unix domain sockets for communication with Logstash is not supported on Windows.")
+			}
+			fmt.Println("Use Unix domain sockets.")
+			if status, err = s.runParallelTests(inv, tests, diffCmd, allKeptEnvVars, liveObserver); err != nil {
+				return fmt.Errorf(err.Error())
+			}
+		} else {
+			if status, err = s.runTests(inv, tests, diffCmd, allKeptEnvVars, liveObserver); err != nil {
+				return fmt.Errorf(err.Error())
+			}
 		}
 	}
 
@@ -205,7 +219,7 @@ func (s Standalone) runTests(inv *logstash.Invocation, tests []testcase.TestCase
 			return false, err
 		}
 
-		result, err := p.Wait()
+		result, err := p.WaitAndRead()
 		if err != nil || s.logstashOutput {
 			message := getLogstashOutputMessage(result.Output, result.Log)
 			if err != nil {
@@ -223,6 +237,72 @@ func (s Standalone) runTests(inv *logstash.Invocation, tests []testcase.TestCase
 		}
 	}
 
+	return ok, nil
+}
+
+func (s Standalone) visit(files *[]string, extension string) filepath.WalkFunc {
+	return func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			s.log.Fatal(err)
+		}
+		if info.IsDir() {
+			return nil
+		}
+		if filepath.Ext(path) != "."+extension {
+			return nil
+		}
+		*files = append(*files, path)
+		return nil
+	}
+}
+
+// runLogs runs Logstash with a set of configuration files against log files.
+func (s Standalone) runLogs(inv *logstash.Invocation, tests []testcase.TestCaseSet, logFilePaths []string, logFileExtension string, keptEnvVars []string) (bool, error) {
+	ok := true
+	for _, t := range tests {
+		fmt.Printf("Using test setup from %s...\n", filepath.Base(t.File))
+		p, err := logstash.NewProcess(inv, t.Codec, t.InputFields, keptEnvVars)
+		if err != nil {
+			return false, err
+		}
+		defer p.Release()
+		if err = p.Start(); err != nil {
+			return false, err
+		}
+		var file *os.File
+		var logFiles []string
+		var written int64
+		for _, logFilePath := range logFilePaths {
+			err = filepath.Walk(logFilePath, s.visit(&logFiles, logFileExtension))
+			if err != nil {
+				return false, err
+			}
+			for _, logFile := range logFiles {
+				fmt.Printf("Piping %s: ", logFile)
+				file, err = os.Open(logFile)
+				if err != nil {
+					return false, err
+				}
+				written, err = io.Copy(p.Input, file)
+				fmt.Printf("%d bytes\n", written)
+				if err != nil {
+					return false, err
+				}
+			}
+		}
+		if err = p.Input.Close(); err != nil {
+			return false, err
+		}
+
+		result, err := p.WaitAndPrint()
+		if err != nil || s.logstashOutput {
+			message := getLogstashOutputMessage(result.Output, result.Log)
+			if err != nil {
+				return false, fmt.Errorf("Error running Logstash: %s.%s", err, message)
+			}
+			userError("%s", message)
+		}
+	}
 	return ok, nil
 }
 
@@ -278,7 +358,7 @@ func (s Standalone) runParallelTests(inv *logstash.Invocation, tests []testcase.
 		}
 	}
 
-	result, err := p.Wait()
+	result, err := p.WaitAndRead()
 	if err != nil || s.logstashOutput {
 		message := getLogstashOutputMessage(result.Output, result.Log)
 		if err != nil {
