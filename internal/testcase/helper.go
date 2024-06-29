@@ -1,6 +1,7 @@
 package testcase
 
 import (
+	"encoding/json"
 	"reflect"
 	"regexp"
 )
@@ -22,6 +23,19 @@ func parseAllBracketProperties(data map[string]interface{}) map[string]interface
 	}
 
 	return result
+}
+
+// parseAllBracketPropertiesInJSON converts a JSON string with attributes
+// that may use the bracket notation (e.g. "[foo][bar]") in their keys into
+// a JSON string where the the field references have been expanded.
+func parseAllBracketPropertiesInJSON(jsonString string) (string, error) {
+	var jsonObj map[string]interface{}
+	if err := json.Unmarshal([]byte(jsonString), &jsonObj); err != nil {
+		return "", err
+	}
+	jsonObj = parseAllBracketProperties(jsonObj)
+	b, err := json.Marshal(jsonObj)
+	return string(b), err
 }
 
 // extractBracketFields convert bracket notation to slice of key.
