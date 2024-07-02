@@ -51,7 +51,7 @@ func TestNew(t *testing.T) {
 				IgnoredFields: []string{"@version", "foo"},
 			},
 		},
-		// Fields with bracket notation
+		// Fields with bracket notation.
 		{
 			input: `{"fields": {"type": "mytype", "[log][file][path]": "/tmp/file.log"}}`,
 			expected: TestCaseSet{
@@ -67,7 +67,7 @@ func TestNew(t *testing.T) {
 				IgnoredFields: []string{"@version"},
 			},
 		},
-		// Ignore bracket notation in TCS input lines when codec is line
+		// Ignore bracket notation in TCS input lines when codec is line.
 		{
 			input: `{"input": ["{\"[test][path]\": \"test\"}"]}`,
 			expected: TestCaseSet{
@@ -78,7 +78,7 @@ func TestNew(t *testing.T) {
 				Events:        []logstash.FieldSet{{}},
 			},
 		},
-		// Transform bracket notation in TCS input lines when codec is json_lines
+		// Transform bracket notation in TCS input lines when codec is json_lines.
 		{
 			input: `{"input": ["{\"[test][path]\": \"test\"}"], "codec": "json_lines"}`,
 			expected: TestCaseSet{
@@ -89,7 +89,7 @@ func TestNew(t *testing.T) {
 				Events:        []logstash.FieldSet{{}},
 			},
 		},
-		// Ignore bracket notation in TC input lines when codec is line
+		// Ignore bracket notation in TC input lines when codec is line.
 		{
 			input: `{"testcases": [{"input": ["{\"[test][path]\": \"test\"}"]}]}`,
 			expected: TestCaseSet{
@@ -106,7 +106,7 @@ func TestNew(t *testing.T) {
 				},
 			},
 		},
-		// Transform bracket notation in TC input lines when codec is json_lines
+		// Transform bracket notation in TC input lines when codec is json_lines.
 		{
 			input: `{"testcases": [{"input": ["{\"[test][path]\": \"test\"}"]}], "codec": "json_lines"}`,
 			expected: TestCaseSet{
