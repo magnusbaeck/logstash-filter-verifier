@@ -144,7 +144,7 @@ func (tcs *TestCaseSet) convertBracketFields() error {
 
 	// Convert fields in input json string
 	if tcs.Codec == "json_lines" {
-		// Perform bracket transform on deprecated top-level input lines
+		// Perform bracket transform on deprecated top-level input lines.
 		for i, line := range tcs.InputLines {
 			s, err := parseAllBracketPropertiesInJSON(line)
 			if err != nil {
@@ -153,7 +153,7 @@ func (tcs *TestCaseSet) convertBracketFields() error {
 			tcs.InputLines[i] = s
 		}
 
-		// Perform bracket transform on input lines inside the test cases
+		// Perform bracket transform on input lines inside the test cases.
 		for i := range tcs.TestCases {
 			for j, line := range tcs.TestCases[i].InputLines {
 				s, err := parseAllBracketPropertiesInJSON(line)
