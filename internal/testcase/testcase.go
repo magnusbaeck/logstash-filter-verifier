@@ -144,17 +144,24 @@ func (tcs *TestCaseSet) convertBracketFields() error {
 
 	// Convert fields in input json string
 	if tcs.Codec == "json_lines" {
+		// Perform bracket transform on deprecated top-level input lines.
 		for i, line := range tcs.InputLines {
-			var jsonObj map[string]interface{}
-			if err := json.Unmarshal([]byte(line), &jsonObj); err != nil {
-				return err
-			}
-			jsonObj = parseAllBracketProperties(jsonObj)
-			data, err := json.Marshal(jsonObj)
+			s, err := parseAllBracketPropertiesInJSON(line)
 			if err != nil {
 				return err
 			}
-			tcs.InputLines[i] = string(data)
+			tcs.InputLines[i] = s
+		}
+
+		// Perform bracket transform on input lines inside the test cases.
+		for i := range tcs.TestCases {
+			for j, line := range tcs.TestCases[i].InputLines {
+				s, err := parseAllBracketPropertiesInJSON(line)
+				if err != nil {
+					return err
+				}
+				tcs.TestCases[i].InputLines[j] = s
+			}
 		}
 	}
 
