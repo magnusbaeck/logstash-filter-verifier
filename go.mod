@@ -11,7 +11,6 @@ require (
 	github.com/bmatcuk/doublestar/v2 v2.0.4
 	github.com/breml/logstash-config v0.5.3
 	github.com/go-playground/overalls v0.0.0-20191218162659-7df9f728c018
-	github.com/golang/protobuf v1.5.3
 	github.com/hashicorp/packer v1.4.4
 	github.com/hpcloud/tail v1.0.0
 	github.com/imkira/go-observer v1.0.3
@@ -42,6 +41,7 @@ require (
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/dsnet/compress v0.0.1 // indirect
 	github.com/fsnotify/fsnotify v1.5.1 // indirect
+	github.com/golang/protobuf v1.5.3 // indirect
 	github.com/golang/snappy v0.0.1 // indirect
 	github.com/hashicorp/hcl v1.0.0 // indirect
 	github.com/inconshreveable/mousetrap v1.0.0 // indirect
