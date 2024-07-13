@@ -16,11 +16,10 @@ import (
 	"github.com/magnusbaeck/logstash-filter-verifier/v2/internal/logstash"
 )
 
-func TestNew(t *testing.T) {
+func TestNew_Success(t *testing.T) {
 	cases := []struct {
-		input         string
-		expected      TestCaseSet
-		expectedError string // Substring match of error message, empty for no error.
+		input    string
+		expected TestCaseSet
 	}{
 		// Happy flow relying on the default codec.
 		{
@@ -69,16 +68,6 @@ func TestNew(t *testing.T) {
 				IgnoredFields: []string{"@version"},
 			},
 		},
-		// Return error if legacy "input" key is used.
-		{
-			input:         `{"input": ["{\"test\": \"test\"}"]}`,
-			expectedError: `testcase file contained deprecated "input" key`,
-		},
-		// Return error if legacy "input" key is used.
-		{
-			input:         `{"expected": [{"test": "test"}]}`,
-			expectedError: `testcase file contained deprecated "expected" key`,
-		},
 		// Ignore bracket notation in TC input lines when codec is line.
 		{
 			input: `{"testcases": [{"input": ["{\"[test][path]\": \"test\"}"]}]}`,
@@ -116,25 +105,43 @@ func TestNew(t *testing.T) {
 	}
 	for i, c := range cases {
 		tcs, err := New(bytes.NewReader([]byte(c.input)), "json")
-		if c.expectedError != "" {
-			if err == nil {
-				t.Errorf("Test %d: %q input: expected error", i, c.input)
-				break
-			}
-			if !strings.Contains(err.Error(), c.expectedError) {
-				t.Errorf("Test %d: %q input: expected error to contain %q, but it didn't", i, c.input, err)
-				break
-			}
-		} else {
-			if err != nil {
-				t.Errorf("Test %d: %q input: %s", i, c.input, err)
-				break
-			}
-			resultJSON := marshalTestCaseSet(t, tcs)
-			expectedJSON := marshalTestCaseSet(t, &c.expected)
-			if expectedJSON != resultJSON {
-				t.Errorf("Test %d:\nExpected:\n%s\nGot:\n%s", i, expectedJSON, resultJSON)
-			}
+		if err != nil {
+			t.Errorf("Test %d: %q input: %s", i, c.input, err)
+			break
+		}
+		resultJSON := marshalTestCaseSet(t, tcs)
+		expectedJSON := marshalTestCaseSet(t, &c.expected)
+		if expectedJSON != resultJSON {
+			t.Errorf("Test %d:\nExpected:\n%s\nGot:\n%s", i, expectedJSON, resultJSON)
+		}
+	}
+}
+
+func TestNew_Failure(t *testing.T) {
+	cases := []struct {
+		input         string
+		expectedError string // Substring match of error message.
+	}{
+		// Return error if legacy "input" key is used.
+		{
+			input:         `{"input": ["{\"test\": \"test\"}"]}`,
+			expectedError: `testcase file contained deprecated "input" key`,
+		},
+		// Return error if legacy "input" key is used.
+		{
+			input:         `{"expected": [{"test": "test"}]}`,
+			expectedError: `testcase file contained deprecated "expected" key`,
+		},
+	}
+	for i, c := range cases {
+		_, err := New(bytes.NewReader([]byte(c.input)), "json")
+		if err == nil {
+			t.Errorf("Test %d: %q input: expected error", i, c.input)
+			break
+		}
+		if !strings.Contains(err.Error(), c.expectedError) {
+			t.Errorf("Test %d: %q input: expected error to contain %q, but it didn't", i, c.input, err)
+			break
 		}
 	}
 }
