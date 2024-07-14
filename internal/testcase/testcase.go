@@ -65,14 +65,18 @@ type TestCaseSet struct {
 	// configured based on the event's type or its tags.
 	InputFields logstash.FieldSet `json:"fields" yaml:"fields"`
 
+	LegacyInputLines []string `json:"input" yaml:"input"`
+
 	// InputLines contains the lines of input that should be fed
 	// to the Logstash process.
-	InputLines []string `json:"input" yaml:"input"`
+	InputLines []string
+
+	LegacyExpectedEvents []logstash.Event `json:"expected" yaml:"expected"`
 
 	// ExpectedEvents contains a slice of expected events to be
 	// compared to the actual events produced by the Logstash
 	// process.
-	ExpectedEvents []logstash.Event `json:"expected" yaml:"expected"`
+	ExpectedEvents []logstash.Event
 
 	// ExportMetadata controls if the metadata of the event processed
 	// by Logstash is returned. The metadata is contained in the field
@@ -92,7 +96,7 @@ type TestCaseSet struct {
 	// Optionally other information regarding the test case may be supplied.
 	TestCases []TestCase `json:"testcases" yaml:"testcases"`
 
-	// Events contains the fields for each event. This fields is filled
+	// Events contains the fields for each event. These fields are filled
 	// in the New function. The sources are: InputFields, TestCase.Event and
 	// TestCase.InputLines
 	Events []logstash.FieldSet `json:"-" yaml:"-"`
@@ -199,6 +203,16 @@ func New(reader io.Reader, configType string) (*TestCaseSet, error) {
 		}
 	}
 
+	// Bail out if the old testcase file format is used.
+	if len(tcs.LegacyExpectedEvents) != 0 {
+		return nil, errors.New(`testcase file contained deprecated "expected" key; ` +
+			`specify an array of testcase objects under the "testcases" key instead`)
+	}
+	if len(tcs.LegacyInputLines) != 0 {
+		return nil, errors.New(`testcase file contained deprecated "input" key; ` +
+			`specify an array of testcase objects under the "testcases" key instead`)
+	}
+
 	if err = tcs.InputFields.IsValid(); err != nil {
 		return nil, err
 	}
@@ -211,11 +225,7 @@ func New(reader io.Reader, configType string) (*TestCaseSet, error) {
 	tcs.IgnoredFields = append(tcs.IgnoredFields, defaultIgnoredFields...)
 	sort.Strings(tcs.IgnoredFields)
 
-	tcs.descriptions = make([]string, len(tcs.ExpectedEvents))
-
-	for range tcs.InputLines {
-		tcs.Events = append(tcs.Events, tcs.InputFields.Clone())
-	}
+	tcs.descriptions = make([]string, 0, 100)
 
 	for _, tc := range tcs.TestCases {
 		// Add event, if there are no input lines.

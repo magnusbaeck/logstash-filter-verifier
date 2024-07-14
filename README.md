@@ -557,7 +557,7 @@ replaced with the given Logstash configuration.
 
 Originally the `input` and `expected` configuration keys were at the
 top level of the test case file. They were later moved into the
-`testcases` key but the old configuration format is still supported.
+`testcases` key.
 
 To migrate test case files from the old to the new file format the
 following command using [jq](https://stedolan.github.io/jq/) can be
