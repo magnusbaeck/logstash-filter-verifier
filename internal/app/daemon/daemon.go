@@ -100,7 +100,7 @@ func (d *Daemon) Run(ctx context.Context) error {
 
 	env := standalonelogstash.GetLimitedEnvironment(os.Environ(), d.keptEnvVars)
 
-	logstashVersion, err := standalonelogstash.DetectVersion(d.logstashPath, env)
+	logstashVersion, err := standalonelogstash.DetectVersion(d.logstashPath, d.keptEnvVars)
 	if err != nil {
 		return err
 	}
