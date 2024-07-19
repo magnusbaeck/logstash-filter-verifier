@@ -62,7 +62,7 @@ func TestParallelProcess(t *testing.T) {
 		t.Fatalf("Unable to close TestStream: %s", err)
 	}
 
-	result, err := p.Wait()
+	result, err := p.WaitAndRead()
 	if err != nil {
 		t.Fatalf("Error while waiting for ParallelProcess to finish: %s", err)
 	}

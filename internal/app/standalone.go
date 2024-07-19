@@ -52,6 +52,12 @@ func makeStandaloneCmd() *cobra.Command {
 	cmd.Flags().Duration("sockets-timeout", 60*time.Second, "Timeout (duration) for the communication with Logstash via Unix domain sockets. Has no effect unless --sockets is used.")
 	_ = viper.BindPFlag("sockets-timeout", cmd.Flags().Lookup("sockets-timeout"))
 
+	cmd.Flags().StringSlice("logfile", nil, "Switches to log-run mode that submits given log files to Logstash and prints the results. If logfile is a directory, it uses all files below that path that match logfile-extension.")
+	_ = viper.BindPFlag("logfiles", cmd.Flags().Lookup("logfile"))
+
+	cmd.Flags().String("logfile-extension", "log", "Extension that identify logfiles to use. Has no effect unless --logfile is a directory. Default is `log`.")
+	_ = viper.BindPFlag("logfile-extension", cmd.Flags().Lookup("logfile-extension"))
+
 	// TODO: Not yet sure, if this should be global or only in standalone.
 	cmd.Flags().Bool("quiet", false, "Omit test progress messages and event diffs.")
 	_ = viper.BindPFlag("quiet", cmd.Flags().Lookup("quiet"))
@@ -72,6 +78,8 @@ func runStandalone(_ *cobra.Command, args []string) error {
 		args[1:],
 		viper.GetBool("sockets"),
 		viper.GetDuration("sockets-timeout"),
+		viper.GetStringSlice("logfiles"),
+		viper.GetString("logfile-extension"),
 		viper.Get("logger").(logging.Logger),
 	)
 
