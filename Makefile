@@ -16,9 +16,6 @@ EXEC_SUFFIX :=
 OS_NAME := $(shell uname -s)
 endif
 
-# The Docker image to use when building release images.
-GOLANG_DOCKER_IMAGE := golang:1.22.4
-
 INSTALL := install
 
 # Installation prefix directory. Could be changed to e.g. /usr or
@@ -122,16 +119,13 @@ dist/$(PROGRAM)_$(VERSION).tar.gz:
 
 dist/$(PROGRAM)_$(VERSION)_%.tar.gz: $(GOVVV)
 	mkdir -p $(dir $@)
-	GOOS="$$(basename $@ .tar.gz | awk -F_ '{print $$3}')" && \
-	    GOARCH="$$(basename $@ .tar.gz | awk -F_ '{print $$4}')" && \
+	export GOOS="$$(basename $@ .tar.gz | awk -F_ '{print $$3}')" && \
+	    export GOARCH="$$(basename $@ .tar.gz | awk -F_ '{print $$4}')" && \
 	    DISTDIR=dist/$${GOOS}_$${GOARCH} && \
 	    if [ $$GOOS = "windows" ] ; then EXEC_SUFFIX=".exe" ; fi && \
 	    mkdir -p $$DISTDIR && \
 	    cp CHANGELOG.md LICENSE README.md $$DISTDIR && \
-	    docker run --rm -v $$(pwd):$$(pwd) -w $$(pwd) \
-	        -e GOOS=$$GOOS -e GOARCH=$$GOARCH \
-	        $(GOLANG_DOCKER_IMAGE) \
-	        bin/govvv build -o $$DISTDIR/$(PROGRAM)$$EXEC_SUFFIX && \
+	    bin/govvv build -o $$DISTDIR/$(PROGRAM)$$EXEC_SUFFIX && \
 	    tar -C $$DISTDIR -zcpf $@ . && \
 	    rm -rf $$DISTDIR
 
