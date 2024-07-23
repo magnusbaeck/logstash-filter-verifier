@@ -31,7 +31,7 @@ PROGRAM := logstash-filter-verifier
 # List of all GOOS_GOARCH combinations that we should build release
 # binaries for. See https://golang.org/doc/install/source#environment
 # for all available combinations.
-TARGETS := darwin_amd64 linux_386 linux_amd64
+TARGETS := darwin_amd64 darwin_arm64 linux_amd64
 
 VERSION := $(shell git describe --tags --always)
 
