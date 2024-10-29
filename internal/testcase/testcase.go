@@ -10,14 +10,13 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
-	"reflect"
 	"sort"
 	"strconv"
 	"strings"
 
 	unjson "github.com/hashicorp/packer/common/json"
 	"github.com/imkira/go-observer"
-	"github.com/mikefarah/yaml/v2"
+	"gopkg.in/yaml.v2"
 
 	"github.com/magnusbaeck/logstash-filter-verifier/v2/internal/logging"
 	"github.com/magnusbaeck/logstash-filter-verifier/v2/internal/logstash"
@@ -196,8 +195,6 @@ func New(reader io.Reader, configType string) (*TestCaseSet, error) {
 			return nil, err
 		}
 	} else {
-		// Fix issue https://github.com/go-yaml/yaml/issues/139
-		yaml.DefaultMapType = reflect.TypeOf(map[string]interface{}{})
 		if err = yaml.Unmarshal(buf, &tcs); err != nil {
 			return nil, err
 		}
