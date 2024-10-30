@@ -592,7 +592,7 @@ the test case files need to include the property `codec` set to the value `line`
 (or `json_lines`, if json formatted input should be processed).
 
 
-### The `--logstash-arg` flag
+### The `--logstash-arg` flag (Standalone mode)
 
 The `--logstash-arg` flag is used to supply additional command line
 arguments or flags for Logstash. Those arguments are not processed by
