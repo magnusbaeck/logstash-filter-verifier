@@ -269,7 +269,7 @@ func TestProcess(t *testing.T) {
 		_, _ = p.Input.Write([]byte(c.input + "\n"))
 		_ = p.Input.Close()
 
-		result, err := p.Wait()
+		result, err := p.WaitAndRead()
 		testhelpers.CompareErrors(t, i, c.waiterr, err)
 
 		if result.Success != c.result.Success {
